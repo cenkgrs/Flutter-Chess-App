@@ -21,6 +21,8 @@ class _GameBoardState extends State<GameBoard> {
   int selectedRow = -1;
   int selectedCol = -1;
 
+  List<List<int>> validMoves = [];
+
   @override
   void initState() {
     // TODO: implement initState
@@ -144,6 +146,9 @@ class _GameBoardState extends State<GameBoard> {
         selectedRow = row;
         selectedCol = col;
       }
+
+      validMoves =
+          calculateRawValidMoves(selectedRow, selectedCol, selectedPiece);
     });
   }
 
@@ -152,7 +157,52 @@ class _GameBoardState extends State<GameBoard> {
       selectedPiece = null;
 
       selectedRow = selectedCol = -1;
+
+      validMoves = [];
     });
+  }
+
+  List<List<int>> calculateRawValidMoves(int row, int col, ChessPiece? piece) {
+    List<List<int>> candidateMoves = [];
+
+    int direction = piece!.isWhite ? -1 : 1;
+
+    switch (piece.type) {
+      case ChessPieceType.pawn:
+
+        // Pawn move forward
+        if (isInBoard(row + direction, col) &&
+            board[row + direction][col] == null) {
+          candidateMoves.add([row + direction, col]);
+        }
+
+        // Pawn move double if initilize position
+        if (row == 1 && !piece.isWhite || row == 6 && piece.isWhite) {
+          if (isInBoard(row + 2 * direction, col) &&
+              board[row + 2 * direction][col] == null &&
+              board[row + direction][col] == null) {
+            candidateMoves.add([row + 2 * direction, col]);
+          }
+        }
+
+        // Pawn kill
+        if (isInBoard(row + direction, col - 1) &&
+            board[row + direction][col - 1] != null &&
+            board[row + direction][col - 1]!.isWhite) {
+          candidateMoves.add([row + direction, col - 1]);
+        }
+
+        if (isInBoard(row + direction, col + 1) &&
+            board[row + direction][col + 1] != null &&
+            board[row + direction][col + 1]!.isWhite) {
+          candidateMoves.add([row + direction, col + 1]);
+        }
+
+        break;
+      default:
+    }
+
+    return candidateMoves;
   }
 
   @override
@@ -171,10 +221,19 @@ class _GameBoardState extends State<GameBoard> {
 
           bool isSelected = selectedRow == row && selectedCol == col;
 
+          bool isValidMove = false;
+
+          for (var position in validMoves) {
+            if (position[0] == row && position[1] == col) {
+              isValidMove = true;
+            }
+          }
+
           return Square(
               isWhite: isWhite(index),
               piece: board[row][col],
               isSelected: isSelected,
+              isValidMove: isValidMove,
               onTap: isSelected
                   ? () => unselectPiece(row, col)
                   : () => selectPiece(row, col));
