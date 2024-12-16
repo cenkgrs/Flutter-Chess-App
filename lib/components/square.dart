@@ -22,9 +22,9 @@ class Square extends StatelessWidget {
     Color? squareColor;
 
     if (isSelected) {
-      squareColor = Colors.green;
+      squareColor = selectedPieceColor;
     } else if (isValidMove) {
-      squareColor = Colors.green[300];
+      squareColor = isWhite ? foregroundColor : backgroundColor;
     } else {
       squareColor = isWhite ? foregroundColor : backgroundColor;
     }
@@ -32,12 +32,18 @@ class Square extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        color: squareColor,
-        child: piece != null
-            ? Image.asset(piece!.imagePath,
-                color: piece!.isWhite ? Colors.white : Colors.black)
-            : null,
-      ),
+          color: squareColor,
+          child: piece != null
+              ? Image.asset(piece!.imagePath,
+                  color: piece!.isWhite ? Colors.white : Colors.black)
+              : (isValidMove
+                  ? Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: CircleAvatar(
+                        backgroundColor: validMoveColor,
+                      ),
+                    )
+                  : null)),
     );
   }
 }
