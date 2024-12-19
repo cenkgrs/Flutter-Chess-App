@@ -231,6 +231,68 @@ class _GameBoardState extends State<GameBoard> {
         }
 
         break;
+      case ChessPieceType.knight:
+        var knightMoves = [
+          [-2, -1],
+          [-2, 1],
+          [2, -1],
+          [2, 1],
+          [1, -2],
+          [1, 2],
+          [-1, -2],
+          [-1, 2],
+        ];
+
+        for (var move in knightMoves) {
+          var newRow = row + move[0];
+          var newCol = col + move[1];
+
+          if (!isInBoard(newRow, newCol)) {
+            continue;
+          }
+
+          if (board[newRow][newCol] != null) {
+            if (board[newRow][newCol]!.isWhite != piece.isWhite) {
+              candidateMoves.add([newRow, newCol]); // Kill
+            }
+
+            continue; // Own piece here
+          }
+          candidateMoves.add([newRow, newCol]);
+        }
+        break;
+      case ChessPieceType.bishop:
+        // Diagonals
+        var directions = [
+          [1, -1],
+          [1, 1],
+          [-1, -1],
+          [-1, 1],
+        ];
+
+        for (var direction in directions) {
+          var i = 0;
+
+          while (true) {
+            var newRow = row + i * direction[0];
+            var newCol = col + i * direction[1];
+
+            if (!isInBoard(newRow, newCol)) {
+              break;
+            }
+
+            if (board[newRow][newCol] != null) {
+              if (board[newRow][newCol]!.isWhite != piece.isWhite) {
+                candidateMoves.add([newRow, newCol]); // Kill
+              }
+              break; // Own piece is on the way cant move further here
+            }
+            candidateMoves.add([newRow, newCol]);
+
+            i++;
+          }
+        }
+        break;
       default:
     }
 
