@@ -271,7 +271,7 @@ class _GameBoardState extends State<GameBoard> {
         ];
 
         for (var direction in directions) {
-          var i = 0;
+          var i = 1;
 
           while (true) {
             var newRow = row + i * direction[0];
@@ -292,6 +292,74 @@ class _GameBoardState extends State<GameBoard> {
             i++;
           }
         }
+        break;
+      case ChessPieceType.queen:
+        var directions = [
+          [-1, 0], // up
+          [1, 0], // down
+          [0, -1], // left
+          [0, 1], // right
+          [1, -1],
+          [1, 1],
+          [-1, -1],
+          [-1, 1],
+        ];
+
+        for (var direction in directions) {
+          var i = 1;
+
+          while (true) {
+            var newRow = row + i * direction[0];
+            var newCol = col + i * direction[1];
+
+            if (!isInBoard(newRow, newCol)) {
+              break;
+            }
+
+            if (board[newRow][newCol] != null) {
+              if (board[newRow][newCol]!.isWhite != piece.isWhite) {
+                candidateMoves.add([newRow, newCol]); // Kill
+              }
+              break;
+            }
+
+            candidateMoves.add([newRow, newCol]); // Empty move
+
+            i++;
+          }
+        }
+
+        break;
+      case ChessPieceType.king:
+        var directions = [
+          [-1, 0], // up
+          [1, 0], // down
+          [0, -1], // left
+          [0, 1], // right
+          [1, -1],
+          [1, 1],
+          [-1, -1],
+          [-1, 1],
+        ];
+
+        for (var direction in directions) {
+          var newRow = row + 1 * direction[0];
+          var newCol = col + 1 * direction[1];
+
+          if (!isInBoard(newRow, newCol)) {
+            continue;
+          }
+
+          if (board[newRow][newCol] != null) {
+            if (board[newRow][newCol]!.isWhite != piece.isWhite) {
+              candidateMoves.add([newRow, newCol]); // Kill
+            }
+            break;
+          }
+
+          candidateMoves.add([newRow, newCol]);
+        }
+
         break;
       default:
     }
