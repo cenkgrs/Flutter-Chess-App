@@ -165,7 +165,11 @@ class _GameBoardState extends State<GameBoard> {
   List<List<int>> calculateRawValidMoves(int row, int col, ChessPiece? piece) {
     List<List<int>> candidateMoves = [];
 
-    int direction = piece!.isWhite ? -1 : 1;
+    if (piece == null) {
+      return [];
+    }
+
+    int direction = piece.isWhite ? -1 : 1;
 
     switch (piece.type) {
       case ChessPieceType.pawn:
@@ -188,13 +192,13 @@ class _GameBoardState extends State<GameBoard> {
         // Pawn kill
         if (isInBoard(row + direction, col - 1) &&
             board[row + direction][col - 1] != null &&
-            board[row + direction][col - 1]!.isWhite) {
+            board[row + direction][col - 1]!.isWhite != piece.isWhite) {
           candidateMoves.add([row + direction, col - 1]);
         }
 
         if (isInBoard(row + direction, col + 1) &&
             board[row + direction][col + 1] != null &&
-            board[row + direction][col + 1]!.isWhite) {
+            board[row + direction][col + 1]!.isWhite != piece.isWhite) {
           candidateMoves.add([row + direction, col + 1]);
         }
         break;
@@ -367,6 +371,14 @@ class _GameBoardState extends State<GameBoard> {
     return candidateMoves;
   }
 
+  void movePiece(int newRow, int newCol) {
+    // move piece
+    board[newRow][newCol] = selectedPiece;
+    board[selectedRow][selectedCol] = null;
+
+    unselectPiece(newRow, newCol);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -396,9 +408,11 @@ class _GameBoardState extends State<GameBoard> {
               piece: board[row][col],
               isSelected: isSelected,
               isValidMove: isValidMove,
-              onTap: isSelected
-                  ? () => unselectPiece(row, col)
-                  : () => selectPiece(row, col));
+              onTap: isValidMove
+                  ? () => movePiece(row, col)
+                  : isSelected
+                      ? () => unselectPiece(row, col)
+                      : () => selectPiece(row, col));
         },
       ),
     );
