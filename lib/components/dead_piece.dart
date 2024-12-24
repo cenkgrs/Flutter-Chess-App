@@ -7,7 +7,10 @@ class DeadPiece extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(imagePath,
-        color: isWhite ? Colors.grey[400] : Colors.grey[800]);
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Image.asset(imagePath,
+          color: isWhite ? Colors.grey[400] : Colors.grey[800]),
+    );
   }
 }
