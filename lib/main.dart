@@ -1,3 +1,4 @@
+import 'package:chess_puzzle_app/screens/home_page_screen.dart';
 import 'package:flutter/material.dart';
 
 import 'game_board.dart';
@@ -11,9 +12,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: GameBoard(),
-    );
+    return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        initialRoute: '/',
+        routes: {
+          '/': (context) => const HomeScreen(),
+          '/game': (context) => const GameBoard()
+        });
   }
 }
