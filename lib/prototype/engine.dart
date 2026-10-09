@@ -52,6 +52,13 @@ class ChessEngine {
     final before = position.get(move.toAlgebraic);
     final copy = position.copy()..move(move);
     final san = copy.getHistory().cast<String>().last;
+    final variation = <String>[san];
+    for (var ply = 0; ply < 2 && !copy.game_over; ply++) {
+      final reply = await choose(copy, Difficulty.medium);
+      if (reply == null) break;
+      copy.move(reply);
+      variation.add(copy.getHistory().cast<String>().last);
+    }
     final reasons = <String>[];
     if (before != null) {
       reasons.add('rakibin ${before.type.name} taşını kazanıyor');
@@ -68,6 +75,9 @@ class ChessEngine {
         : reasons.join(' ve ');
     return ChessAdvice(
       san,
+      move.fromAlgebraic,
+      move.toAlgebraic,
+      variation,
       '${move.fromAlgebraic} karesindeki taşı ${move.toAlgebraic} karesine götürmeni öneriyorum.',
       '$san hamlesi $mainReason. Bu hamleden sonra rakibin tehdidini kontrol edip taşlarını güvenli karelerde tut.',
     );
@@ -116,8 +126,18 @@ class ChessEngine {
 }
 
 class ChessAdvice {
-  const ChessAdvice(this.move, this.firstSentence, this.secondSentence);
+  const ChessAdvice(
+    this.move,
+    this.from,
+    this.to,
+    this.variation,
+    this.firstSentence,
+    this.secondSentence,
+  );
   final String move;
+  final String from;
+  final String to;
+  final List<String> variation;
   final String firstSentence;
   final String secondSentence;
 }
