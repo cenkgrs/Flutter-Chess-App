@@ -27,7 +27,7 @@ class AuthRepository {
         email: email.trim(),
         password: password,
         data: {'username': username.trim()},
-        emailRedirectTo: 'com.rok.chess://login-callback/',
+        emailRedirectTo: 'com.cenkgrs.rok://login-callback/',
       );
 
   Future<void> signOut() => _client.auth.signOut();

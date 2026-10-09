@@ -5,7 +5,7 @@
    adı sırasıyla çalıştırın. İlk kurulum daha önce yapıldıysa yalnızca
    `20261009150000_invites_and_history_retention.sql` dosyasını çalıştırın.
 3. Authentication > URL Configuration alanına
-   `com.rok.chess://login-callback/` yönlendirme adresini ekleyin.
+   `com.cenkgrs.rok://login-callback/` yönlendirme adresini ekleyin.
 4. `supabase.env.example.json` dosyasını `supabase.env.json` adıyla kopyalayın
    ve Connect ekranındaki Project URL ile publishable key'i girin.
 5. Uygulamayı şu komutla çalıştırın:
