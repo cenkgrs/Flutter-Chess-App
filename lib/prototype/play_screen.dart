@@ -22,6 +22,7 @@ class _PlayScreenState extends State<PlayScreen> {
   List<c.Move> targets = [];
   List<String> notation = [];
   c.Move? last;
+  ChessAdvice? assistantAdvice;
 
   bool get ended => resigned || game.game_over;
   String get status {
@@ -61,6 +62,7 @@ class _PlayScreenState extends State<PlayScreen> {
       if (!mounted || ticket != generation) return;
       setState(() {
         if (move != null) game.move(move);
+        assistantAdvice = null;
         thinking = false;
         refresh();
       });
@@ -103,6 +105,7 @@ class _PlayScreenState extends State<PlayScreen> {
       }
       setState(() {
         game.move(move);
+        assistantAdvice = null;
         refresh();
       });
       await ai();
@@ -177,6 +180,7 @@ class _PlayScreenState extends State<PlayScreen> {
       thinking = false;
       resigned = false;
       error = null;
+      assistantAdvice = null;
       refresh();
     });
     await ai();
@@ -189,6 +193,7 @@ class _PlayScreenState extends State<PlayScreen> {
       thinking = false;
       resigned = false;
       error = null;
+      assistantAdvice = null;
       game.undo_move();
       if (game.turn != human && game.history.isNotEmpty) game.undo_move();
       refresh();
@@ -262,7 +267,22 @@ class _PlayScreenState extends State<PlayScreen> {
                     child: SizedBox(
                       width: boardSize,
                       height: boardSize,
-                      child: boardWidget(),
+                      child: Stack(children: [
+                        Positioned.fill(child: boardWidget()),
+                        if (assistantAdvice != null)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: CustomPaint(
+                                key: const ValueKey('assistant-arrow'),
+                                painter: _MoveArrowPainter(
+                                  from: assistantAdvice!.from,
+                                  to: assistantAdvice!.to,
+                                  flipped: flipped,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ]),
                     ),
                   ),
                   const Spacer(),
@@ -278,7 +298,9 @@ class _PlayScreenState extends State<PlayScreen> {
                 child: IconButton.filledTonal(
                   key: const ValueKey('assistant-info'),
                   tooltip: 'Asistana sor',
-                  onPressed: _showAssistant,
+                  onPressed: !ended && !thinking && game.turn == human
+                      ? _showAssistant
+                      : null,
                   icon: const Icon(Icons.info_outline_rounded),
                 ),
               ),
@@ -289,7 +311,9 @@ class _PlayScreenState extends State<PlayScreen> {
   }
 
   Future<void> _showAssistant() async {
-    final advice = ChessEngine().explain(game);
+    final advice = await ChessEngine().explain(game);
+    if (!mounted) return;
+    setState(() => assistantAdvice = advice);
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -300,34 +324,29 @@ class _PlayScreenState extends State<PlayScreen> {
           color: Color(0xfff3eee7),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        child: FutureBuilder<ChessAdvice?>(
-          future: advice,
-          builder: (context, snapshot) => Column(children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close),
-              ),
+        child: Column(children: [
+          Align(
+            alignment: Alignment.topRight,
+            child: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.close),
             ),
-            Expanded(
-              child: Image.asset('lib/images/assistant-strategist.png',
-                  fit: BoxFit.contain),
+          ),
+          Expanded(
+            child: Image.asset('lib/images/assistant-strategist.png',
+                fit: BoxFit.contain),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(22, 8, 22, 24),
+            child: Text(
+              advice == null
+                  ? 'Bu konumda oynanabilecek bir hamle kalmadı.'
+                  : '${advice.firstSentence}\n\n${advice.secondSentence}\n\nAna varyant: ${advice.variation.join('  ')}',
+              style: const TextStyle(
+                  color: Color(0xff211712), fontSize: 16, height: 1.4),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 8, 22, 24),
-              child: snapshot.connectionState != ConnectionState.done
-                  ? const CircularProgressIndicator()
-                  : Text(
-                      snapshot.data == null
-                          ? 'Bu konumda oynanabilecek bir hamle kalmadı.'
-                          : '${snapshot.data!.firstSentence}\n\n${snapshot.data!.secondSentence}',
-                      style: const TextStyle(
-                          color: Color(0xff211712), fontSize: 16, height: 1.4),
-                    ),
-            ),
-          ]),
-        ),
+          ),
+        ]),
       ),
     );
   }
@@ -833,4 +852,73 @@ class _WoodPainter extends CustomPainter {
       seed != oldDelegate.seed ||
       base != oldDelegate.base ||
       overlay != oldDelegate.overlay;
+}
+
+class _MoveArrowPainter extends CustomPainter {
+  const _MoveArrowPainter({
+    required this.from,
+    required this.to,
+    required this.flipped,
+  });
+
+  final String from;
+  final String to;
+  final bool flipped;
+
+  Offset _center(String square, Size size) {
+    const boardInset = 7.0;
+    final squareSize = (size.width - boardInset * 2) / 8;
+    final file = 'abcdefgh'.indexOf(square[0]);
+    final rank = int.parse(square[1]);
+    final column = flipped ? 7 - file : file;
+    final row = flipped ? rank - 1 : 8 - rank;
+    return Offset(
+      boardInset + (column + .5) * squareSize,
+      boardInset + (row + .5) * squareSize,
+    );
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final start = _center(from, size);
+    final end = _center(to, size);
+    final direction = end - start;
+    if (direction.distance == 0) return;
+    final unit = direction / direction.distance;
+    final shortenedEnd = end - unit * (size.width / 34);
+    final width = math.max(7.0, size.width / 42);
+    final paint = Paint()
+      ..color = const Color(0xd96c7074)
+      ..strokeWidth = width
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(start, shortenedEnd, paint);
+
+    final normal = Offset(-unit.dy, unit.dx);
+    final headLength = size.width / 18;
+    final headWidth = size.width / 25;
+    final path = Path()
+      ..moveTo(end.dx, end.dy)
+      ..lineTo(
+        end.dx - unit.dx * headLength + normal.dx * headWidth,
+        end.dy - unit.dy * headLength + normal.dy * headWidth,
+      )
+      ..lineTo(
+        end.dx - unit.dx * headLength - normal.dx * headWidth,
+        end.dy - unit.dy * headLength - normal.dy * headWidth,
+      )
+      ..close();
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = const Color(0xe66c7074)
+        ..style = PaintingStyle.fill,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _MoveArrowPainter oldDelegate) =>
+      oldDelegate.from != from ||
+      oldDelegate.to != to ||
+      oldDelegate.flipped != flipped;
 }

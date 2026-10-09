@@ -78,4 +78,14 @@ void main() {
     game.move(move!);
     expect(game.in_checkmate, true);
   });
+  test('Assistant returns a legal arrow and short principal variation',
+      () async {
+    final game = Chess();
+    final advice = await ChessEngine(random: Random(7)).explain(game);
+    expect(advice, isNotNull);
+    expect(advice!.from, matches(RegExp(r'^[a-h][1-8]$')));
+    expect(advice.to, matches(RegExp(r'^[a-h][1-8]$')));
+    expect(advice.variation, isNotEmpty);
+    expect(advice.variation.length, lessThanOrEqualTo(3));
+  });
 }
