@@ -30,10 +30,11 @@ flutter:
     - lib/images/wood/
 
 flutter_launcher_icons:
-  android: true
+  android: "ic_launcher_rok"
   ios: true
   image_path: "assets/branding/rok-app-icon.png"
   adaptive_icon_background: "#171412"
-  adaptive_icon_foreground: "assets/branding/rok-app-icon.png"
+  adaptive_icon_foreground: "assets/branding/rok-app-icon-foreground.png"
+  adaptive_icon_foreground_inset: 28
   min_sdk_android: 21
   remove_alpha_ios: true
