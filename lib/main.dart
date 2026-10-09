@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+
+import 'backend/app_backend.dart';
 import 'screens/home_menu_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AppBackend.initialize();
   runApp(const MyApp());
 }
 

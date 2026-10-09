@@ -2,6 +2,8 @@ enum SpeedPool { bullet, blitz, rapid, classical }
 
 extension SpeedPoolUi on SpeedPool {
   String get label => const ['Bullet', 'Blitz', 'Rapid', 'Klasik'][index];
+  String get databaseName =>
+      const ['bullet', 'blitz', 'rapid', 'classical'][index];
   String get description => const [
         'Çok hızlı',
         'Hızlı',

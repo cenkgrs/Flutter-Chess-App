@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../backend/app_backend.dart';
+import '../backend/auth_repository.dart';
+import '../backend/game_repository.dart';
 import '../online/time_control.dart';
 import '../prototype/play_screen.dart';
+import 'auth_screen.dart';
+import 'matchmaking_screen.dart';
 
 class HomeMenuScreen extends StatelessWidget {
   const HomeMenuScreen({super.key});
@@ -13,7 +19,18 @@ class HomeMenuScreen extends StatelessWidget {
   static const divider = Color(0x66d8cec5);
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) {
+    if (!AppBackend.isConfigured) return _menu(context, null);
+    return StreamBuilder<AuthState>(
+      stream: AuthRepository().changes,
+      initialData: AuthState(AuthChangeEvent.initialSession,
+          AppBackend.client.auth.currentSession),
+      builder: (context, snapshot) =>
+          _menu(context, snapshot.data?.session?.user),
+    );
+  }
+
+  Widget _menu(BuildContext context, User? user) => Scaffold(
         backgroundColor: const Color(0xff32180d),
         body: DecoratedBox(
           decoration: const BoxDecoration(
@@ -39,9 +56,9 @@ class HomeMenuScreen extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
                       child: Column(
                         children: [
-                          _header(context),
+                          _header(context, user),
                           const SizedBox(height: 76),
-                          const _RatingsStrip(),
+                          _RatingsStrip(user: user),
                           const SizedBox(height: 45),
                           _PrimaryAction(
                             key: const ValueKey('online-play'),
@@ -78,76 +95,127 @@ class HomeMenuScreen extends StatelessWidget {
         ),
       );
 
-  Widget _header(BuildContext context) => Row(
-        children: [
-          const Icon(Icons.castle_rounded, color: bone, size: 33),
-          const SizedBox(width: 11),
-          const SizedBox(
-            width: 78,
+  Widget _header(BuildContext context, User? user) {
+    final username = user?.userMetadata?['username'] as String?;
+    return Row(
+      children: [
+        const Icon(Icons.castle_rounded, color: bone, size: 33),
+        const SizedBox(width: 11),
+        const SizedBox(
+          width: 78,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'ROK',
+              maxLines: 1,
+              style: TextStyle(
+                color: bone,
+                fontSize: 25,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 5.5,
+              ),
+            ),
+          ),
+        ),
+        const Spacer(),
+        const Icon(Icons.account_circle_outlined, color: mutedBone, size: 34),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 53,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              username ?? 'Misafir',
+              maxLines: 1,
+              style: const TextStyle(color: mutedBone, fontSize: 15),
+            ),
+          ),
+        ),
+        Container(
+          width: 1,
+          height: 27,
+          margin: const EdgeInsets.symmetric(horizontal: 13),
+          color: divider,
+        ),
+        InkWell(
+          key: const ValueKey('login'),
+          onTap: () => user == null
+              ? Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AuthScreen()),
+                )
+              : _showAccountActions(context),
+          borderRadius: BorderRadius.circular(4),
+          child: SizedBox(
+            width: 38,
             child: FittedBox(
               fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
               child: Text(
-                'ROK',
+                user == null ? 'Giriş' : 'Çıkış',
                 maxLines: 1,
-                style: TextStyle(
+                style: const TextStyle(
                   color: bone,
-                  fontSize: 25,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 5.5,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
           ),
-          const Spacer(),
-          const Icon(Icons.account_circle_outlined, color: mutedBone, size: 34),
-          const SizedBox(width: 8),
-          const SizedBox(
-            width: 53,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                'Misafir',
-                maxLines: 1,
-                style: TextStyle(color: mutedBone, fontSize: 15),
-              ),
-            ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showAccountActions(BuildContext context) async {
+    final signOut = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Oturumu kapat'),
+        content: const Text('ROK hesabından çıkmak istiyor musun?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Vazgeç'),
           ),
-          Container(
-            width: 1,
-            height: 27,
-            margin: const EdgeInsets.symmetric(horizontal: 13),
-            color: divider,
-          ),
-          InkWell(
-            key: const ValueKey('login'),
-            onTap: () => _comingSoon(context),
-            borderRadius: BorderRadius.circular(4),
-            child: const SizedBox(
-              width: 38,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  'Giriş',
-                  maxLines: 1,
-                  style: TextStyle(
-                    color: bone,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Çıkış yap'),
           ),
         ],
-      );
+      ),
+    );
+    if (signOut == true) await AuthRepository().signOut();
+  }
 
   void _showTimeControls(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const _TimeControlSheet(),
+      builder: (_) => _TimeControlSheet(
+        onSelected: (control) {
+          Navigator.pop(context);
+          _startOnline(context, control);
+        },
+      ),
+    );
+  }
+
+  Future<void> _startOnline(BuildContext context, TimeControl control) async {
+    if (AppBackend.currentUser == null) {
+      final authenticated = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => const AuthScreen()),
+      );
+      if (!context.mounted || authenticated != true) return;
+    }
+    if (!context.mounted) return;
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MatchmakingScreen(control: control),
+      ),
     );
   }
 
@@ -162,10 +230,22 @@ class HomeMenuScreen extends StatelessWidget {
 }
 
 class _RatingsStrip extends StatelessWidget {
-  const _RatingsStrip();
+  const _RatingsStrip({required this.user});
+
+  final User? user;
 
   @override
-  Widget build(BuildContext context) => Row(
+  Widget build(BuildContext context) {
+    if (user == null) return _ratings(RatingSnapshot.initial);
+    return FutureBuilder<RatingSnapshot>(
+      future: GameRepository().loadRatings(),
+      initialData: RatingSnapshot.initial,
+      builder: (context, snapshot) =>
+          _ratings(snapshot.data ?? RatingSnapshot.initial),
+    );
+  }
+
+  Widget _ratings(RatingSnapshot ratings) => Row(
         children: [
           for (var index = 0; index < SpeedPool.values.length; index++) ...[
             if (index > 0)
@@ -181,9 +261,9 @@ class _RatingsStrip extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 5),
-                  const Text(
-                    '1500',
-                    style: TextStyle(
+                  Text(
+                    '${ratings.ratingFor(SpeedPool.values[index])}',
+                    style: const TextStyle(
                       color: HomeMenuScreen.bone,
                       fontSize: 23,
                       fontWeight: FontWeight.w500,
@@ -355,7 +435,9 @@ class _MenuDivider extends StatelessWidget {
 }
 
 class _TimeControlSheet extends StatelessWidget {
-  const _TimeControlSheet();
+  const _TimeControlSheet({required this.onSelected});
+
+  final ValueChanged<TimeControl> onSelected;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -421,8 +503,7 @@ class _TimeControlSheet extends StatelessWidget {
                               .map(
                                 (control) => OutlinedButton(
                                   key: ValueKey('time-${control.label}'),
-                                  onPressed: () =>
-                                      HomeMenuScreen._comingSoon(context),
+                                  onPressed: () => onSelected(control),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: HomeMenuScreen.ink,
                                     side: const BorderSide(
