@@ -27,6 +27,16 @@ Future<void> move(WidgetTester tester, String from, String to) async {
 }
 
 void main() {
+  testWidgets('Assistant mode exposes explanation action', (tester) async {
+    usePhoneViewport(tester);
+    await tester.pumpWidget(
+      const MaterialApp(home: PlayScreen(assistantMode: true)),
+    );
+
+    expect(find.byKey(const ValueKey('assistant-info')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Board and new-game dialog fit a narrow screen', (tester) async {
     usePhoneViewport(tester);
     await tester.pumpWidget(playApp());

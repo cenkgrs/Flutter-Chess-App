@@ -1,8 +1,9 @@
 # ROK Supabase kurulumu
 
 1. Supabase'te boş bir proje oluşturun.
-2. SQL Editor içinde `supabase/migrations/20261009143000_initial_online_chess.sql`
-   dosyasını çalıştırın.
+2. SQL Editor içinde `supabase/migrations` klasöründeki SQL dosyalarını dosya
+   adı sırasıyla çalıştırın. İlk kurulum daha önce yapıldıysa yalnızca
+   `20261009150000_invites_and_history_retention.sql` dosyasını çalıştırın.
 3. Authentication > URL Configuration alanına
    `com.rok.chess://login-callback/` yönlendirme adresini ekleyin.
 4. `supabase.env.example.json` dosyasını `supabase.env.json` adıyla kopyalayın
@@ -26,6 +27,8 @@ konur; `service_role` anahtarı hiçbir zaman uygulamaya eklenmemelidir.
 - Katılımcılarla sınırlı oyun ve hamle verileri
 - Hamle sırası/ply çakışma kontrolü
 - Oyun sonucunda atomik Elo güncellemesi
+- Altı karakterli özel oda/davet kodu
+- Kullanıcı başına son 10 maçın hamle geçmişi ve inceleme konumları
 
 Üretim ortamında hamle yasallığının ve saatlerin istemciden bağımsız doğrulanması
 için `submit_move` RPC'si bir Edge Function veya özel oyun sunucusuyla

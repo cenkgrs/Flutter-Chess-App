@@ -6,7 +6,8 @@ import 'package:flutter/services.dart';
 import 'engine.dart';
 
 class PlayScreen extends StatefulWidget {
-  const PlayScreen({super.key});
+  const PlayScreen({super.key, this.assistantMode = false});
+  final bool assistantMode;
   @override
   State<PlayScreen> createState() => _PlayScreenState();
 }
@@ -238,37 +239,94 @@ class _PlayScreenState extends State<PlayScreen> {
           ),
         ),
         child: SafeArea(
-          child: LayoutBuilder(builder: (context, box) {
-            final boardSize = math.max(
-              0.0,
-              math.min(box.maxWidth, box.maxHeight - 154),
-            );
-            final showTurn =
-                !ended && !thinking && error == null && game.turn == human;
-            return Padding(
-              padding: EdgeInsets.zero,
-              child: Column(children: [
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 42,
-                  child: Center(
-                    child: showTurn ? const _TurnIndicator() : null,
+          child: Stack(children: [
+            LayoutBuilder(builder: (context, box) {
+              final boardSize = math.max(
+                0.0,
+                math.min(box.maxWidth, box.maxHeight - 154),
+              );
+              final showTurn =
+                  !ended && !thinking && error == null && game.turn == human;
+              return Padding(
+                padding: EdgeInsets.zero,
+                child: Column(children: [
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 42,
+                    child: Center(
+                      child: showTurn ? const _TurnIndicator() : null,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Center(
-                  child: SizedBox(
-                    width: boardSize,
-                    height: boardSize,
-                    child: boardWidget(),
+                  const SizedBox(height: 12),
+                  Center(
+                    child: SizedBox(
+                      width: boardSize,
+                      height: boardSize,
+                      child: boardWidget(),
+                    ),
                   ),
+                  const Spacer(),
+                  _InspectionButton(onPressed: openReview),
+                  const SizedBox(height: 18),
+                ]),
+              );
+            }),
+            if (widget.assistantMode)
+              Positioned(
+                top: 8,
+                right: 10,
+                child: IconButton.filledTonal(
+                  key: const ValueKey('assistant-info'),
+                  tooltip: 'Asistana sor',
+                  onPressed: _showAssistant,
+                  icon: const Icon(Icons.info_outline_rounded),
                 ),
-                const Spacer(),
-                _InspectionButton(onPressed: openReview),
-                const SizedBox(height: 18),
-              ]),
-            );
-          }),
+              ),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showAssistant() async {
+    final advice = ChessEngine().explain(game);
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: math.min(570, MediaQuery.sizeOf(context).height * .68),
+        decoration: const BoxDecoration(
+          color: Color(0xfff3eee7),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: FutureBuilder<ChessAdvice?>(
+          future: advice,
+          builder: (context, snapshot) => Column(children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close),
+              ),
+            ),
+            Expanded(
+              child: Image.asset('lib/images/assistant-strategist.png',
+                  fit: BoxFit.contain),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 8, 22, 24),
+              child: snapshot.connectionState != ConnectionState.done
+                  ? const CircularProgressIndicator()
+                  : Text(
+                      snapshot.data == null
+                          ? 'Bu konumda oynanabilecek bir hamle kalmadı.'
+                          : '${snapshot.data!.firstSentence}\n\n${snapshot.data!.secondSentence}',
+                      style: const TextStyle(
+                          color: Color(0xff211712), fontSize: 16, height: 1.4),
+                    ),
+            ),
+          ]),
         ),
       ),
     );

@@ -13,6 +13,7 @@ void main() {
     await tester.pumpWidget(const MyApp());
     expect(find.text('OYUNA BAŞLA'), findsOneWidget);
     expect(find.text('Bilgisayara karşı'), findsOneWidget);
+    expect(find.text('Asistan'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('online-play')));
     await tester.pumpAndSettle();
