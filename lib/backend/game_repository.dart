@@ -109,4 +109,42 @@ class GameRepository {
           'p_reason': reason,
         },
       );
+
+  Future<String> createPrivateRoom(TimeControl control) async =>
+      await AppBackend.client.rpc('create_private_room', params: {
+        'p_pool': control.pool.databaseName,
+        'p_minutes': control.minutes,
+        'p_increment': control.increment,
+      }) as String;
+
+  Future<String> joinPrivateRoom(String code) async =>
+      await AppBackend.client.rpc('join_private_room', params: {
+        'p_code': code.trim().toUpperCase(),
+      }) as String;
+
+  Future<String?> findPrivateGame(String code) async =>
+      await AppBackend.client.rpc('find_private_room_game', params: {
+        'p_code': code,
+      }) as String?;
+
+  Future<List<Map<String, dynamic>>> recentGames() async {
+    final id = AppBackend.currentUser!.id;
+    final rows = await AppBackend.client
+        .from('games')
+        .select()
+        .or('white_id.eq.$id,black_id.eq.$id')
+        .neq('status', 'active')
+        .order('finished_at', ascending: false)
+        .limit(10);
+    return List<Map<String, dynamic>>.from(rows);
+  }
+
+  Future<List<Map<String, dynamic>>> gameMoves(String gameId) async {
+    final rows = await AppBackend.client
+        .from('game_moves')
+        .select('ply,san,fen_after')
+        .eq('game_id', gameId)
+        .order('ply');
+    return List<Map<String, dynamic>>.from(rows);
+  }
 }

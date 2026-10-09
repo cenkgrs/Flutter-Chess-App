@@ -46,6 +46,33 @@ class ChessEngine {
     return best;
   }
 
+  Future<ChessAdvice?> explain(Chess position) async {
+    final move = await choose(position, Difficulty.hard);
+    if (move == null) return null;
+    final before = position.get(move.toAlgebraic);
+    final copy = position.copy()..move(move);
+    final san = copy.getHistory().cast<String>().last;
+    final reasons = <String>[];
+    if (before != null) {
+      reasons.add('rakibin ${before.type.name} taşını kazanıyor');
+    }
+    if (copy.in_check) reasons.add('şah çekerek rakibi cevap vermeye zorluyor');
+    if ('d4e4d5e5'.contains(move.toAlgebraic)) {
+      reasons.add('merkez kontrolünü güçlendiriyor');
+    }
+    if (move.promotion != null) {
+      reasons.add('piyonu güçlü bir taşa dönüştürüyor');
+    }
+    final mainReason = reasons.isEmpty
+        ? 'taşlarının etkinliğini artırıp konumunu daha dengeli hale getiriyor'
+        : reasons.join(' ve ');
+    return ChessAdvice(
+      san,
+      '${move.fromAlgebraic} karesindeki taşı ${move.toAlgebraic} karesine götürmeni öneriyorum.',
+      '$san hamlesi $mainReason. Bu hamleden sonra rakibin tehdidini kontrol edip taşlarını güvenli karelerde tut.',
+    );
+  }
+
   int _priority(Move m) =>
       (values[m.captured?.name] ?? 0) * 10 + (values[m.promotion?.name] ?? 0);
 
@@ -86,4 +113,11 @@ class ChessEngine {
     }
     return game.turn == Color.WHITE ? score : -score;
   }
+}
+
+class ChessAdvice {
+  const ChessAdvice(this.move, this.firstSentence, this.secondSentence);
+  final String move;
+  final String firstSentence;
+  final String secondSentence;
 }

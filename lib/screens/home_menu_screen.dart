@@ -7,7 +7,9 @@ import '../backend/game_repository.dart';
 import '../online/time_control.dart';
 import '../prototype/play_screen.dart';
 import 'auth_screen.dart';
+import 'friend_room_screen.dart';
 import 'matchmaking_screen.dart';
+import 'profile_screen.dart';
 
 class HomeMenuScreen extends StatelessWidget {
   const HomeMenuScreen({super.key});
@@ -69,7 +71,7 @@ class HomeMenuScreen extends StatelessWidget {
                             icon: Icons.group_outlined,
                             title: 'Arkadaşla oyna',
                             subtitle: 'Oda kur veya davet kodu gir',
-                            onTap: () => _comingSoon(context),
+                            onTap: () => _openFriends(context),
                           ),
                           const _MenuDivider(),
                           _SecondaryAction(
@@ -81,6 +83,19 @@ class HomeMenuScreen extends StatelessWidget {
                               context,
                               MaterialPageRoute(
                                 builder: (_) => const PlayScreen(),
+                              ),
+                            ),
+                          ),
+                          const _MenuDivider(),
+                          _SecondaryAction(
+                            icon: Icons.auto_awesome_outlined,
+                            title: 'Asistan',
+                            subtitle: 'Hamlelerini stratejistinle planla',
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const PlayScreen(assistantMode: true),
                               ),
                             ),
                           ),
@@ -119,7 +134,17 @@ class HomeMenuScreen extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        const Icon(Icons.account_circle_outlined, color: mutedBone, size: 34),
+        IconButton(
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+          onPressed: user == null
+              ? () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const AuthScreen()))
+              : () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const ProfileScreen())),
+          icon: const Icon(Icons.account_circle_outlined,
+              color: mutedBone, size: 34),
+        ),
         const SizedBox(width: 8),
         SizedBox(
           width: 53,
@@ -219,13 +244,16 @@ class HomeMenuScreen extends StatelessWidget {
     );
   }
 
-  static void _comingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        backgroundColor: graphite,
-        content: Text('Bu akış Supabase bağlantısıyla etkinleşecek.'),
-      ),
-    );
+  Future<void> _openFriends(BuildContext context) async {
+    if (AppBackend.currentUser == null) {
+      final authenticated = await Navigator.push<bool>(
+          context, MaterialPageRoute(builder: (_) => const AuthScreen()));
+      if (!context.mounted || authenticated != true) return;
+    }
+    if (context.mounted) {
+      await Navigator.push<void>(
+          context, MaterialPageRoute(builder: (_) => const FriendRoomScreen()));
+    }
   }
 }
 

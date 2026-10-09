@@ -1,0 +1,166 @@
+import 'package:chess/chess.dart' as c;
+import 'package:flutter/material.dart';
+
+import '../backend/game_repository.dart';
+
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+            title: const Text('Profil · Son maçlar'),
+            backgroundColor: const Color(0xff202120),
+            foregroundColor: const Color(0xfff3eee7)),
+        backgroundColor: const Color(0xff3b1e0f),
+        body: FutureBuilder<List<Map<String, dynamic>>>(
+          future: GameRepository().recentGames(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.data!.isEmpty) {
+              return const Center(
+                  child: Text('Henüz tamamlanmış maç yok.',
+                      style: TextStyle(color: Color(0xfff3eee7))));
+            }
+            return ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: snapshot.data!.length,
+                separatorBuilder: (_, __) =>
+                    const Divider(color: Color(0x55ffffff)),
+                itemBuilder: (context, index) {
+                  final game = snapshot.data![index];
+                  return ListTile(
+                    textColor: const Color(0xfff3eee7),
+                    iconColor: const Color(0xfff3eee7),
+                    leading: const Icon(Icons.history),
+                    title: Text(
+                        '${game['pool']} · ${game['initial_minutes']}+${game['increment_seconds']}'),
+                    subtitle: Text(
+                        '${game['status']} · ${game['result_reason'] ?? ''}'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => GameReviewScreen(game: game))),
+                  );
+                });
+          },
+        ),
+      );
+}
+
+class GameReviewScreen extends StatefulWidget {
+  const GameReviewScreen({super.key, required this.game});
+  final Map<String, dynamic> game;
+  @override
+  State<GameReviewScreen> createState() => _GameReviewScreenState();
+}
+
+class _GameReviewScreenState extends State<GameReviewScreen> {
+  List<Map<String, dynamic>>? _moves;
+  int _index = 0;
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final moves = await GameRepository().gameMoves(widget.game['id'] as String);
+    if (mounted) setState(() => _moves = moves);
+  }
+
+  c.Chess get _position => _index == 0
+      ? c.Chess()
+      : c.Chess.fromFEN(_moves![_index - 1]['fen_after'] as String);
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+            title: const Text('Maç inceleme'),
+            backgroundColor: const Color(0xff202120),
+            foregroundColor: const Color(0xfff3eee7)),
+        backgroundColor: const Color(0xff3b1e0f),
+        body: _moves == null
+            ? const Center(child: CircularProgressIndicator())
+            : Column(children: [
+                const SizedBox(height: 18),
+                AspectRatio(
+                    aspectRatio: 1,
+                    child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: GridView.builder(
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: 64,
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 8),
+                            itemBuilder: (context, i) {
+                              final file = i % 8, rank = 8 - i ~/ 8;
+                              final piece =
+                                  _position.get('${'abcdefgh'[file]}$rank');
+                              return ColoredBox(
+                                  color: (i ~/ 8 + file).isEven
+                                      ? const Color(0xffd9b77e)
+                                      : const Color(0xff85552f),
+                                  child: piece == null
+                                      ? const SizedBox()
+                                      : Image.asset(
+                                          'lib/images/wood/${const {
+                                            'p': 'pawn',
+                                            'r': 'rook',
+                                            'n': 'knight',
+                                            'b': 'bishop',
+                                            'q': 'queen',
+                                            'k': 'king'
+                                          }[piece.type.name]}.png',
+                                          color: piece.color == c.Color.WHITE
+                                              ? const Color(0xfffff5df)
+                                              : const Color(0xff48291c),
+                                          colorBlendMode: BlendMode.modulate));
+                            }))),
+                Text(
+                    _index == 0
+                        ? 'Başlangıç konumu'
+                        : '$_index. ${_moves![_index - 1]['san']}',
+                    style: const TextStyle(
+                        color: Color(0xfff3eee7), fontSize: 17)),
+                const SizedBox(height: 12),
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  IconButton(
+                      onPressed:
+                          _index == 0 ? null : () => setState(() => _index = 0),
+                      icon: const Icon(Icons.first_page),
+                      color: Colors.white),
+                  IconButton(
+                      onPressed:
+                          _index == 0 ? null : () => setState(() => _index--),
+                      icon: const Icon(Icons.chevron_left),
+                      color: Colors.white),
+                  Text('$_index / ${_moves!.length}',
+                      style: const TextStyle(color: Colors.white)),
+                  IconButton(
+                      onPressed: _index == _moves!.length
+                          ? null
+                          : () => setState(() => _index++),
+                      icon: const Icon(Icons.chevron_right),
+                      color: Colors.white),
+                  IconButton(
+                      onPressed: _index == _moves!.length
+                          ? null
+                          : () => setState(() => _index = _moves!.length),
+                      icon: const Icon(Icons.last_page),
+                      color: Colors.white),
+                ]),
+                Expanded(
+                    child: ListView.builder(
+                        itemCount: _moves!.length,
+                        itemBuilder: (_, i) => ListTile(
+                            selected: _index == i + 1,
+                            title: Text('${i + 1}. ${_moves![i]['san']}',
+                                style: const TextStyle(color: Colors.white)),
+                            onTap: () => setState(() => _index = i + 1)))),
+              ]),
+      );
+}
