@@ -1,10 +1,8 @@
 import 'package:chess_puzzle_app/game_board.dart';
 import 'package:chess_puzzle_app/values/colors.dart';
-import 'package:chess_puzzle_app/widgets/bottomNavbar.dart';
-import 'package:chess_puzzle_app/widgets/fastPuzzles.dart';
+import 'package:chess_puzzle_app/widgets/bottom_navbar.dart';
+import 'package:chess_puzzle_app/widgets/fast_puzzles.dart';
 import 'package:flutter/material.dart';
-
-import 'package:provider/provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
