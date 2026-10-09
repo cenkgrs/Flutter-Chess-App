@@ -12,17 +12,30 @@ class PlayScreen extends StatefulWidget {
   State<PlayScreen> createState() => _PlayScreenState();
 }
 
-class _PlayScreenState extends State<PlayScreen> {
+class _PlayScreenState extends State<PlayScreen>
+    with SingleTickerProviderStateMixin {
   c.Chess game = c.Chess();
   Difficulty difficulty = Difficulty.medium;
   c.Color human = c.Color.WHITE;
   bool thinking = false, flipped = false, resigned = false;
   int generation = 0;
   String? selected, error, dragFrom;
+  Offset? dragPosition;
   List<c.Move> targets = [];
   List<String> notation = [];
   c.Move? last;
   ChessAdvice? assistantAdvice;
+  late final AnimationController assistantPulse;
+
+  @override
+  void initState() {
+    super.initState();
+    assistantPulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    );
+    if (widget.assistantMode) assistantPulse.repeat(reverse: true);
+  }
 
   bool get ended => resigned || game.game_over;
   String get status {
@@ -45,6 +58,8 @@ class _PlayScreenState extends State<PlayScreen> {
     notation = game.getHistory().cast<String>();
     last = game.history.isEmpty ? null : game.history.last.move;
     selected = null;
+    dragFrom = null;
+    dragPosition = null;
     targets = [];
   }
 
@@ -227,6 +242,7 @@ class _PlayScreenState extends State<PlayScreen> {
   @override
   void dispose() {
     generation++;
+    assistantPulse.dispose();
     super.dispose();
   }
 
@@ -295,13 +311,23 @@ class _PlayScreenState extends State<PlayScreen> {
               Positioned(
                 top: 8,
                 right: 10,
-                child: IconButton.filledTonal(
-                  key: const ValueKey('assistant-info'),
-                  tooltip: 'Asistana sor',
-                  onPressed: !ended && !thinking && game.turn == human
-                      ? _showAssistant
-                      : null,
-                  icon: const Icon(Icons.info_outline_rounded),
+                child: AnimatedBuilder(
+                  animation: assistantPulse,
+                  builder: (context, child) => Transform.scale(
+                    scale: .94 + assistantPulse.value * .12,
+                    child: Transform.rotate(
+                      angle: math.sin(assistantPulse.value * math.pi * 2) * .1,
+                      child: child,
+                    ),
+                  ),
+                  child: IconButton.filledTonal(
+                    key: const ValueKey('assistant-info'),
+                    tooltip: 'Asistana sor',
+                    onPressed: !ended && !thinking && game.turn == human
+                        ? _showAssistant
+                        : null,
+                    icon: const Icon(Icons.auto_awesome_rounded),
+                  ),
                 ),
               ),
           ]),
@@ -396,13 +422,42 @@ class _PlayScreenState extends State<PlayScreen> {
               return Listener(
                 onPointerDown: (event) {
                   final square = squareAt(event.localPosition);
-                  dragFrom = game.get(square)?.color == human ? square : null;
+                  if (!thinking &&
+                      !ended &&
+                      game.turn == human &&
+                      game.get(square)?.color == human) {
+                    setState(() {
+                      dragFrom = square;
+                      dragPosition = event.localPosition;
+                    });
+                  }
                 },
-                onPointerCancel: (_) => dragFrom = null,
+                onPointerMove: (event) {
+                  if (dragFrom != null) {
+                    setState(() => dragPosition = event.localPosition);
+                  }
+                },
+                onPointerCancel: (_) {
+                  if (dragFrom != null) {
+                    setState(() {
+                      dragFrom = null;
+                      dragPosition = null;
+                    });
+                  }
+                },
                 onPointerUp: (event) async {
                   final from = dragFrom;
-                  dragFrom = null;
+                  setState(() {
+                    dragFrom = null;
+                    dragPosition = null;
+                  });
                   if (from == null || thinking || ended || game.turn != human) {
+                    return;
+                  }
+                  if (event.localPosition.dx < 0 ||
+                      event.localPosition.dy < 0 ||
+                      event.localPosition.dx >= boardBox.maxWidth ||
+                      event.localPosition.dy >= boardBox.maxHeight) {
                     return;
                   }
                   final to = squareAt(event.localPosition);
@@ -413,90 +468,112 @@ class _PlayScreenState extends State<PlayScreen> {
                   });
                   await tap(to);
                 },
-                child: GridView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: 64,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 8,
+                child: Stack(children: [
+                  GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: 64,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 8,
+                    ),
+                    itemBuilder: (context, i) {
+                      final index = flipped ? 63 - i : i;
+                      final file = index % 8, rank = 8 - index ~/ 8;
+                      final square = '${'abcdefgh'[file]}$rank';
+                      final piece = game.get(square);
+                      final legal = targets.any((m) => m.toAlgebraic == square);
+                      final recent = last?.fromAlgebraic == square ||
+                          last?.toAlgebraic == square;
+                      final check = piece?.type == c.PieceType.KING &&
+                          piece?.color == game.turn &&
+                          game.in_check;
+                      final isLight = (index ~/ 8 + file).isEven;
+                      final base = isLight
+                          ? const Color(0xffd9b77e)
+                          : const Color(0xff85552f);
+                      final overlay = check
+                          ? const Color(0x99a73e32)
+                          : selected == square
+                              ? const Color(0x99d39a35)
+                              : recent
+                                  ? const Color(0x667a743e)
+                                  : Colors.transparent;
+                      return Semantics(
+                          label:
+                              '$square ${piece == null ? 'boş' : '${piece.color == c.Color.WHITE ? 'beyaz' : 'siyah'} ${piece.type.name}'}',
+                          button: true,
+                          child: GestureDetector(
+                            key: ValueKey('square-$square'),
+                            onTap: () => tap(square),
+                            child: _WoodSurface(
+                                seed: index + (isLight ? 100 : 200),
+                                base: base,
+                                overlay: overlay,
+                                child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      if (piece != null &&
+                                          !(dragFrom == square &&
+                                              dragPosition != null))
+                                        _piece(piece),
+                                      if (legal)
+                                        Container(
+                                            width: piece == null ? 12 : null,
+                                            height: piece == null ? 12 : null,
+                                            margin: const EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: piece == null
+                                                    ? const Color(0x88412a18)
+                                                    : null,
+                                                border: piece != null
+                                                    ? Border.all(
+                                                        color: const Color(
+                                                            0xaae2b75f),
+                                                        width: 3)
+                                                    : null)),
+                                      if (i % 8 == 0)
+                                        Positioned(
+                                            top: 2,
+                                            left: 3,
+                                            child: Text('$rank',
+                                                style: TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: isLight
+                                                        ? const Color(
+                                                            0xff684426)
+                                                        : const Color(
+                                                            0xffe3c691)))),
+                                      if (i >= 56)
+                                        Positioned(
+                                            bottom: 1,
+                                            right: 3,
+                                            child: Text('abcdefgh'[file],
+                                                style: TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: isLight
+                                                        ? const Color(
+                                                            0xff684426)
+                                                        : const Color(
+                                                            0xffe3c691)))),
+                                    ])),
+                          ));
+                    },
                   ),
-                  itemBuilder: (context, i) {
-                    final index = flipped ? 63 - i : i;
-                    final file = index % 8, rank = 8 - index ~/ 8;
-                    final square = '${'abcdefgh'[file]}$rank';
-                    final piece = game.get(square);
-                    final legal = targets.any((m) => m.toAlgebraic == square);
-                    final recent = last?.fromAlgebraic == square ||
-                        last?.toAlgebraic == square;
-                    final check = piece?.type == c.PieceType.KING &&
-                        piece?.color == game.turn &&
-                        game.in_check;
-                    final isLight = (index ~/ 8 + file).isEven;
-                    final base = isLight
-                        ? const Color(0xffd9b77e)
-                        : const Color(0xff85552f);
-                    final overlay = check
-                        ? const Color(0x99a73e32)
-                        : selected == square
-                            ? const Color(0x99d39a35)
-                            : recent
-                                ? const Color(0x667a743e)
-                                : Colors.transparent;
-                    return Semantics(
-                        label:
-                            '$square ${piece == null ? 'boş' : '${piece.color == c.Color.WHITE ? 'beyaz' : 'siyah'} ${piece.type.name}'}',
-                        button: true,
-                        child: GestureDetector(
-                          key: ValueKey('square-$square'),
-                          onTap: () => tap(square),
-                          child: _WoodSurface(
-                              seed: index + (isLight ? 100 : 200),
-                              base: base,
-                              overlay: overlay,
-                              child:
-                                  Stack(alignment: Alignment.center, children: [
-                                if (piece != null) _piece(piece),
-                                if (legal)
-                                  Container(
-                                      width: piece == null ? 12 : null,
-                                      height: piece == null ? 12 : null,
-                                      margin: const EdgeInsets.all(2),
-                                      decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: piece == null
-                                              ? const Color(0x88412a18)
-                                              : null,
-                                          border: piece != null
-                                              ? Border.all(
-                                                  color:
-                                                      const Color(0xaae2b75f),
-                                                  width: 3)
-                                              : null)),
-                                if (i % 8 == 0)
-                                  Positioned(
-                                      top: 2,
-                                      left: 3,
-                                      child: Text('$rank',
-                                          style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w600,
-                                              color: isLight
-                                                  ? const Color(0xff684426)
-                                                  : const Color(0xffe3c691)))),
-                                if (i >= 56)
-                                  Positioned(
-                                      bottom: 1,
-                                      right: 3,
-                                      child: Text('abcdefgh'[file],
-                                          style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w600,
-                                              color: isLight
-                                                  ? const Color(0xff684426)
-                                                  : const Color(0xffe3c691)))),
-                              ])),
-                        ));
-                  },
-                ),
+                  if (dragFrom != null && dragPosition != null)
+                    Positioned(
+                      key: const ValueKey('dragged-piece'),
+                      left: dragPosition!.dx - boardBox.maxWidth / 16,
+                      top: dragPosition!.dy - boardBox.maxHeight / 16,
+                      width: boardBox.maxWidth / 8,
+                      height: boardBox.maxHeight / 8,
+                      child: IgnorePointer(
+                        child: _piece(game.get(dragFrom!)!),
+                      ),
+                    ),
+                ]),
               );
             }),
           ),
