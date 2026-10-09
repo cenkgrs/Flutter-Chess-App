@@ -1,5 +1,5 @@
 import 'package:chess/chess.dart' as c;
-import 'package:chess_puzzle_app/main.dart';
+import 'package:chess_puzzle_app/prototype/play_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -9,6 +9,8 @@ void usePhoneViewport(WidgetTester tester) {
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
 }
+
+Widget playApp() => const MaterialApp(home: PlayScreen());
 
 Future<void> startNewGame(WidgetTester tester) async {
   await tester.tap(find.byKey(const ValueKey('inspection')));
@@ -27,7 +29,7 @@ Future<void> move(WidgetTester tester, String from, String to) async {
 void main() {
   testWidgets('Board and new-game dialog fit a narrow screen', (tester) async {
     usePhoneViewport(tester);
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(playApp());
 
     expect(find.text('Sıra sende'), findsOneWidget);
     expect(find.text('İNCELEME'), findsOneWidget);
@@ -51,7 +53,7 @@ void main() {
 
   testWidgets('Human can select and play a legal move', (tester) async {
     usePhoneViewport(tester);
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(playApp());
 
     await tester.tap(find.byKey(const ValueKey('square-e2')));
     await tester.pump();
@@ -70,7 +72,7 @@ void main() {
 
   testWidgets('Human can drag a piece to play a legal move', (tester) async {
     usePhoneViewport(tester);
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(playApp());
 
     final gesture = await tester.startGesture(
       tester.getCenter(find.byKey(const ValueKey('square-e2'))),
@@ -92,7 +94,7 @@ void main() {
 
   testWidgets('Undo cancels an in-flight computer move', (tester) async {
     usePhoneViewport(tester);
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(playApp());
 
     await move(tester, 'e2', 'e4');
     await tester.tap(find.byKey(const ValueKey('inspection')));
@@ -110,7 +112,7 @@ void main() {
 
   testWidgets('Restart cancels an in-flight computer move', (tester) async {
     usePhoneViewport(tester);
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(playApp());
 
     await move(tester, 'e2', 'e4');
     await startNewGame(tester);
@@ -126,7 +128,7 @@ void main() {
 
   testWidgets('Computer opens when human chooses black', (tester) async {
     usePhoneViewport(tester);
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(playApp());
     await startNewGame(tester);
 
     await tester.tap(find.byType(DropdownButton<c.Color>));
