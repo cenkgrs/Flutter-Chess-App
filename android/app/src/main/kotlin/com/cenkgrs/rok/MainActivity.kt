@@ -1,4 +1,4 @@
-package com.example.chess_puzzle_app
+package com.cenkgrs.rok
 
 import io.flutter.embedding.android.FlutterActivity
 

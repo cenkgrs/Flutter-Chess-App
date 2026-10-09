@@ -1,7 +1,7 @@
 name: chess_puzzle_app
-description: A new Flutter project.
+description: ROK online chess application.
 publish_to: 'none'
-version: 0.1.0
+version: 0.1.0+1
 
 environment:
   sdk: '>=3.0.0-229.0.dev <4.0.0'
@@ -20,6 +20,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -27,3 +28,12 @@ flutter:
   assets:
     - lib/images/
     - lib/images/wood/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/branding/rok-app-icon.png"
+  adaptive_icon_background: "#171412"
+  adaptive_icon_foreground: "assets/branding/rok-app-icon.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
