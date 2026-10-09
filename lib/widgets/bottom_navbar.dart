@@ -1,7 +1,6 @@
 import 'package:chess_puzzle_app/game_board.dart';
 import 'package:chess_puzzle_app/values/colors.dart';
 import 'package:flutter/material.dart';
-import 'package:chess_puzzle_app/screens/home_page_screen.dart';
 import 'package:chess_puzzle_app/main.dart';
 
 class BottomNavbar extends StatefulWidget {
@@ -14,6 +13,7 @@ class BottomNavbar extends StatefulWidget {
 }
 
 class _BottomNavbarState extends State<BottomNavbar> {
+  @override
   void initState() {
     super.initState();
   }
@@ -29,7 +29,7 @@ class _BottomNavbarState extends State<BottomNavbar> {
           }
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => GameBoard()),
+            MaterialPageRoute(builder: (context) => const GameBoard()),
           );
           break;
 
@@ -39,7 +39,7 @@ class _BottomNavbarState extends State<BottomNavbar> {
           }
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => GameBoard()),
+            MaterialPageRoute(builder: (context) => const GameBoard()),
           );
           break;
 
@@ -49,7 +49,7 @@ class _BottomNavbarState extends State<BottomNavbar> {
           }
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => GameBoard()),
+            MaterialPageRoute(builder: (context) => const GameBoard()),
           );
           break;
 
@@ -59,7 +59,7 @@ class _BottomNavbarState extends State<BottomNavbar> {
           }
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => GameBoard()),
+            MaterialPageRoute(builder: (context) => const GameBoard()),
           );
           break;
         // Log Out

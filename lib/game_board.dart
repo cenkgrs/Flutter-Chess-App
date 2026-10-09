@@ -370,7 +370,6 @@ class _GameBoardState extends State<GameBoard> {
         }
 
         break;
-      default:
     }
 
     return candidateMoves;

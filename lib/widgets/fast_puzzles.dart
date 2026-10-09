@@ -17,7 +17,6 @@ class FastPuzzles extends StatelessWidget {
             context,
             MaterialPageRoute(builder: (context) => const GameBoard()),
           );
-          ;
         },
         child: Container(
           width: width * 0.9,
@@ -27,7 +26,7 @@ class FastPuzzles extends StatelessWidget {
             color: Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.5),
+                color: Colors.grey.withValues(alpha: 0.5),
                 spreadRadius: 5,
                 blurRadius: 7,
                 offset: const Offset(0, 3),
