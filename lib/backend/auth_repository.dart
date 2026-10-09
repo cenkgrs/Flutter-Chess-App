@@ -27,7 +27,7 @@ class AuthRepository {
         email: email.trim(),
         password: password,
         data: {'username': username.trim()},
-        emailRedirectTo: 'com.cenkgrs.rok://login-callback/',
+        emailRedirectTo: 'com.silveroaktech.rok://login-callback/',
       );
 
   Future<void> signOut() => _client.auth.signOut();

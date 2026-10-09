@@ -1,4 +1,4 @@
-package com.cenkgrs.rok
+package com.silveroaktech.rok
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -21,7 +21,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.cenkgrs.rok</string>
+				<string>com.silveroaktech.rok</string>
 			</array>
 		</dict>
 	</array>
