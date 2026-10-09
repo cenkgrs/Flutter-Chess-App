@@ -91,6 +91,8 @@ void main() {
       tester.getCenter(find.byKey(const ValueKey('square-e4'))),
       timeStamp: const Duration(milliseconds: 300),
     );
+    await tester.pump();
+    expect(find.byKey(const ValueKey('dragged-piece')), findsOneWidget);
     await gesture.up();
     await tester.pump();
 

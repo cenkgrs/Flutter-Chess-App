@@ -24,6 +24,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
   c.Chess _game = c.Chess();
   String? _selected;
   String? _dragFrom;
+  Offset? _dragPosition;
   List<c.Move> _targets = [];
   bool _sending = false;
   String? _error;
@@ -84,6 +85,8 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
         _row = row;
         _game = c.Chess.fromFEN(row['fen'] as String);
         _selected = null;
+        _dragFrom = null;
+        _dragPosition = null;
         _targets = [];
         _sending = false;
         _error = null;
@@ -321,13 +324,41 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                 onPointerDown: (event) {
                   final square = squareAt(event.localPosition);
                   final mine = _isWhite ? c.Color.WHITE : c.Color.BLACK;
-                  _dragFrom = _game.get(square)?.color == mine ? square : null;
+                  if (_myTurn &&
+                      !_sending &&
+                      _game.get(square)?.color == mine) {
+                    setState(() {
+                      _dragFrom = square;
+                      _dragPosition = event.localPosition;
+                    });
+                  }
                 },
-                onPointerCancel: (_) => _dragFrom = null,
+                onPointerMove: (event) {
+                  if (_dragFrom != null) {
+                    setState(() => _dragPosition = event.localPosition);
+                  }
+                },
+                onPointerCancel: (_) {
+                  if (_dragFrom != null) {
+                    setState(() {
+                      _dragFrom = null;
+                      _dragPosition = null;
+                    });
+                  }
+                },
                 onPointerUp: (event) {
                   final from = _dragFrom;
-                  _dragFrom = null;
+                  setState(() {
+                    _dragFrom = null;
+                    _dragPosition = null;
+                  });
                   if (from == null || !_myTurn || _sending) return;
+                  if (event.localPosition.dx < 0 ||
+                      event.localPosition.dy < 0 ||
+                      event.localPosition.dx >= boardBox.maxWidth ||
+                      event.localPosition.dy >= boardBox.maxHeight) {
+                    return;
+                  }
                   final to = squareAt(event.localPosition);
                   if (from == to) return;
                   setState(() {
@@ -336,56 +367,73 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                   });
                   _tap(to);
                 },
-                child: GridView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: 64,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 8),
-                  itemBuilder: (context, displayIndex) {
-                    final index = _flipped ? 63 - displayIndex : displayIndex;
-                    final file = index % 8;
-                    final rank = 8 - index ~/ 8;
-                    final square = '${'abcdefgh'[file]}$rank';
-                    final piece = _game.get(square);
-                    final light = (index ~/ 8 + file).isEven;
-                    final legal =
-                        _targets.any((move) => move.toAlgebraic == square);
-                    return GestureDetector(
-                      key: ValueKey('online-square-$square'),
-                      onTap: () => _tap(square),
-                      child: ColoredBox(
-                        color: _selected == square
-                            ? const Color(0xffb5823b)
-                            : light
-                                ? const Color(0xffd9b77e)
-                                : const Color(0xff85552f),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            if (piece != null) _piece(piece),
-                            if (legal)
-                              Container(
-                                width: piece == null ? 12 : null,
-                                height: piece == null ? 12 : null,
-                                margin: const EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: piece == null
-                                      ? const Color(0x88412a18)
-                                      : null,
-                                  border: piece == null
-                                      ? null
-                                      : Border.all(
-                                          color: const Color(0xaae2b75f),
-                                          width: 3),
+                child: Stack(children: [
+                  GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: 64,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 8),
+                    itemBuilder: (context, displayIndex) {
+                      final index = _flipped ? 63 - displayIndex : displayIndex;
+                      final file = index % 8;
+                      final rank = 8 - index ~/ 8;
+                      final square = '${'abcdefgh'[file]}$rank';
+                      final piece = _game.get(square);
+                      final light = (index ~/ 8 + file).isEven;
+                      final legal =
+                          _targets.any((move) => move.toAlgebraic == square);
+                      return GestureDetector(
+                        key: ValueKey('online-square-$square'),
+                        onTap: () => _tap(square),
+                        child: ColoredBox(
+                          color: _selected == square
+                              ? const Color(0xffb5823b)
+                              : light
+                                  ? const Color(0xffd9b77e)
+                                  : const Color(0xff85552f),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              if (piece != null &&
+                                  !(_dragFrom == square &&
+                                      _dragPosition != null))
+                                _piece(piece),
+                              if (legal)
+                                Container(
+                                  width: piece == null ? 12 : null,
+                                  height: piece == null ? 12 : null,
+                                  margin: const EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: piece == null
+                                        ? const Color(0x88412a18)
+                                        : null,
+                                    border: piece == null
+                                        ? null
+                                        : Border.all(
+                                            color: const Color(0xaae2b75f),
+                                            width: 3),
+                                  ),
                                 ),
-                              ),
-                          ],
+                            ],
+                          ),
                         ),
+                      );
+                    },
+                  ),
+                  if (_dragFrom != null && _dragPosition != null)
+                    Positioned(
+                      key: const ValueKey('online-dragged-piece'),
+                      left: _dragPosition!.dx - boardBox.maxWidth / 16,
+                      top: _dragPosition!.dy - boardBox.maxHeight / 16,
+                      width: boardBox.maxWidth / 8,
+                      height: boardBox.maxHeight / 8,
+                      child: IgnorePointer(
+                        child: _piece(_game.get(_dragFrom!)!),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                ]),
               );
             },
           ),
