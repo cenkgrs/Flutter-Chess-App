@@ -10,6 +10,7 @@ import 'auth_screen.dart';
 import 'friend_room_screen.dart';
 import 'matchmaking_screen.dart';
 import 'profile_screen.dart';
+import 'puzzle_screen.dart';
 
 class HomeMenuScreen extends StatelessWidget {
   const HomeMenuScreen({super.key});
@@ -85,6 +86,16 @@ class HomeMenuScreen extends StatelessWidget {
                                 builder: (_) => const PlayScreen(),
                               ),
                             ),
+                          ),
+                          const _MenuDivider(),
+                          _SecondaryAction(
+                            icon: Icons.extension_outlined,
+                            title: 'Bulmacalar',
+                            subtitle: 'Seviyene uygun taktikleri çöz',
+                            onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const PuzzleScreen())),
                           ),
                           const _MenuDivider(),
                           _SecondaryAction(

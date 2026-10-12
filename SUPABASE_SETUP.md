@@ -2,8 +2,10 @@
 
 1. Supabase'te boş bir proje oluşturun.
 2. SQL Editor içinde `supabase/migrations` klasöründeki SQL dosyalarını dosya
-   adı sırasıyla çalıştırın. İlk kurulum daha önce yapıldıysa yalnızca
-   `20261009150000_invites_and_history_retention.sql` dosyasını çalıştırın.
+   adı sırasıyla çalıştırın. Mevcut kurulumlarda yalnızca uygulanmamış
+   migration dosyalarını çalıştırın. Bulmacalar için
+   `20261012120000_puzzles.sql`, ardından `supabase/seeds/puzzles.sql`
+   çalıştırılmalıdır. Üretim ve puanlama bilgisi: `tools/puzzles/README.md`.
 3. Authentication > URL Configuration alanına
    `com.silveroaktech.rok://login-callback/` yönlendirme adresini ekleyin.
 4. `supabase.env.example.json` dosyasını `supabase.env.json` adıyla kopyalayın
