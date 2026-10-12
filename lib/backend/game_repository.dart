@@ -68,6 +68,10 @@ class GameRepository {
 
   Future<void> leaveQueue() => AppBackend.client.rpc('leave_matchmaking');
 
+  Future<Map<String, dynamic>> queuePopulation() async =>
+      Map<String, dynamic>.from(
+          await AppBackend.client.rpc('matchmaking_population') as Map);
+
   Stream<Map<String, dynamic>> watchGame(String gameId) => AppBackend.client
       .from('games')
       .stream(primaryKey: ['id'])
@@ -135,7 +139,8 @@ class GameRepository {
     final id = AppBackend.currentUser!.id;
     final rows = await AppBackend.client
         .from('games')
-        .select()
+        .select('*,white_profile:profiles!games_white_id_fkey(username),'
+            'black_profile:profiles!games_black_id_fkey(username)')
         .or('white_id.eq.$id,black_id.eq.$id')
         .neq('status', 'active')
         .order('finished_at', ascending: false)

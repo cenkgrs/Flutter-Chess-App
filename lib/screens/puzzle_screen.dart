@@ -3,6 +3,7 @@ import 'package:chess/chess.dart' as c;
 import 'package:flutter/material.dart';
 import '../backend/app_backend.dart';
 import 'auth_screen.dart';
+import 'puzzle_leaderboard_screen.dart';
 
 class PuzzleScreen extends StatefulWidget {
   const PuzzleScreen({super.key});
@@ -168,6 +169,17 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
         backgroundColor: const Color(0xff202120),
         appBar: AppBar(
             title: const Text('Bulmacalar'),
+            actions: [
+              if (AppBackend.currentUser != null)
+                IconButton(
+                  tooltip: 'Bulmaca sıralaması',
+                  icon: const Icon(Icons.emoji_events_outlined),
+                  onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const PuzzleLeaderboardScreen())),
+                )
+            ],
             backgroundColor: const Color(0xff202120),
             foregroundColor: Colors.white),
         body: AppBackend.currentUser == null
