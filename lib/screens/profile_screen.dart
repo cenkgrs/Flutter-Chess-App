@@ -1,7 +1,9 @@
 import 'package:chess/chess.dart' as c;
 import 'package:flutter/material.dart';
 
+import '../backend/app_backend.dart';
 import '../backend/game_repository.dart';
+import '../online/game_result.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -30,14 +32,19 @@ class ProfileScreen extends StatelessWidget {
                     const Divider(color: Color(0x55ffffff)),
                 itemBuilder: (context, index) {
                   final game = snapshot.data![index];
+                  final outcome =
+                      gameOutcomeFor(game, AppBackend.currentUser!.id);
+                  final reason = resultReasonLabel(game['result_reason']);
                   return ListTile(
                     textColor: const Color(0xfff3eee7),
                     iconColor: const Color(0xfff3eee7),
-                    leading: const Icon(Icons.history),
+                    leading: _OutcomeIcon(outcome: outcome),
                     title: Text(
                         '${game['pool']} · ${game['initial_minutes']}+${game['increment_seconds']}'),
-                    subtitle: Text(
-                        '${game['status']} · ${game['result_reason'] ?? ''}'),
+                    subtitle: Text([
+                      outcomeLabel(outcome),
+                      if (reason.isNotEmpty) reason,
+                    ].join(' · ')),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.push(
                         context,
@@ -48,6 +55,43 @@ class ProfileScreen extends StatelessWidget {
           },
         ),
       );
+}
+
+class _OutcomeIcon extends StatelessWidget {
+  const _OutcomeIcon({required this.outcome});
+
+  final PlayerGameOutcome outcome;
+
+  @override
+  Widget build(BuildContext context) {
+    final (icon, foreground, background) = switch (outcome) {
+      PlayerGameOutcome.win => (
+          Icons.emoji_events_rounded,
+          const Color(0xfff4d28d),
+          const Color(0xff4b391f),
+        ),
+      PlayerGameOutcome.loss => (
+          Icons.close_rounded,
+          const Color(0xffffc4b8),
+          const Color(0xff4b2723),
+        ),
+      PlayerGameOutcome.draw => (
+          Icons.balance_rounded,
+          const Color(0xffdedbd6),
+          const Color(0xff343536),
+        ),
+      _ => (
+          Icons.horizontal_rule_rounded,
+          const Color(0xffdedbd6),
+          const Color(0xff343536),
+        ),
+    };
+    return CircleAvatar(
+      backgroundColor: background,
+      foregroundColor: foreground,
+      child: Icon(icon),
+    );
+  }
 }
 
 class GameReviewScreen extends StatefulWidget {

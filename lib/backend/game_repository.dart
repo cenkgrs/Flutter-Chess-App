@@ -72,9 +72,13 @@ class GameRepository {
       .from('games')
       .stream(primaryKey: ['id'])
       .eq('id', gameId)
-      .map((rows) => rows.single);
+      .map((rows) => rows.single)
+      .distinct((previous, next) =>
+          previous['updated_at'] == next['updated_at'] &&
+          previous['status'] == next['status'] &&
+          previous['ply'] == next['ply']);
 
-  Future<void> submitMove({
+  Future<Map<String, dynamic>> submitMove({
     required String gameId,
     required int expectedPly,
     required String uci,
@@ -82,8 +86,8 @@ class GameRepository {
     required String fenAfter,
     required int whiteMs,
     required int blackMs,
-  }) =>
-      AppBackend.client.rpc(
+  }) async =>
+      Map<String, dynamic>.from(await AppBackend.client.rpc(
         'submit_move',
         params: {
           'p_game_id': gameId,
@@ -94,7 +98,7 @@ class GameRepository {
           'p_white_ms': whiteMs,
           'p_black_ms': blackMs,
         },
-      );
+      ) as Map);
 
   Future<void> finishGame({
     required String gameId,
