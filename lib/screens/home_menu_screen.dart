@@ -11,8 +11,9 @@ import 'friend_room_screen.dart';
 import 'matchmaking_screen.dart';
 import 'profile_screen.dart';
 import 'puzzle_screen.dart';
+import '../route_observer.dart';
 
-class HomeMenuScreen extends StatelessWidget {
+class HomeMenuScreen extends StatefulWidget {
   const HomeMenuScreen({super.key});
 
   static const bone = Color(0xfff3eee7);
@@ -20,6 +21,33 @@ class HomeMenuScreen extends StatelessWidget {
   static const graphite = Color(0xff202120);
   static const ink = Color(0xff211712);
   static const divider = Color(0x66d8cec5);
+
+  @override
+  State<HomeMenuScreen> createState() => _HomeMenuScreenState();
+}
+
+class _HomeMenuScreenState extends State<HomeMenuScreen> with RouteAware {
+  static const bone = HomeMenuScreen.bone;
+  static const mutedBone = HomeMenuScreen.mutedBone;
+  static const divider = HomeMenuScreen.divider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route != null) appRouteObserver.subscribe(this, route);
+  }
+
+  @override
+  void didPopNext() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    appRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -253,6 +281,7 @@ class HomeMenuScreen extends StatelessWidget {
         builder: (_) => MatchmakingScreen(control: control),
       ),
     );
+    if (mounted) setState(() {});
   }
 
   Future<void> _openFriends(BuildContext context) async {
@@ -264,6 +293,7 @@ class HomeMenuScreen extends StatelessWidget {
     if (context.mounted) {
       await Navigator.push<void>(
           context, MaterialPageRoute(builder: (_) => const FriendRoomScreen()));
+      if (mounted) setState(() {});
     }
   }
 }
@@ -278,9 +308,17 @@ class _RatingsStrip extends StatelessWidget {
     if (user == null) return _ratings(RatingSnapshot.initial);
     return FutureBuilder<RatingSnapshot>(
       future: GameRepository().loadRatings(),
-      initialData: RatingSnapshot.initial,
-      builder: (context, snapshot) =>
-          _ratings(snapshot.data ?? RatingSnapshot.initial),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Text('Rating yüklenemedi',
+              style: TextStyle(color: HomeMenuScreen.bone));
+        }
+        if (!snapshot.hasData) {
+          return const SizedBox(
+              height: 46, child: Center(child: CircularProgressIndicator()));
+        }
+        return _ratings(snapshot.data!);
+      },
     );
   }
 

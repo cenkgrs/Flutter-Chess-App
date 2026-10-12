@@ -40,7 +40,7 @@ class ProfileScreen extends StatelessWidget {
                     iconColor: const Color(0xfff3eee7),
                     leading: _OutcomeIcon(outcome: outcome),
                     title: Text(
-                        '${game['pool']} · ${game['initial_minutes']}+${game['increment_seconds']}'),
+                        '${game['pool'].toString().toUpperCase()} · ${game['initial_minutes']}+${game['increment_seconds']}'),
                     subtitle: Text([
                       outcomeLabel(outcome),
                       if (reason.isNotEmpty) reason,
