@@ -27,6 +27,21 @@ Future<void> move(WidgetTester tester, String from, String to) async {
 }
 
 void main() {
+  testWidgets('Checkmate shows a result and keeps an exit after dismissal',
+      (tester) async {
+    usePhoneViewport(tester);
+    await tester.pumpWidget(playApp());
+    final dynamic state = tester.state(find.byType(PlayScreen));
+    state.game = c.Chess.fromFEN('8/8/8/8/8/5k2/6q1/7K w - - 0 1');
+    state.setState(() {});
+    state.announceResult();
+    await tester.pumpAndSettle();
+    expect(find.text('Kaybettin'), findsOneWidget);
+    await tester.tap(find.text('Tahtayı incele'));
+    await tester.pumpAndSettle();
+    expect(find.text('Menüye dön'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('Assistant mode exposes explanation action', (tester) async {
     usePhoneViewport(tester);
     await tester.pumpWidget(

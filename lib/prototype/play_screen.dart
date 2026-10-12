@@ -25,6 +25,7 @@ class _PlayScreenState extends State<PlayScreen>
   List<String> notation = [];
   c.Move? last;
   ChessAdvice? assistantAdvice;
+  bool resultShown = false;
   late final AnimationController assistantPulse;
 
   @override
@@ -38,6 +39,36 @@ class _PlayScreenState extends State<PlayScreen>
   }
 
   bool get ended => resigned || game.game_over;
+  void announceResult() {
+    if (!mounted || !ended || resultShown) return;
+    resultShown = true;
+    final won = !resigned && game.in_checkmate && game.turn != human;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        icon: Icon(won ? Icons.emoji_events_rounded : Icons.flag_outlined),
+        title: Text(won
+            ? 'Kazandın!'
+            : resigned || game.in_checkmate
+                ? 'Kaybettin'
+                : 'Berabere'),
+        content: Text(status),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Tahtayı incele')),
+          FilledButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                Navigator.maybePop(context);
+              },
+              child: const Text('Menüye dön')),
+        ],
+      ),
+    );
+  }
+
   String get status {
     if (error != null) return error!;
     if (resigned) return 'Oyun bitti · Teslim oldun';
@@ -81,6 +112,7 @@ class _PlayScreenState extends State<PlayScreen>
         thinking = false;
         refresh();
       });
+      announceResult();
     } catch (_) {
       if (!mounted || ticket != generation) return;
       setState(() {
@@ -124,6 +156,7 @@ class _PlayScreenState extends State<PlayScreen>
         refresh();
       });
       await ai();
+      announceResult();
       return;
     }
     setState(() {
@@ -194,6 +227,7 @@ class _PlayScreenState extends State<PlayScreen>
       flipped = human == c.Color.BLACK;
       thinking = false;
       resigned = false;
+      resultShown = false;
       error = null;
       assistantAdvice = null;
       refresh();
@@ -207,6 +241,7 @@ class _PlayScreenState extends State<PlayScreen>
       generation++;
       thinking = false;
       resigned = false;
+      resultShown = false;
       error = null;
       assistantAdvice = null;
       game.undo_move();
@@ -237,6 +272,7 @@ class _PlayScreenState extends State<PlayScreen>
       selected = null;
       targets = [];
     });
+    announceResult();
   }
 
   @override
@@ -275,7 +311,14 @@ class _PlayScreenState extends State<PlayScreen>
                   SizedBox(
                     height: 42,
                     child: Center(
-                      child: showTurn ? const _TurnIndicator() : null,
+                      child: ended
+                          ? Text(status,
+                              style: const TextStyle(
+                                  color: Color(0xfff3eee7),
+                                  fontWeight: FontWeight.bold))
+                          : showTurn
+                              ? const _TurnIndicator()
+                              : null,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -302,6 +345,14 @@ class _PlayScreenState extends State<PlayScreen>
                     ),
                   ),
                   const Spacer(),
+                  if (ended)
+                    TextButton.icon(
+                      onPressed: () => Navigator.maybePop(context),
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text('Menüye dön'),
+                      style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xfff3eee7)),
+                    ),
                   _InspectionButton(onPressed: openReview),
                   const SizedBox(height: 18),
                 ]),
