@@ -17,6 +17,11 @@ class ProfileScreen extends StatelessWidget {
         body: FutureBuilder<List<Map<String, dynamic>>>(
           future: GameRepository().recentGames(),
           builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return const Center(
+                  child: Text('Maç geçmişi yüklenemedi.',
+                      style: TextStyle(color: Color(0xfff3eee7))));
+            }
             if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
             }
@@ -35,13 +40,17 @@ class ProfileScreen extends StatelessWidget {
                   final outcome =
                       gameOutcomeFor(game, AppBackend.currentUser!.id);
                   final reason = resultReasonLabel(game['result_reason']);
+                  final opponent = game[
+                      game['white_id'] == AppBackend.currentUser!.id
+                          ? 'black_profile'
+                          : 'white_profile'] as Map?;
                   return ListTile(
                     textColor: const Color(0xfff3eee7),
                     iconColor: const Color(0xfff3eee7),
                     leading: _OutcomeIcon(outcome: outcome),
-                    title: Text(
-                        '${game['pool'].toString().toUpperCase()} · ${game['initial_minutes']}+${game['increment_seconds']}'),
+                    title: Text(opponent?['username']?.toString() ?? 'Oyuncu'),
                     subtitle: Text([
+                      '${game['pool'].toString().toUpperCase()} · ${game['initial_minutes']}+${game['increment_seconds']}',
                       outcomeLabel(outcome),
                       if (reason.isNotEmpty) reason,
                     ].join(' · ')),

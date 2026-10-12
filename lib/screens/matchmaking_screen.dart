@@ -21,6 +21,8 @@ class _MatchmakingScreenState extends State<MatchmakingScreen> {
   String? _gameId;
   String? _error;
   bool _leaving = false;
+  bool _polling = false;
+  Map<String, dynamic>? _population;
 
   @override
   void initState() {
@@ -37,6 +39,7 @@ class _MatchmakingScreenState extends State<MatchmakingScreen> {
         return;
       }
       _poller = Timer.periodic(const Duration(seconds: 2), (_) => _poll());
+      await _poll();
     } catch (_) {
       if (mounted) {
         setState(() => _error = 'Eşleştirme servisine bağlanılamadı.');
@@ -45,13 +48,22 @@ class _MatchmakingScreenState extends State<MatchmakingScreen> {
   }
 
   Future<void> _poll() async {
+    if (_polling || _leaving) return;
+    _polling = true;
     try {
       final gameId = await _games.findActiveGame();
-      if (!mounted || gameId == null) return;
-      _poller?.cancel();
-      _openGame(gameId);
+      if (!mounted || _leaving) return;
+      if (gameId != null) {
+        _poller?.cancel();
+        _openGame(gameId);
+        return;
+      }
+      final population = await _games.queuePopulation();
+      if (mounted && !_leaving) setState(() => _population = population);
     } catch (_) {
-      // Geçici bağlantı kesintilerinde kuyrukta kal ve yeniden dene.
+      if (mounted) setState(() => _population = null);
+    } finally {
+      _polling = false;
     }
   }
 
@@ -157,6 +169,22 @@ class _MatchmakingScreenState extends State<MatchmakingScreen> {
                         'Çevrimiçi tahta bağlantısı hazırlanıyor.',
                         style: TextStyle(color: Color(0xffb9aea5)),
                       ),
+                    ],
+                    if (_gameId == null && _error == null) ...[
+                      const SizedBox(height: 24),
+                      Text(
+                        _population == null
+                            ? 'Oyuncu sayısı güncelleniyor…'
+                            : 'Bu sürede ${_population!['same_control']} diğer oyuncu\n'
+                                'Toplam ${_population!['total']} diğer oyuncu eşleşme arıyor',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            color: Color(0xfff3eee7), height: 1.7),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text('Sayılar bekleme süresi garantisi değildir.',
+                          style: TextStyle(
+                              color: Color(0xffb9aea5), fontSize: 12)),
                     ],
                     const Spacer(),
                     OutlinedButton(
