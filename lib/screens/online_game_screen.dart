@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../backend/app_backend.dart';
 import '../backend/game_repository.dart';
+import '../online/game_result.dart';
 
 class OnlineGameScreen extends StatefulWidget {
   const OnlineGameScreen({super.key, required this.gameId});
@@ -24,11 +25,13 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
   c.Chess _game = c.Chess();
   String? _selected;
   String? _dragFrom;
-  Offset? _dragPosition;
+  final ValueNotifier<Offset?> _dragPosition = ValueNotifier(null);
   List<c.Move> _targets = [];
   bool _sending = false;
   String? _error;
   bool _finishSent = false;
+  bool _resultShown = false;
+  bool _leaving = false;
 
   String get _myId => AppBackend.currentUser!.id;
   bool get _isWhite => _row?['white_id'] == _myId;
@@ -47,10 +50,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
       },
     );
     _clockTimer = Timer.periodic(const Duration(milliseconds: 250), (_) {
-      if (mounted && _row?['status'] == 'active') {
-        setState(() {});
-        _checkTimeout();
-      }
+      if (mounted && _row?['status'] == 'active') _checkTimeout();
     });
   }
 
@@ -81,19 +81,59 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
   void _applySnapshot(Map<String, dynamic> row) {
     if (!mounted) return;
     try {
+      _dragPosition.value = null;
       setState(() {
         _row = row;
         _game = c.Chess.fromFEN(row['fen'] as String);
         _selected = null;
         _dragFrom = null;
-        _dragPosition = null;
         _targets = [];
         _sending = false;
         _error = null;
       });
+      if (row['status'] != 'active' && !_resultShown && !_leaving) {
+        _resultShown = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && !_leaving) _showResult(row);
+        });
+      }
     } catch (_) {
       setState(() => _error = 'Sunucudan geçersiz oyun konumu geldi.');
     }
+  }
+
+  Future<void> _showResult(Map<String, dynamic> row) async {
+    final outcome = gameOutcomeFor(row, _myId);
+    final reason = resultReasonLabel(row['result_reason']);
+    final icon = switch (outcome) {
+      PlayerGameOutcome.win => Icons.emoji_events_rounded,
+      PlayerGameOutcome.loss => Icons.close_rounded,
+      PlayerGameOutcome.draw => Icons.balance_rounded,
+      _ => Icons.sports_esports_rounded,
+    };
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        icon: Icon(icon, size: 42),
+        title: Text(outcomeLabel(outcome)),
+        content:
+            reason.isEmpty ? null : Text(reason, textAlign: TextAlign.center),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Tahtaya dön'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              Navigator.maybePop(context);
+            },
+            child: const Text('Menüye dön'),
+          ),
+        ],
+      ),
+    );
   }
 
   ({int white, int black}) get _clocks {
@@ -162,7 +202,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
     final blackMs = _isWhite ? clocks.black : clocks.black + increment;
     setState(() => _sending = true);
     try {
-      await _repository.submitMove(
+      final confirmedRow = await _repository.submitMove(
         gameId: widget.gameId,
         expectedPly: row['ply'] as int,
         uci:
@@ -172,6 +212,12 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
         whiteMs: whiteMs,
         blackMs: blackMs,
       );
+      // The RPC can arrive after a newer realtime snapshot.
+      if (mounted &&
+          (_row?['status'] == 'active') &&
+          (confirmedRow['ply'] as int) > (_row!['ply'] as int)) {
+        _applySnapshot(confirmedRow);
+      }
       if (gameAfter.game_over) await _finish(gameAfter);
     } catch (_) {
       if (mounted) {
@@ -189,18 +235,28 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
     final result = game.in_checkmate
         ? (game.turn == c.Color.WHITE ? 'black' : 'white')
         : 'draw';
-    await _repository.finishGame(
-      gameId: widget.gameId,
-      result: result,
-      reason: game.in_checkmate ? 'checkmate' : 'draw',
-    );
+    try {
+      await _repository.finishGame(
+        gameId: widget.gameId,
+        result: result,
+        reason: game.in_checkmate ? 'checkmate' : 'draw',
+      );
+    } catch (_) {
+      _finishSent = false;
+      rethrow;
+    }
   }
 
-  Future<void> _resign() async {
+  Future<void> _resign({bool exitAfter = false}) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Teslim olmak istiyor musun?'),
+        title: Text(exitAfter
+            ? 'Oyundan çıkmak istiyor musun?'
+            : 'Teslim olmak istiyor musun?'),
+        content: exitAfter
+            ? const Text('Devam eden oyundan çıkmak teslim olmak sayılır.')
+            : null,
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -211,18 +267,34 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
         ],
       ),
     );
-    if (confirmed != true) return;
-    await _repository.finishGame(
-      gameId: widget.gameId,
-      result: _isWhite ? 'black' : 'white',
-      reason: 'resignation',
-    );
+    if (confirmed != true || !mounted) return;
+    _leaving = exitAfter;
+    try {
+      await _repository.finishGame(
+        gameId: widget.gameId,
+        result: _isWhite ? 'black' : 'white',
+        reason: 'resignation',
+      );
+      if (exitAfter && mounted) Navigator.pop(context);
+    } catch (_) {
+      _leaving = false;
+      if (mounted) setState(() => _error = 'Teslim işlemi gönderilemedi.');
+    }
+  }
+
+  void _exit() {
+    if (_row?['status'] == 'active') {
+      _resign(exitAfter: true);
+    } else {
+      Navigator.maybePop(context);
+    }
   }
 
   @override
   void dispose() {
     _subscription?.cancel();
     _clockTimer?.cancel();
+    _dragPosition.dispose();
     super.dispose();
   }
 
@@ -250,16 +322,50 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                 : LayoutBuilder(
                     builder: (context, box) {
                       final boardSize =
-                          math.min(box.maxWidth, box.maxHeight - 180);
-                      final clocks = _clocks;
+                          math.min(box.maxWidth, box.maxHeight - 235);
+                      final row = _row!;
+                      final updatedAt =
+                          DateTime.parse(row['updated_at'] as String).toUtc();
+                      final active = row['status'] == 'active';
+                      final topColor = _flipped ? c.Color.WHITE : c.Color.BLACK;
+                      final bottomColor =
+                          _flipped ? c.Color.BLACK : c.Color.WHITE;
                       return Column(
                         children: [
+                          SizedBox(
+                            height: 44,
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  key: const ValueKey('online-exit'),
+                                  onPressed: _exit,
+                                  tooltip: 'Oyundan çık',
+                                  icon: const Icon(Icons.arrow_back_rounded),
+                                  color: const Color(0xfff3eee7),
+                                ),
+                                const Spacer(),
+                                const Text(
+                                  'ÇEVRİMİÇİ OYUN',
+                                  style: TextStyle(
+                                    color: Color(0xfff3eee7),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.4,
+                                  ),
+                                ),
+                                const Spacer(),
+                                const SizedBox(width: 48),
+                              ],
+                            ),
+                          ),
                           _PlayerBar(
                             label: _flipped ? 'Beyaz' : 'Siyah',
-                            milliseconds:
-                                _flipped ? clocks.white : clocks.black,
-                            active: _game.turn ==
-                                (_flipped ? c.Color.WHITE : c.Color.BLACK),
+                            milliseconds: _flipped
+                                ? row['white_ms'] as int
+                                : row['black_ms'] as int,
+                            updatedAt: updatedAt,
+                            running: active && _game.turn == topColor,
+                            highlighted: active && _game.turn == topColor,
                           ),
                           const SizedBox(height: 10),
                           SizedBox(
@@ -270,23 +376,32 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                           const SizedBox(height: 10),
                           _PlayerBar(
                             label: _flipped ? 'Siyah · Sen' : 'Beyaz · Sen',
-                            milliseconds:
-                                _flipped ? clocks.black : clocks.white,
-                            active: _myTurn,
+                            milliseconds: _flipped
+                                ? row['black_ms'] as int
+                                : row['white_ms'] as int,
+                            updatedAt: updatedAt,
+                            running: active && _game.turn == bottomColor,
+                            highlighted: _myTurn,
                           ),
                           const Spacer(),
                           if (_error != null)
                             Text(_error!,
                                 style:
                                     const TextStyle(color: Color(0xffffd8c7))),
-                          TextButton.icon(
-                            onPressed:
-                                _row?['status'] == 'active' ? _resign : null,
-                            icon: const Icon(Icons.flag_outlined),
-                            label: const Text('Teslim ol'),
-                            style: TextButton.styleFrom(
-                                foregroundColor: const Color(0xfff3eee7)),
-                          ),
+                          if (active)
+                            TextButton.icon(
+                              onPressed: _resign,
+                              icon: const Icon(Icons.flag_outlined),
+                              label: const Text('Teslim ol'),
+                              style: TextButton.styleFrom(
+                                  foregroundColor: const Color(0xfff3eee7)),
+                            )
+                          else
+                            _GameResultBar(
+                              outcome: gameOutcomeFor(row, _myId),
+                              reason: resultReasonLabel(row['result_reason']),
+                              onExit: _exit,
+                            ),
                           const SizedBox(height: 8),
                         ],
                       );
@@ -329,28 +444,28 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                       _game.get(square)?.color == mine) {
                     setState(() {
                       _dragFrom = square;
-                      _dragPosition = event.localPosition;
                     });
+                    _dragPosition.value = event.localPosition;
                   }
                 },
                 onPointerMove: (event) {
                   if (_dragFrom != null) {
-                    setState(() => _dragPosition = event.localPosition);
+                    _dragPosition.value = event.localPosition;
                   }
                 },
                 onPointerCancel: (_) {
                   if (_dragFrom != null) {
+                    _dragPosition.value = null;
                     setState(() {
                       _dragFrom = null;
-                      _dragPosition = null;
                     });
                   }
                 },
                 onPointerUp: (event) {
                   final from = _dragFrom;
+                  _dragPosition.value = null;
                   setState(() {
                     _dragFrom = null;
-                    _dragPosition = null;
                   });
                   if (from == null || !_myTurn || _sending) return;
                   if (event.localPosition.dx < 0 ||
@@ -397,7 +512,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                             children: [
                               if (piece != null &&
                                   !(_dragFrom == square &&
-                                      _dragPosition != null))
+                                      _dragPosition.value != null))
                                 _piece(piece),
                               if (legal)
                                 Container(
@@ -422,17 +537,25 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                       );
                     },
                   ),
-                  if (_dragFrom != null && _dragPosition != null)
-                    Positioned(
-                      key: const ValueKey('online-dragged-piece'),
-                      left: _dragPosition!.dx - boardBox.maxWidth / 16,
-                      top: _dragPosition!.dy - boardBox.maxHeight / 16,
-                      width: boardBox.maxWidth / 8,
-                      height: boardBox.maxHeight / 8,
-                      child: IgnorePointer(
-                        child: _piece(_game.get(_dragFrom!)!),
-                      ),
-                    ),
+                  ValueListenableBuilder<Offset?>(
+                    valueListenable: _dragPosition,
+                    builder: (context, position, _) {
+                      final from = _dragFrom;
+                      if (from == null || position == null) {
+                        return const SizedBox.shrink();
+                      }
+                      return Positioned(
+                        key: const ValueKey('online-dragged-piece'),
+                        left: position.dx - boardBox.maxWidth / 16,
+                        top: position.dy - boardBox.maxHeight / 16,
+                        width: boardBox.maxWidth / 8,
+                        height: boardBox.maxHeight / 8,
+                        child: IgnorePointer(
+                          child: _piece(_game.get(from)!),
+                        ),
+                      );
+                    },
+                  ),
                 ]),
               );
             },
@@ -463,47 +586,156 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
   }
 }
 
-class _PlayerBar extends StatelessWidget {
+class _PlayerBar extends StatefulWidget {
   const _PlayerBar({
     required this.label,
     required this.milliseconds,
-    required this.active,
+    required this.updatedAt,
+    required this.running,
+    required this.highlighted,
   });
 
   final String label;
   final int milliseconds;
-  final bool active;
+  final DateTime updatedAt;
+  final bool running;
+  final bool highlighted;
+
+  @override
+  State<_PlayerBar> createState() => _PlayerBarState();
+}
+
+class _PlayerBarState extends State<_PlayerBar> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncTimer();
+  }
+
+  @override
+  void didUpdateWidget(covariant _PlayerBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.running != widget.running ||
+        oldWidget.updatedAt != widget.updatedAt ||
+        oldWidget.milliseconds != widget.milliseconds) {
+      _syncTimer();
+    }
+  }
+
+  void _syncTimer() {
+    _timer?.cancel();
+    if (widget.running) {
+      _timer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
+  int get _milliseconds {
+    if (!widget.running) return widget.milliseconds;
+    final elapsed =
+        DateTime.now().toUtc().difference(widget.updatedAt).inMilliseconds;
+    return math.max(0, widget.milliseconds - elapsed);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final seconds = (milliseconds / 1000).ceil().clamp(0, 99999);
+    final seconds = (_milliseconds / 1000).ceil().clamp(0, 99999);
     final time =
         '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       child: Row(
         children: [
-          Text(label,
+          Text(widget.label,
               style: const TextStyle(
                   color: Color(0xfff3eee7), fontWeight: FontWeight.w600)),
           const Spacer(),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
             decoration: BoxDecoration(
-              color: active ? const Color(0xfff3eee7) : const Color(0xff202120),
+              color: widget.highlighted
+                  ? const Color(0xfff3eee7)
+                  : const Color(0xff202120),
               borderRadius: BorderRadius.circular(7),
             ),
             child: Text(
               time,
               style: TextStyle(
-                color:
-                    active ? const Color(0xff202120) : const Color(0xfff3eee7),
+                color: widget.highlighted
+                    ? const Color(0xff202120)
+                    : const Color(0xfff3eee7),
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GameResultBar extends StatelessWidget {
+  const _GameResultBar({
+    required this.outcome,
+    required this.reason,
+    required this.onExit,
+  });
+
+  final PlayerGameOutcome outcome;
+  final String reason;
+  final VoidCallback onExit;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = switch (outcome) {
+      PlayerGameOutcome.win => Icons.emoji_events_rounded,
+      PlayerGameOutcome.loss => Icons.close_rounded,
+      PlayerGameOutcome.draw => Icons.balance_rounded,
+      _ => Icons.sports_esports_rounded,
+    };
+    return Container(
+      key: const ValueKey('online-result'),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
+      decoration: BoxDecoration(
+        color: const Color(0xee202120),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xff81776c)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: const Color(0xfff4d28d)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  outcomeLabel(outcome),
+                  style: const TextStyle(
+                    color: Color(0xfff3eee7),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (reason.isNotEmpty)
+                  Text(reason,
+                      style: const TextStyle(color: Color(0xffbdb7af))),
+              ],
+            ),
+          ),
+          TextButton(onPressed: onExit, child: const Text('Çık')),
         ],
       ),
     );
