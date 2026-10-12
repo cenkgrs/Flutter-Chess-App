@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'backend/app_backend.dart';
 import 'screens/home_menu_screen.dart';
+import 'route_observer.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +18,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'ROK',
+        navigatorObservers: [appRouteObserver],
         theme: ThemeData(
             useMaterial3: true,
             colorScheme:
