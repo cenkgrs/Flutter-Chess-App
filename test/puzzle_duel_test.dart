@@ -85,7 +85,7 @@ void main() {
         'opponent_score': 0,
         'opponent': 'Bobby',
         'rating': 1200,
-        'seconds_left': 120
+        'seconds_left': 30
       };
     })));
     await tester.pumpAndSettle();

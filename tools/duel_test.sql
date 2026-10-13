@@ -38,7 +38,7 @@ select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001'
 select public.duel_matchmaking();
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',true);
 select public.duel_matchmaking();
-update public.puzzle_duels set started_at=now()-interval '41 minutes' where status='active';
+update public.puzzle_duels set started_at=now()-interval '11 minutes' where status='active';
 do $$ declare gid uuid; begin
  select id into gid from public.puzzle_duels where status='active';
  assert public.duel_state(gid)->>'status'='finished';

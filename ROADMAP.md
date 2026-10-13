@@ -21,8 +21,9 @@ ROK projesinde önceki migration'ların ardından sırayla:
 - Düello: kişi başı 10 farklı bulmaca, toplam 20 dönüşümlü tur. Rakip beklerken
   bulmacanın konumu ve çözümü gönderilmez. Mat uzunluğuna göre çiftler seçilir,
   oyuncuların ortalama rating'ine yakın çiftler önceliklidir.
-- Tur süresi 120 saniye, geçme/süre aşımı 0 puan. Çözüm puanı:
-  `round(100 × (1 + 0.5 × max(0, 1 - saniye/120)) / (1 + hata))`.
+- Ardından `supabase/migrations/20261013160000_duel_30_second_turns.sql` uygulanmalı.
+- Tur süresi 30 saniye, geçme/süre aşımı 0 puan. Çözüm puanı:
+  `round(100 × (1 + 0.5 × max(0, 1 - saniye/30)) / (1 + hata))`.
   Saat, hamle doğrulama, skor ve sonuç sunucuda tutulur.
 - Rekabetçi rating başlangıcı 1200, Elo K=32; normal bulmaca rating'inden ayrıdır.
   Eşit skorda beraberlik. İki istemci sonuç istediğinde rating tekrar yazılmaz.

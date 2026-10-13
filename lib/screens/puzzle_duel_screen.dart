@@ -251,7 +251,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                                             height: 1.7)),
                                     const SizedBox(height: 8),
                                     const Text(
-                                        'Tur başına 120 saniye\nHız puan kazandırır, yanlışlar puanı azaltır.',
+                                        'Tur başına 30 saniye\nHız puan kazandırır, yanlışlar puanı azaltır.',
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                             color: Color(0xffb9aea5),
