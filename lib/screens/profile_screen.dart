@@ -1,5 +1,6 @@
 import 'package:chess/chess.dart' as c;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../backend/app_backend.dart';
 import '../backend/game_repository.dart';
@@ -9,60 +10,101 @@ class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
   @override
   Widget build(BuildContext context) => Scaffold(
+        extendBodyBehindAppBar: true,
         appBar: AppBar(
-            title: const Text('Profil · Son maçlar'),
-            backgroundColor: const Color(0xff202120),
+            title: const Text('SON MAÇLAR',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.8)),
+            backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            systemOverlayStyle: SystemUiOverlayStyle.light
+                .copyWith(statusBarColor: Colors.transparent),
             foregroundColor: const Color(0xfff3eee7)),
         backgroundColor: const Color(0xff3b1e0f),
-        body: FutureBuilder<List<Map<String, dynamic>>>(
-          future: GameRepository().recentGames(),
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return const Center(
-                  child: Text('Maç geçmişi yüklenemedi.',
-                      style: TextStyle(color: Color(0xfff3eee7))));
-            }
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.data!.isEmpty) {
-              return const Center(
-                  child: Text('Henüz tamamlanmış maç yok.',
-                      style: TextStyle(color: Color(0xfff3eee7))));
-            }
-            return ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: snapshot.data!.length,
-                separatorBuilder: (_, __) =>
-                    const Divider(color: Color(0x55ffffff)),
-                itemBuilder: (context, index) {
-                  final game = snapshot.data![index];
-                  final outcome =
-                      gameOutcomeFor(game, AppBackend.currentUser!.id);
-                  final reason = resultReasonLabel(game['result_reason']);
-                  final opponent = game[
-                      game['white_id'] == AppBackend.currentUser!.id
-                          ? 'black_profile'
-                          : 'white_profile'] as Map?;
-                  return ListTile(
-                    textColor: const Color(0xfff3eee7),
-                    iconColor: const Color(0xfff3eee7),
-                    leading: _OutcomeIcon(outcome: outcome),
-                    title: Text(opponent?['username']?.toString() ?? 'Oyuncu'),
-                    subtitle: Text([
-                      '${game['pool'].toString().toUpperCase()} · ${game['initial_minutes']}+${game['increment_seconds']}',
-                      outcomeLabel(outcome),
-                      if (reason.isNotEmpty) reason,
-                    ].join(' · ')),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => GameReviewScreen(game: game))),
-                  );
-                });
-          },
-        ),
+        body: DecoratedBox(
+            decoration: const BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage('lib/images/wood/background.png'),
+                    fit: BoxFit.cover,
+                    colorFilter:
+                        ColorFilter.mode(Color(0x40000000), BlendMode.darken))),
+            child: SafeArea(
+                child: Padding(
+                    padding: const EdgeInsets.only(top: kToolbarHeight),
+                    child: FutureBuilder<List<Map<String, dynamic>>>(
+                      future: GameRepository().recentGames(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return const Center(
+                              child: Text('Maç geçmişi yüklenemedi.',
+                                  style: TextStyle(color: Color(0xfff3eee7))));
+                        }
+                        if (!snapshot.hasData) {
+                          return const Center(
+                              child: CircularProgressIndicator(
+                                  color: Color(0xfff3eee7)));
+                        }
+                        if (snapshot.data!.isEmpty) {
+                          return const Center(
+                              child: Text('Henüz tamamlanmış maç yok.',
+                                  style: TextStyle(color: Color(0xfff3eee7))));
+                        }
+                        return ListView.separated(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: snapshot.data!.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final game = snapshot.data![index];
+                              final outcome = gameOutcomeFor(
+                                  game, AppBackend.currentUser!.id);
+                              final reason =
+                                  resultReasonLabel(game['result_reason']);
+                              final opponent = game[
+                                  game['white_id'] == AppBackend.currentUser!.id
+                                      ? 'black_profile'
+                                      : 'white_profile'] as Map?;
+                              return Card(
+                                  margin: EdgeInsets.zero,
+                                  color: const Color(0xf2202120),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                      side: const BorderSide(
+                                          color: Color(0xff686966), width: .8)),
+                                  child: ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 12),
+                                    textColor: const Color(0xfff3eee7),
+                                    iconColor: const Color(0xfff3eee7),
+                                    leading: _OutcomeIcon(outcome: outcome),
+                                    title: Text(
+                                        opponent?['username']?.toString() ??
+                                            'Oyuncu',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w600)),
+                                    subtitle: Text(
+                                        [
+                                          '${game['pool'].toString().toUpperCase()} · ${game['initial_minutes']}+${game['increment_seconds']}',
+                                          outcomeLabel(outcome),
+                                          if (reason.isNotEmpty) reason,
+                                        ].join(' · '),
+                                        style: const TextStyle(
+                                            color: Color(0xffb9aea5),
+                                            height: 1.6)),
+                                    trailing: const Icon(Icons.chevron_right),
+                                    onTap: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (_) =>
+                                                GameReviewScreen(game: game))),
+                                  ));
+                            });
+                      },
+                    )))),
       );
 }
 
