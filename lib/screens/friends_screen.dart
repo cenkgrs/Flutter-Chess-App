@@ -218,80 +218,92 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 icon: const Icon(Icons.refresh),
                 tooltip: 'Yenile')
           ]),
-          body: RefreshIndicator(
-              onRefresh: _load,
-              child: ListView(padding: const EdgeInsets.all(20), children: [
-                for (final invite in _invitations)
-                  Card(
-                      child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                    '${invite['username']} · ${invite['minutes']}+${invite['increment']}'),
-                                if (invite['status'] == 'accepted')
-                                  TextButton(
-                                      onPressed: () => Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (_) => OnlineGameScreen(
-                                                  gameId: invite['game_id']
-                                                      as String))),
-                                      child: const Text('Maça katıl'))
-                                else if (invite['incoming'] == true)
-                                  Wrap(children: [
-                                    TextButton(
-                                        onPressed: _busy
-                                            ? null
-                                            : () => _respond(invite, true),
-                                        child: const Text('Daveti kabul et')),
-                                    TextButton(
-                                        onPressed: _busy
-                                            ? null
-                                            : () => _respond(invite, false),
-                                        child: const Text('Daveti reddet')),
-                                  ])
-                                else
-                                  const Text(
-                                      'Davet gönderildi · 5 dakika geçerli'),
-                              ]))),
-                TextField(
-                    controller: _query,
-                    maxLength: 20,
-                    onSubmitted: (_) => _search(),
-                    decoration: InputDecoration(
-                        labelText: 'Kullanıcı adı ara',
-                        hintText: 'En az 3 karakter',
-                        suffixIcon: IconButton(
-                            onPressed: _searching ? null : _search,
-                            tooltip: 'Ara',
-                            icon: const Icon(Icons.search)))),
-                if (_searching) const LinearProgressIndicator(),
-                if (_searchError != null) Text(_searchError!),
-                ..._results.map(_person),
-                const SizedBox(height: 24),
-                if (_loading) const Center(child: CircularProgressIndicator()),
-                if (_error != null) Text(_error!),
-                for (final section in [
-                  ('GELEN İSTEKLER', 'incoming'),
-                  ('ARKADAŞLARIM', 'accepted'),
-                  ('GÖNDERİLEN İSTEKLER', 'outgoing')
-                ]) ...[
-                  Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Text(section.$1,
-                          style: const TextStyle(letterSpacing: 1.5))),
-                  ..._friends
-                      .where((f) => section.$2 == 'accepted'
-                          ? f['status'] == 'accepted'
-                          : f['status'] == 'pending' &&
-                              f['incoming'] == (section.$2 == 'incoming'))
-                      .map(_person),
-                ],
-                if (!_loading && _error == null && _friends.isEmpty)
-                  const Text('Henüz arkadaşın veya bekleyen isteğin yok.'),
-              ])),
+          body: DecoratedBox(
+              decoration: const BoxDecoration(
+                  image: DecorationImage(
+                image: AssetImage('lib/images/wood/background.png'),
+                fit: BoxFit.cover,
+                colorFilter:
+                    ColorFilter.mode(Color(0x40000000), BlendMode.darken),
+              )),
+              child: RefreshIndicator(
+                  onRefresh: _load,
+                  child: ListView(padding: const EdgeInsets.all(20), children: [
+                    for (final invite in _invitations)
+                      Card(
+                          child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                        '${invite['username']} · ${invite['minutes']}+${invite['increment']}'),
+                                    if (invite['status'] == 'accepted')
+                                      TextButton(
+                                          onPressed: () => Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      OnlineGameScreen(
+                                                          gameId:
+                                                              invite['game_id']
+                                                                  as String))),
+                                          child: const Text('Maça katıl'))
+                                    else if (invite['incoming'] == true)
+                                      Wrap(children: [
+                                        TextButton(
+                                            onPressed: _busy
+                                                ? null
+                                                : () => _respond(invite, true),
+                                            child:
+                                                const Text('Daveti kabul et')),
+                                        TextButton(
+                                            onPressed: _busy
+                                                ? null
+                                                : () => _respond(invite, false),
+                                            child: const Text('Daveti reddet')),
+                                      ])
+                                    else
+                                      const Text(
+                                          'Davet gönderildi · 5 dakika geçerli'),
+                                  ]))),
+                    TextField(
+                        controller: _query,
+                        maxLength: 20,
+                        onSubmitted: (_) => _search(),
+                        decoration: InputDecoration(
+                            labelText: 'Kullanıcı adı ara',
+                            hintText: 'En az 3 karakter',
+                            suffixIcon: IconButton(
+                                onPressed: _searching ? null : _search,
+                                tooltip: 'Ara',
+                                icon: const Icon(Icons.search)))),
+                    if (_searching) const LinearProgressIndicator(),
+                    if (_searchError != null) Text(_searchError!),
+                    ..._results.map(_person),
+                    const SizedBox(height: 24),
+                    if (_loading)
+                      const Center(child: CircularProgressIndicator()),
+                    if (_error != null) Text(_error!),
+                    for (final section in [
+                      ('GELEN İSTEKLER', 'incoming'),
+                      ('ARKADAŞLARIM', 'accepted'),
+                      ('GÖNDERİLEN İSTEKLER', 'outgoing')
+                    ]) ...[
+                      Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Text(section.$1,
+                              style: const TextStyle(letterSpacing: 1.5))),
+                      ..._friends
+                          .where((f) => section.$2 == 'accepted'
+                              ? f['status'] == 'accepted'
+                              : f['status'] == 'pending' &&
+                                  f['incoming'] == (section.$2 == 'incoming'))
+                          .map(_person),
+                    ],
+                    if (!_loading && _error == null && _friends.isEmpty)
+                      const Text('Henüz arkadaşın veya bekleyen isteğin yok.'),
+                  ]))),
         ),
       );
 }

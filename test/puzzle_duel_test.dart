@@ -3,6 +3,21 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:chess_puzzle_app/screens/puzzle_duel_screen.dart';
 
 void main() {
+  testWidgets('lobby uses wood matchmaking layout and cancel button',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(
+        home: PuzzleDuelScreen(
+            request: (name, params) async => {'rating': 1200})));
+    await tester.pumpAndSettle();
+    expect(find.text('BULMACA DÜELLOSU'), findsOneWidget);
+    await tester.tap(find.text('RAKİP ARA'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('RAKİP ARANIYOR'), findsOneWidget);
+    expect(find.text('ARAMAYI İPTAL ET'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
   testWidgets('resume shows opponent turn without exposing board',
       (tester) async {
     await tester.pumpWidget(
