@@ -4,6 +4,8 @@ import 'package:chess_puzzle_app/backend/friend_repository.dart';
 import 'package:chess_puzzle_app/screens/friends_screen.dart';
 
 class FakeFriends extends FriendRepository {
+  @override
+  Future<List<Map<String, dynamic>>> invitations() async => [];
   final rows = <Map<String, dynamic>>[
     {'id': 'a', 'username': 'Rakip', 'status': 'pending', 'incoming': true}
   ];

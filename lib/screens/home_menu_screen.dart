@@ -12,6 +12,7 @@ import 'friends_screen.dart';
 import 'matchmaking_screen.dart';
 import 'profile_screen.dart';
 import 'puzzle_screen.dart';
+import 'puzzle_duel_screen.dart';
 import '../route_observer.dart';
 
 class HomeMenuScreen extends StatefulWidget {
@@ -138,6 +139,16 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> with RouteAware {
                                 MaterialPageRoute(
                                     builder: (_) => const PuzzleScreen())),
                           ),
+                          const _MenuDivider(),
+                          _SecondaryAction(
+                              icon: Icons.bolt_outlined,
+                              title: 'Bulmaca Düellosu',
+                              subtitle: '10 bulmaca · Sıra tabanlı rekabet',
+                              onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          const PuzzleDuelScreen()))),
                           const _MenuDivider(),
                           _SecondaryAction(
                             icon: Icons.auto_awesome_outlined,
