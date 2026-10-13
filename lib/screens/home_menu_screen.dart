@@ -8,7 +8,6 @@ import '../online/time_control.dart';
 import '../prototype/play_screen.dart';
 import 'auth_screen.dart';
 import 'friend_room_screen.dart';
-import 'friends_screen.dart';
 import 'matchmaking_screen.dart';
 import 'profile_screen.dart';
 import 'puzzle_screen.dart';
@@ -79,94 +78,92 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> with RouteAware {
               textScaler: const TextScaler.linear(1),
             ),
             child: SafeArea(
-              child: LayoutBuilder(
-                builder: (context, constraints) => SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
-                  child: ConstrainedBox(
-                    constraints:
-                        BoxConstraints(minHeight: constraints.maxHeight),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
-                      child: Column(
-                        children: [
-                          _header(context, user),
-                          Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton.icon(
-                                icon: const Icon(Icons.person_add_alt_1,
-                                    color: bone),
-                                label: user == null
-                                    ? const Text('Arkadaşlar',
-                                        style: TextStyle(color: bone))
-                                    : FriendRequestLabel(
-                                        key: ValueKey(user.id)),
-                                onPressed: () => _openSocial(context),
-                              )),
-                          const SizedBox(height: 76),
-                          _RatingsStrip(user: user),
-                          const SizedBox(height: 45),
-                          _PrimaryAction(
-                            key: const ValueKey('online-play'),
-                            onTap: () => _showTimeControls(context),
-                          ),
-                          const SizedBox(height: 36),
-                          _SecondaryAction(
-                            icon: Icons.group_outlined,
-                            title: 'Arkadaşla oyna',
-                            subtitle: 'Oda kur veya davet kodu gir',
-                            onTap: () => _openFriends(context),
-                          ),
-                          const _MenuDivider(),
-                          _SecondaryAction(
-                            key: const ValueKey('computer-play'),
-                            icon: Icons.memory_rounded,
-                            title: 'Bilgisayara karşı',
-                            subtitle: 'Çevrimdışı antrenman',
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const PlayScreen(),
-                              ),
-                            ),
-                          ),
-                          const _MenuDivider(),
-                          _SecondaryAction(
-                            icon: Icons.extension_outlined,
-                            title: 'Bulmacalar',
-                            subtitle: 'Seviyene uygun taktikleri çöz',
-                            onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => const PuzzleScreen())),
-                          ),
-                          const _MenuDivider(),
-                          _SecondaryAction(
-                              icon: Icons.bolt_outlined,
-                              title: 'Bulmaca Düellosu',
-                              subtitle: '10 bulmaca · Sıra tabanlı rekabet',
-                              onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(22, 18, 22, 14),
+                    child: _header(context, user),
+                  ),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) => SingleChildScrollView(
+                        physics: const ClampingScrollPhysics(),
+                        child: ConstrainedBox(
+                          constraints:
+                              BoxConstraints(minHeight: constraints.maxHeight),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(22, 52, 22, 28),
+                            child: Column(
+                              children: [
+                                _RatingsStrip(user: user),
+                                const SizedBox(height: 45),
+                                _PrimaryAction(
+                                  key: const ValueKey('online-play'),
+                                  onTap: () => _showTimeControls(context),
+                                ),
+                                const SizedBox(height: 36),
+                                _SecondaryAction(
+                                  icon: Icons.group_outlined,
+                                  title: 'Arkadaşla oyna',
+                                  subtitle: 'Oda kur veya davet kodu gir',
+                                  onTap: () => _openFriends(context),
+                                ),
+                                const _MenuDivider(),
+                                _SecondaryAction(
+                                  key: const ValueKey('computer-play'),
+                                  icon: Icons.memory_rounded,
+                                  title: 'Bilgisayara karşı',
+                                  subtitle: 'Çevrimdışı antrenman',
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const PlayScreen(),
+                                    ),
+                                  ),
+                                ),
+                                const _MenuDivider(),
+                                _SecondaryAction(
+                                  icon: Icons.extension_outlined,
+                                  title: 'Bulmacalar',
+                                  subtitle: 'Seviyene uygun taktikleri çöz',
+                                  onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const PuzzleScreen())),
+                                ),
+                                const _MenuDivider(),
+                                _SecondaryAction(
+                                    icon: Icons.bolt_outlined,
+                                    title: 'Bulmaca Düellosu',
+                                    subtitle:
+                                        '10 bulmaca · Sıra tabanlı rekabet',
+                                    onTap: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (_) =>
+                                                const PuzzleDuelScreen()))),
+                                const _MenuDivider(),
+                                _SecondaryAction(
+                                  icon: Icons.auto_awesome_outlined,
+                                  title: 'Asistan',
+                                  subtitle: 'Hamlelerini stratejistinle planla',
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
                                       builder: (_) =>
-                                          const PuzzleDuelScreen()))),
-                          const _MenuDivider(),
-                          _SecondaryAction(
-                            icon: Icons.auto_awesome_outlined,
-                            title: 'Asistan',
-                            subtitle: 'Hamlelerini stratejistinle planla',
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    const PlayScreen(assistantMode: true),
-                              ),
+                                          const PlayScreen(assistantMode: true),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
@@ -317,19 +314,6 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> with RouteAware {
     if (context.mounted) {
       await Navigator.push<void>(
           context, MaterialPageRoute(builder: (_) => const FriendRoomScreen()));
-      if (mounted) setState(() {});
-    }
-  }
-
-  Future<void> _openSocial(BuildContext context) async {
-    if (AppBackend.currentUser == null) {
-      final authenticated = await Navigator.push<bool>(
-          context, MaterialPageRoute(builder: (_) => const AuthScreen()));
-      if (!context.mounted || authenticated != true) return;
-    }
-    if (context.mounted) {
-      await Navigator.push<void>(
-          context, MaterialPageRoute(builder: (_) => const FriendsScreen()));
       if (mounted) setState(() {});
     }
   }
