@@ -182,9 +182,6 @@ class _MatchmakingScreenState extends State<MatchmakingScreen> {
                             color: Color(0xfff3eee7), height: 1.7),
                       ),
                       const SizedBox(height: 8),
-                      const Text('Sayılar bekleme süresi garantisi değildir.',
-                          style: TextStyle(
-                              color: Color(0xffb9aea5), fontSize: 12)),
                     ],
                     const Spacer(),
                     OutlinedButton(
