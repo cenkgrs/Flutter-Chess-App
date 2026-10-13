@@ -182,6 +182,100 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
     super.dispose();
   }
 
+  Widget _lobby() => Scaffold(
+        backgroundColor: const Color(0xff32180d),
+        body: DecoratedBox(
+          decoration: const BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage('lib/images/wood/background.png'),
+                  fit: BoxFit.cover,
+                  colorFilter:
+                      ColorFilter.mode(Color(0x40000000), BlendMode.darken))),
+          child: SafeArea(
+              child: LayoutBuilder(
+                  builder: (context, constraints) => SingleChildScrollView(
+                        child: ConstrainedBox(
+                          constraints:
+                              BoxConstraints(minHeight: constraints.maxHeight),
+                          child: IntrinsicHeight(
+                              child: Padding(
+                                  padding: const EdgeInsets.all(24),
+                                  child: Column(children: [
+                                    Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: IconButton(
+                                            onPressed: _leave,
+                                            tooltip: 'Kapat',
+                                            icon:
+                                                const Icon(Icons.close_rounded),
+                                            color: const Color(0xfff3eee7))),
+                                    const Spacer(),
+                                    const SizedBox(height: 24),
+                                    if (_error != null)
+                                      const Icon(Icons.cloud_off_outlined,
+                                          color: Color(0xfff3eee7), size: 64)
+                                    else if (_searching)
+                                      const SizedBox.square(
+                                          dimension: 62,
+                                          child: CircularProgressIndicator(
+                                              color: Color(0xfff3eee7),
+                                              strokeWidth: 3))
+                                    else
+                                      const Icon(Icons.bolt_outlined,
+                                          color: Color(0xfff3eee7), size: 64),
+                                    const SizedBox(height: 30),
+                                    Text(
+                                        _error != null
+                                            ? 'BAĞLANTI KURULAMADI'
+                                            : _searching
+                                                ? 'RAKİP ARANIYOR'
+                                                : 'BULMACA DÜELLOSU',
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                            color: Color(0xfff3eee7),
+                                            fontSize: 23,
+                                            fontWeight: FontWeight.w700,
+                                            letterSpacing: 1.8)),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                        _error ??
+                                            'Kişi başı 10 bulmaca · 20 tur',
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                            color: Color(0xffb9aea5),
+                                            fontSize: 17)),
+                                    const SizedBox(height: 24),
+                                    Text('Rekabetçi rating: ${_rating ?? '—'}',
+                                        style: const TextStyle(
+                                            color: Color(0xfff3eee7),
+                                            height: 1.7)),
+                                    const SizedBox(height: 8),
+                                    const Text(
+                                        'Tur başına 120 saniye\nHız puan kazandırır, yanlışlar puanı azaltır.',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            color: Color(0xffb9aea5),
+                                            height: 1.7)),
+                                    const SizedBox(height: 24),
+                                    const Spacer(),
+                                    OutlinedButton(
+                                        onPressed: _searching ? _leave : _start,
+                                        style: OutlinedButton.styleFrom(
+                                            minimumSize:
+                                                const Size.fromHeight(52),
+                                            foregroundColor:
+                                                const Color(0xfff3eee7),
+                                            side: const BorderSide(
+                                                color: Color(0x99f3eee7))),
+                                        child: Text(_searching
+                                            ? 'ARAMAYI İPTAL ET'
+                                            : 'RAKİP ARA')),
+                                  ]))),
+                        ),
+                      ))),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final s = _state;
@@ -193,118 +287,114 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
         onPopInvokedWithResult: (didPop, _) {
           if (!didPop) _leave();
         },
-        child: Scaffold(
-          backgroundColor: const Color(0xff202120),
-          appBar: AppBar(
-              title: const Text('Bulmaca Düellosu'),
-              backgroundColor: const Color(0xff202120),
-              foregroundColor: Colors.white,
-              leading: IconButton(
-                  onPressed: _leave, icon: const Icon(Icons.arrow_back)),
-              actions: [
-                if (s != null)
-                  Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Text('${s['score']} : ${s['opponent_score']}',
-                          style: const TextStyle(fontSize: 20)))
-              ]),
-          body: SafeArea(
-              child: ListView(padding: const EdgeInsets.all(16), children: [
-            if (s == null) ...[
-              const Text('10 BULMACA · 20 TUR',
-                  style: TextStyle(color: Colors.white, fontSize: 22)),
-              const SizedBox(height: 16),
-              Text('Rekabetçi rating: ${_rating ?? '—'}',
-                  style: const TextStyle(color: Colors.white)),
-              const Text(
-                  'Sırayla çöz. Her tur 120 saniye. Hız puan kazandırır, yanlışlar puanı azaltır.\nNormal bulmaca seviyenden bağımsız rating.',
-                  style: TextStyle(color: Colors.white70)),
-              const SizedBox(height: 24),
-              if (_searching)
-                const Center(child: CircularProgressIndicator())
-              else
-                FilledButton(onPressed: _start, child: const Text('RAKİP ARA')),
-            ] else ...[
-              Text('Rakip: ${s['opponent']} · Rating ${s['rating']}',
-                  style: const TextStyle(color: Colors.white70)),
-              const SizedBox(height: 12),
-              if (finished) ...[
-                Text(
-                    s['score'] == s['opponent_score']
-                        ? 'Berabere!'
-                        : (s['score'] as num) > (s['opponent_score'] as num)
-                            ? 'Kazandın!'
-                            : 'Rakibin kazandı',
-                    style: const TextStyle(color: Colors.white, fontSize: 28)),
-                Text(
-                    'Rating değişimi: ${s['delta']} · Yeni rating: ${(s['rating'] as num) + (s['delta'] as num)}',
-                    style: const TextStyle(color: Colors.white)),
-                FilledButton(
-                    onPressed: _leave, child: const Text('MENÜYE DÖN')),
-              ] else ...[
-                Text('Tur ${s['turn']}/20 · ${s['seconds_left']} sn',
-                    style: const TextStyle(color: Colors.white, fontSize: 20)),
-                Text(
-                    s['my_turn'] == true
-                        ? 'Sıra sende · Hata: ${s['mistakes']}'
-                        : 'Rakibin bulmacayı çözüyor…',
-                    style: const TextStyle(color: Colors.white70)),
-                if (board != null)
-                  AspectRatio(
-                      aspectRatio: 1,
-                      child: GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: 64,
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 8),
-                          itemBuilder: (_, display) {
-                            final i = board.turn == c.Color.BLACK
-                                ? 63 - display
-                                : display;
-                            final square = '${'abcdefgh'[i % 8]}${8 - i ~/ 8}';
-                            final piece = board.get(square);
-                            return GestureDetector(
-                                onTap: () => _tap(square, board),
-                                child: ColoredBox(
-                                    color: _selected == square
-                                        ? const Color(0xffb89454)
-                                        : (i ~/ 8 + i % 8).isEven
-                                            ? const Color(0xffd9b77e)
-                                            : const Color(0xff85552f),
-                                    child: piece == null
-                                        ? const SizedBox()
-                                        : Padding(
-                                            padding: const EdgeInsets.all(3),
-                                            child: Image.asset(
-                                                'lib/images/wood/${{
-                                                  'p': 'pawn',
-                                                  'r': 'rook',
-                                                  'n': 'knight',
-                                                  'b': 'bishop',
-                                                  'q': 'queen',
-                                                  'k': 'king'
-                                                }[piece.type.name]}.png',
-                                                color: piece.color ==
-                                                        c.Color.WHITE
-                                                    ? const Color(0xfffff5df)
-                                                    : const Color(0xff48291c),
-                                                colorBlendMode:
-                                                    BlendMode.modulate))));
-                          })),
-                if (s['my_turn'] == true)
-                  TextButton(
-                      onPressed: _busy ? null : () => _move('skip'),
-                      child: const Text('Bu turu geç (0 puan)')),
-                const Text(
-                    'Çıkarsan süre işlemeye devam eder. Bu ekrandan maça geri dönebilirsin.',
-                    style: TextStyle(color: Colors.white54)),
-              ],
-            ],
-            if (_error != null)
-              Text(_error!, style: const TextStyle(color: Colors.orangeAccent)),
-          ])),
-        ));
+        child: s == null
+            ? _lobby()
+            : Scaffold(
+                backgroundColor: const Color(0xff202120),
+                appBar: AppBar(
+                    title: const Text('Bulmaca Düellosu'),
+                    backgroundColor: const Color(0xff202120),
+                    foregroundColor: Colors.white,
+                    leading: IconButton(
+                        onPressed: _leave, icon: const Icon(Icons.arrow_back)),
+                    actions: [
+                      Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Text('${s['score']} : ${s['opponent_score']}',
+                              style: const TextStyle(fontSize: 20)))
+                    ]),
+                body: SafeArea(
+                    child:
+                        ListView(padding: const EdgeInsets.all(16), children: [
+                  ...[
+                    Text('Rakip: ${s['opponent']} · Rating ${s['rating']}',
+                        style: const TextStyle(color: Colors.white70)),
+                    const SizedBox(height: 12),
+                    if (finished) ...[
+                      Text(
+                          s['score'] == s['opponent_score']
+                              ? 'Berabere!'
+                              : (s['score'] as num) >
+                                      (s['opponent_score'] as num)
+                                  ? 'Kazandın!'
+                                  : 'Rakibin kazandı',
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 28)),
+                      Text(
+                          'Rating değişimi: ${s['delta']} · Yeni rating: ${(s['rating'] as num) + (s['delta'] as num)}',
+                          style: const TextStyle(color: Colors.white)),
+                      FilledButton(
+                          onPressed: _leave, child: const Text('MENÜYE DÖN')),
+                    ] else ...[
+                      Text('Tur ${s['turn']}/20 · ${s['seconds_left']} sn',
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 20)),
+                      Text(
+                          s['my_turn'] == true
+                              ? 'Sıra sende · Hata: ${s['mistakes']}'
+                              : 'Rakibin bulmacayı çözüyor…',
+                          style: const TextStyle(color: Colors.white70)),
+                      if (board != null)
+                        AspectRatio(
+                            aspectRatio: 1,
+                            child: GridView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: 64,
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 8),
+                                itemBuilder: (_, display) {
+                                  final i = board.turn == c.Color.BLACK
+                                      ? 63 - display
+                                      : display;
+                                  final square =
+                                      '${'abcdefgh'[i % 8]}${8 - i ~/ 8}';
+                                  final piece = board.get(square);
+                                  return GestureDetector(
+                                      onTap: () => _tap(square, board),
+                                      child: ColoredBox(
+                                          color: _selected == square
+                                              ? const Color(0xffb89454)
+                                              : (i ~/ 8 + i % 8).isEven
+                                                  ? const Color(0xffd9b77e)
+                                                  : const Color(0xff85552f),
+                                          child: piece == null
+                                              ? const SizedBox()
+                                              : Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(3),
+                                                  child: Image.asset(
+                                                      'lib/images/wood/${{
+                                                        'p': 'pawn',
+                                                        'r': 'rook',
+                                                        'n': 'knight',
+                                                        'b': 'bishop',
+                                                        'q': 'queen',
+                                                        'k': 'king'
+                                                      }[piece.type.name]}.png',
+                                                      color: piece.color ==
+                                                              c.Color.WHITE
+                                                          ? const Color(
+                                                              0xfffff5df)
+                                                          : const Color(
+                                                              0xff48291c),
+                                                      colorBlendMode: BlendMode
+                                                          .modulate))));
+                                })),
+                      if (s['my_turn'] == true)
+                        TextButton(
+                            onPressed: _busy ? null : () => _move('skip'),
+                            child: const Text('Bu turu geç (0 puan)')),
+                      const Text(
+                          'Çıkarsan süre işlemeye devam eder. Bu ekrandan maça geri dönebilirsin.',
+                          style: TextStyle(color: Colors.white54)),
+                    ],
+                  ],
+                  if (_error != null)
+                    Text(_error!,
+                        style: const TextStyle(color: Colors.orangeAccent)),
+                ])),
+              ));
   }
 }
