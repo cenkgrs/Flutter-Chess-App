@@ -24,4 +24,26 @@ void main() {
     expect(find.byKey(const ValueKey('time-45+45')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('header stays fixed and social link leaves the home screen',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const MyApp());
+    final header = find.text('ROK');
+    final initialTop = tester.getTopLeft(header).dy;
+
+    expect(find.text('Arkadaşlar'), findsNothing);
+    expect(find.text('Arkadaşla oyna'), findsOneWidget);
+
+    await tester.drag(
+        find.byType(SingleChildScrollView), const Offset(0, -360));
+    await tester.pumpAndSettle();
+
+    expect(tester.getTopLeft(header).dy, initialTop);
+    expect(find.text('ROK'), findsOneWidget);
+  });
 }
