@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../backend/friend_repository.dart';
+import '../online/time_control.dart';
+import 'online_game_screen.dart';
 
 class FriendsScreen extends StatefulWidget {
   const FriendsScreen({super.key, this.repository});
@@ -13,6 +15,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
   late final _repo = widget.repository ?? FriendRepository();
   final _query = TextEditingController();
   List<Map<String, dynamic>> _friends = [], _results = [];
+  List<Map<String, dynamic>> _invitations = [];
   Timer? _timer;
   bool _loading = true, _busy = false, _searching = false;
   String? _error, _searchError;
@@ -32,9 +35,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
   Future<void> _load() async {
     try {
       final rows = await _repo.list();
+      final invitations = await _repo.invitations();
       if (mounted) {
         setState(() {
           _friends = rows;
+          _invitations = invitations;
           _loading = false;
           _error = null;
         });
@@ -135,8 +140,61 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                   button('Reddet', 'decline')
                                 ]
                               : [button('İsteği geri çek', 'cancel')]),
+                if (accepted)
+                  TextButton.icon(
+                      onPressed:
+                          _busy ? null : () => _invite(person['id'] as String),
+                      icon: const Icon(Icons.sports_esports_outlined),
+                      label: const Text('Oyuna davet et')),
               ],
             )));
+  }
+
+  Future<void> _invite(String id) async {
+    final control = await showModalBottomSheet<TimeControl>(
+        context: context,
+        builder: (context) => SafeArea(
+                child: ListView(children: [
+              const ListTile(title: Text('Oyun süresi seç')),
+              for (final c in TimeControl.presets)
+                ListTile(
+                    title: Text('${c.pool.label} · ${c.label}'),
+                    onTap: () => Navigator.pop(context, c)),
+            ])));
+    if (control == null || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      await _repo.invite(id, control);
+      await _load();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Davet gönderilemedi. Tekrar dene.')));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _respond(Map<String, dynamic> invite, bool accept) async {
+    setState(() => _busy = true);
+    try {
+      final game = await _repo.respond(invite['id'] as String, accept);
+      if (!mounted) return;
+      if (game != null) {
+        await Navigator.push(context,
+            MaterialPageRoute(builder: (_) => OnlineGameScreen(gameId: game)));
+      }
+      await _load();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+                'Davet açılamadı. Süresi dolmuş olabilir veya oyunculardan biri maçta.')));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
@@ -163,6 +221,41 @@ class _FriendsScreenState extends State<FriendsScreen> {
           body: RefreshIndicator(
               onRefresh: _load,
               child: ListView(padding: const EdgeInsets.all(20), children: [
+                for (final invite in _invitations)
+                  Card(
+                      child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                    '${invite['username']} · ${invite['minutes']}+${invite['increment']}'),
+                                if (invite['status'] == 'accepted')
+                                  TextButton(
+                                      onPressed: () => Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (_) => OnlineGameScreen(
+                                                  gameId: invite['game_id']
+                                                      as String))),
+                                      child: const Text('Maça katıl'))
+                                else if (invite['incoming'] == true)
+                                  Wrap(children: [
+                                    TextButton(
+                                        onPressed: _busy
+                                            ? null
+                                            : () => _respond(invite, true),
+                                        child: const Text('Daveti kabul et')),
+                                    TextButton(
+                                        onPressed: _busy
+                                            ? null
+                                            : () => _respond(invite, false),
+                                        child: const Text('Daveti reddet')),
+                                  ])
+                                else
+                                  const Text(
+                                      'Davet gönderildi · 5 dakika geçerli'),
+                              ]))),
                 TextField(
                     controller: _query,
                     maxLength: 20,
@@ -213,6 +306,7 @@ class FriendRequestLabel extends StatefulWidget {
 class _FriendRequestLabelState extends State<FriendRequestLabel> {
   Timer? _timer;
   int _count = 0;
+  int _invites = 0;
   @override
   void initState() {
     super.initState();
@@ -226,10 +320,16 @@ class _FriendRequestLabelState extends State<FriendRequestLabel> {
     }
     try {
       final rows = await FriendRepository().list();
+      final invitations = await FriendRepository().invitations();
       if (mounted) {
-        setState(() => _count = rows
-            .where((r) => r['status'] == 'pending' && r['incoming'] == true)
-            .length);
+        setState(() {
+          _invites = invitations
+              .where((r) => r['incoming'] == true && r['status'] == 'pending')
+              .length;
+          _count = rows
+              .where((r) => r['status'] == 'pending' && r['incoming'] == true)
+              .length;
+        });
       }
     } catch (_) {
       /* Keep the menu usable during temporary connection failures. */
@@ -243,7 +343,11 @@ class _FriendRequestLabelState extends State<FriendRequestLabel> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      Text(_count > 0 ? 'Arkadaşlar · $_count yeni istek' : 'Arkadaşlar',
-          style: const TextStyle(color: Color(0xfff3eee7)));
+  Widget build(BuildContext context) => Text(
+      _invites > 0
+          ? 'Arkadaşlar · $_invites maç daveti'
+          : _count > 0
+              ? 'Arkadaşlar · $_count yeni istek'
+              : 'Arkadaşlar',
+      style: const TextStyle(color: Color(0xfff3eee7)));
 }

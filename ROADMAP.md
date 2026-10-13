@@ -7,6 +7,34 @@
 
 # Bu sürümün kurulumu
 
+## Doğrudan davet ve Bulmaca Düellosu (13 Ekim)
+
+ROK projesinde önceki migration'ların ardından sırayla:
+
+1. `supabase/migrations/20261013140000_direct_invites.sql`
+2. `supabase/migrations/20261013150000_puzzle_duels.sql`
+3. `supabase/seeds/puzzles_20261013.sql` (44 yeni motor doğrulamalı bulmaca).
+
+- Arkadaşlar listesinden süre seçip maç daveti gönderilir. Karşı taraf kabul
+  edince maç açılır; gönderen aynı ekrandaki Maça katıl ile girer. Menü davet
+  sayısını gösterir. Davetler 5 dakika geçerlidir.
+- Düello: kişi başı 10 farklı bulmaca, toplam 20 dönüşümlü tur. Rakip beklerken
+  bulmacanın konumu ve çözümü gönderilmez. Mat uzunluğuna göre çiftler seçilir,
+  oyuncuların ortalama rating'ine yakın çiftler önceliklidir.
+- Tur süresi 120 saniye, geçme/süre aşımı 0 puan. Çözüm puanı:
+  `round(100 × (1 + 0.5 × max(0, 1 - saniye/120)) / (1 + hata))`.
+  Saat, hamle doğrulama, skor ve sonuç sunucuda tutulur.
+- Rekabetçi rating başlangıcı 1200, Elo K=32; normal bulmaca rating'inden ayrıdır.
+  Eşit skorda beraberlik. İki istemci sonuç istediğinde rating tekrar yazılmaz.
+- Uygulamadan çıkmak maçı iptal etmez; süre devam eder. Düello ekranına dönünce
+  aktif maç devam eder. İki taraf da koparsa süre aşımı bir sonraki sunucu
+  isteğinde işlenir; ayrıca çalışan bir zamanlayıcı kurulmadı.
+- Bu ilk oynanabilir sürümdür. Canlı iki cihaz testi, anti-cheat, rating ve
+  zorluk kalibrasyonu henüz tamamlanmış sayılmaz. Aynı maçta konum tekrarlanmaz;
+  farklı maçlarda ve normal bulmaca modunda havuz ortak olduğundan tekrar olabilir.
+- Üretim manuel işçi komutuyla yapılır; otomatik sürekli havuz doldurma servisi
+  henüz yoktur. Yeni seed mevcut denemeleri sıfırlamadan havuzu genişletir.
+
 - Arkadaşlar için `supabase/migrations/20261013120000_friends.sql` uygulanmalı.
   Ana menüdeki Arkadaşlar bağlantısında gelen istek sayısı, uygulama açıkken
   15 saniyede bir yenilenir. Kullanıcı adı araması en az 3 karakterle başlayan
