@@ -8,6 +8,7 @@ import '../online/time_control.dart';
 import '../prototype/play_screen.dart';
 import 'auth_screen.dart';
 import 'friend_room_screen.dart';
+import 'friends_screen.dart';
 import 'matchmaking_screen.dart';
 import 'profile_screen.dart';
 import 'puzzle_screen.dart';
@@ -88,6 +89,18 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> with RouteAware {
                       child: Column(
                         children: [
                           _header(context, user),
+                          Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton.icon(
+                                icon: const Icon(Icons.person_add_alt_1,
+                                    color: bone),
+                                label: user == null
+                                    ? const Text('Arkadaşlar',
+                                        style: TextStyle(color: bone))
+                                    : FriendRequestLabel(
+                                        key: ValueKey(user.id)),
+                                onPressed: () => _openSocial(context),
+                              )),
                           const SizedBox(height: 76),
                           _RatingsStrip(user: user),
                           const SizedBox(height: 45),
@@ -293,6 +306,19 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> with RouteAware {
     if (context.mounted) {
       await Navigator.push<void>(
           context, MaterialPageRoute(builder: (_) => const FriendRoomScreen()));
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _openSocial(BuildContext context) async {
+    if (AppBackend.currentUser == null) {
+      final authenticated = await Navigator.push<bool>(
+          context, MaterialPageRoute(builder: (_) => const AuthScreen()));
+      if (!context.mounted || authenticated != true) return;
+    }
+    if (context.mounted) {
+      await Navigator.push<void>(
+          context, MaterialPageRoute(builder: (_) => const FriendsScreen()));
       if (mounted) setState(() {});
     }
   }

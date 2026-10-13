@@ -7,6 +7,11 @@
 
 # Bu sürümün kurulumu
 
+- Arkadaşlar için `supabase/migrations/20261013120000_friends.sql` uygulanmalı.
+  Ana menüdeki Arkadaşlar bağlantısında gelen istek sayısı, uygulama açıkken
+  15 saniyede bir yenilenir. Kullanıcı adı araması en az 3 karakterle başlayan
+  ilk 20 sonucu getirir. Telefon push bildirimi gönderilmez.
+
 - Önceki migration'ların ardından
   `supabase/migrations/20261012160000_population_and_leaderboard.sql` uygulanmalı.
 - Eşleşme ekranı iki saniyede bir varlık sinyali gönderir; son 15 saniyede
