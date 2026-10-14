@@ -1,4 +1,5 @@
 import '../widgets/rok_style.dart';
+import 'dart:math' as math;
 import 'package:chess/chess.dart' as c;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -347,6 +348,7 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
   List<Map<String, dynamic>>? _moves;
   int _index = 0;
   final ScrollController _moveScroll = ScrollController();
+  final GlobalKey _summaryKey = GlobalKey();
   static const double _moveExtent = 60;
 
   void _selectMove(int index) {
@@ -355,9 +357,10 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
       if (!mounted || !_moveScroll.hasClients) return;
       final position = _moveScroll.position;
       final row = index > 0 ? index - 1 : 0;
-      final target =
-          (row * _moveExtent - (position.viewportDimension - _moveExtent) / 2)
-              .clamp(0.0, position.maxScrollExtent);
+      final target = ((_summaryKey.currentContext?.size?.height ?? 0) +
+              row * _moveExtent -
+              (position.viewportDimension - _moveExtent) / 2)
+          .clamp(0.0, position.maxScrollExtent);
       _moveScroll.animateTo(target,
           duration: const Duration(milliseconds: 220), curve: Curves.easeOut);
     });
@@ -478,235 +481,260 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
             ? Center(child: TextButton(onPressed: _load, child: Text(_error!)))
             : _moves == null
                 ? const Center(child: CircularProgressIndicator())
-                : Column(children: [
-                    Flexible(
-                        child: AspectRatio(
-                            aspectRatio: 1.12,
-                            child: Padding(
-                                padding: const EdgeInsets.all(8),
-                                child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      Expanded(
-                                          child: AspectRatio(
-                                              aspectRatio: 1,
-                                              child: GridView.builder(
-                                                  physics:
-                                                      const NeverScrollableScrollPhysics(),
-                                                  itemCount: 64,
-                                                  gridDelegate:
-                                                      const SliverGridDelegateWithFixedCrossAxisCount(
-                                                          crossAxisCount: 8),
-                                                  itemBuilder: (context, i) {
-                                                    final file = i % 8,
-                                                        rank = 8 - i ~/ 8;
-                                                    final piece = _position.get(
-                                                        '${'abcdefgh'[file]}$rank');
-                                                    final badge = _destinations[
-                                                                _index - 1] ==
-                                                            '${'abcdefgh'[file]}$rank'
-                                                        ? _qualities[_index - 1]
-                                                        : null;
-                                                    return ColoredBox(
-                                                        color: (i ~/ 8 + file)
-                                                                .isEven
-                                                            ? const Color(
-                                                                0xffd9b77e)
-                                                            : const Color(
-                                                                0xff85552f),
-                                                        child: Stack(
-                                                            fit:
-                                                                StackFit.expand,
-                                                            children: [
-                                                              piece == null
-                                                                  ? const SizedBox()
-                                                                  : Image.asset(
-                                                                      'lib/images/wood/${const {
-                                                                        'p':
-                                                                            'pawn',
-                                                                        'r':
-                                                                            'rook',
-                                                                        'n':
-                                                                            'knight',
-                                                                        'b':
-                                                                            'bishop',
-                                                                        'q':
-                                                                            'queen',
-                                                                        'k':
-                                                                            'king'
-                                                                      }[piece.type.name]}.png',
-                                                                      color: piece.color ==
-                                                                              c.Color
-                                                                                  .WHITE
-                                                                          ? const Color(
-                                                                              0xfffff5df)
-                                                                          : const Color(
-                                                                              0xff48291c),
-                                                                      colorBlendMode:
-                                                                          BlendMode
-                                                                              .modulate),
-                                                              if (badge != null)
-                                                                Positioned(
-                                                                    right: 0,
-                                                                    top: 0,
-                                                                    child: QualityBadge(
-                                                                        badge)),
-                                                            ]));
-                                                  }))),
-                                      const SizedBox(width: 8),
-                                      EvaluationBar(
-                                          evaluation: _evaluations[_index],
-                                          whiteToMove:
-                                              _position.turn == c.Color.WHITE),
-                                    ])))),
-                    Text(
-                        _index == 0
-                            ? 'Başlangıç konumu'
-                            : '$_index. ${_moves![_index - 1]['san']}',
-                        style: const TextStyle(
-                            color: Color(0xfff3eee7), fontSize: 17)),
-                    const SizedBox(height: 12),
-                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      IconButton(
-                          onPressed: _index == 0 ? null : () => _selectMove(0),
-                          icon: const Icon(Icons.first_page),
-                          color: Colors.white),
-                      IconButton(
-                          onPressed: _index == 0
-                              ? null
-                              : () => _selectMove(_index - 1),
-                          icon: const Icon(Icons.chevron_left),
-                          color: Colors.white),
-                      Text('$_index / ${_moves!.length}',
-                          style: const TextStyle(color: Colors.white)),
-                      IconButton(
-                          onPressed: _index == _moves!.length
-                              ? null
-                              : () => _selectMove(_index + 1),
-                          icon: const Icon(Icons.chevron_right),
-                          color: Colors.white),
-                      IconButton(
-                          onPressed: _index == _moves!.length
-                              ? null
-                              : () => _selectMove(_moves!.length),
-                          icon: const Icon(Icons.last_page),
-                          color: Colors.white),
-                    ]),
-                    Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 8,
-                        children: [
-                          FilledButton.icon(
-                              onPressed: _analyzing || _moves!.isEmpty
-                                  ? null
-                                  : _analyze,
-                              icon: const Icon(Icons.analytics_outlined),
-                              label: Text(_analyzing
-                                  ? 'Analiz $_progress/${_moves!.length}'
-                                  : 'Motor analizi')),
-                          TextButton(
-                              onPressed: _analyzing || _position.game_over
-                                  ? null
-                                  : () {
-                                      PlayScreen.launch(context,
-                                          fen: _position.fen);
-                                    },
-                              child:
-                                  const Text('Buradan bilgisayarla devam et')),
-                        ]),
-                    if (_analyzing) const LinearProgressIndicator(),
-                    if (_error != null) Text(_error!),
-                    if (_qualities.isNotEmpty)
-                      Container(
-                        margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
-                        decoration: BoxDecoration(
-                            color: const Color(0x990f0d0b),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0x557f7062))),
-                        child: Column(children: [
-                          Row(children: [
-                            Expanded(
-                                child: Text(
-                                    'Senin hamlelerin (${_player == c.Color.WHITE ? 'Beyaz' : 'Siyah'}):',
-                                    style: const TextStyle(
-                                        color: rokBone,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 13))),
-                            const Tooltip(
-                                message:
-                                    'Kısa motor analizi tahminidir. “En iyi” motorun ilk tercihidir; parlak hamle/feda tespiti değildir.',
-                                triggerMode: TooltipTriggerMode.tap,
-                                child: Padding(
-                                    padding: EdgeInsets.all(4),
-                                    child: Icon(Icons.info_outline,
-                                        size: 18, color: rokBone))),
-                          ]),
-                          const SizedBox(height: 6),
-                          for (final quality in [
-                            'En iyi',
-                            'İyi',
-                            'İsabetsizlik',
-                            'Hata',
-                            'Büyük hata'
-                          ])
-                            Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 3),
-                                child: Row(children: [
-                                  Icon(Icons.circle,
-                                      size: 7, color: qualityColor(quality)),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                      child: Text(
-                                          quality == 'En iyi'
-                                              ? 'En İyi'
-                                              : quality,
-                                          style: const TextStyle(
-                                              color: rokBone, fontSize: 13))),
-                                  const Text('—',
-                                      style:
-                                          TextStyle(color: Color(0xffb9aea5))),
-                                  SizedBox(
-                                      width: 36,
-                                      child: Text(
-                                          '${_qualities.values.where((v) => v == quality).length}',
-                                          textAlign: TextAlign.right,
-                                          style: const TextStyle(
-                                              color: rokBone,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w700))),
-                                ])),
-                        ]),
-                      ),
-                    Expanded(
-                        child: ListView.builder(
-                            key: const ValueKey('review-move-list'),
-                            controller: _moveScroll,
-                            itemExtent: _moveExtent,
-                            itemCount: _moves!.length,
-                            itemBuilder: (_, i) => ListTile(
-                                key: ValueKey('review-move-${i + 1}'),
-                                selectedTileColor: const Color(0x447f7062),
-                                selected: _index == i + 1,
-                                title: Text('${i + 1}. ${_moves![i]['san']}',
+                : LayoutBuilder(
+                    builder: (context, constraints) => Column(children: [
+                          SizedBox(
+                              key: const ValueKey('review-board-area'),
+                              width: math.min(constraints.maxWidth,
+                                  constraints.maxHeight * .60 + 38),
+                              height: math.min(constraints.maxWidth - 38,
+                                  constraints.maxHeight * .60),
+                              child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        Expanded(
+                                            child: AspectRatio(
+                                                aspectRatio: 1,
+                                                child: GridView.builder(
+                                                    physics:
+                                                        const NeverScrollableScrollPhysics(),
+                                                    itemCount: 64,
+                                                    gridDelegate:
+                                                        const SliverGridDelegateWithFixedCrossAxisCount(
+                                                            crossAxisCount: 8),
+                                                    itemBuilder: (context, i) {
+                                                      final file = i % 8,
+                                                          rank = 8 - i ~/ 8;
+                                                      final piece = _position.get(
+                                                          '${'abcdefgh'[file]}$rank');
+                                                      final badge = _destinations[
+                                                                  _index - 1] ==
+                                                              '${'abcdefgh'[file]}$rank'
+                                                          ? _qualities[
+                                                              _index - 1]
+                                                          : null;
+                                                      return ColoredBox(
+                                                          color: (i ~/ 8 + file)
+                                                                  .isEven
+                                                              ? const Color(
+                                                                  0xffd9b77e)
+                                                              : const Color(
+                                                                  0xff85552f),
+                                                          child: Stack(
+                                                              fit: StackFit
+                                                                  .expand,
+                                                              children: [
+                                                                piece == null
+                                                                    ? const SizedBox()
+                                                                    : Image.asset(
+                                                                        'lib/images/wood/${const {
+                                                                          'p':
+                                                                              'pawn',
+                                                                          'r':
+                                                                              'rook',
+                                                                          'n':
+                                                                              'knight',
+                                                                          'b':
+                                                                              'bishop',
+                                                                          'q':
+                                                                              'queen',
+                                                                          'k':
+                                                                              'king'
+                                                                        }[piece.type.name]}.png',
+                                                                        color: piece.color == c.Color.WHITE ? const Color(0xfffff5df) : const Color(0xff48291c),
+                                                                        colorBlendMode: BlendMode.modulate),
+                                                                if (badge !=
+                                                                    null)
+                                                                  Positioned(
+                                                                      right: 0,
+                                                                      top: 0,
+                                                                      child: QualityBadge(
+                                                                          badge,
+                                                                          size:
+                                                                              14)),
+                                                              ]));
+                                                    }))),
+                                        const SizedBox(width: 8),
+                                        EvaluationBar(
+                                            evaluation: _evaluations[_index],
+                                            whiteToMove: _position.turn ==
+                                                c.Color.WHITE),
+                                      ]))),
+                          Text(
+                              _index == 0
+                                  ? 'Başlangıç konumu'
+                                  : '$_index. ${_moves![_index - 1]['san']}',
+                              style: const TextStyle(
+                                  color: Color(0xfff3eee7), fontSize: 17)),
+                          const SizedBox(height: 12),
+                          Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                IconButton(
+                                    onPressed: _index == 0
+                                        ? null
+                                        : () => _selectMove(0),
+                                    icon: const Icon(Icons.first_page),
+                                    color: Colors.white),
+                                IconButton(
+                                    onPressed: _index == 0
+                                        ? null
+                                        : () => _selectMove(_index - 1),
+                                    icon: const Icon(Icons.chevron_left),
+                                    color: Colors.white),
+                                Text('$_index / ${_moves!.length}',
                                     style:
                                         const TextStyle(color: Colors.white)),
-                                trailing: _qualities[i] == null
-                                    ? null
-                                    : Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                            QualityBadge(_qualities[i]!),
-                                            const SizedBox(width: 8),
-                                            Text(_qualities[i]!,
-                                                style: TextStyle(
-                                                    color: qualityColor(
-                                                        _qualities[i]!))),
-                                          ]),
-                                onTap: () => _selectMove(i + 1)))),
-                  ]),
+                                IconButton(
+                                    onPressed: _index == _moves!.length
+                                        ? null
+                                        : () => _selectMove(_index + 1),
+                                    icon: const Icon(Icons.chevron_right),
+                                    color: Colors.white),
+                                IconButton(
+                                    onPressed: _index == _moves!.length
+                                        ? null
+                                        : () => _selectMove(_moves!.length),
+                                    icon: const Icon(Icons.last_page),
+                                    color: Colors.white),
+                              ]),
+                          Wrap(
+                              alignment: WrapAlignment.center,
+                              spacing: 8,
+                              children: [
+                                FilledButton.icon(
+                                    onPressed: _analyzing || _moves!.isEmpty
+                                        ? null
+                                        : _analyze,
+                                    icon: const Icon(Icons.analytics_outlined),
+                                    label: Text(_analyzing
+                                        ? 'Analiz $_progress/${_moves!.length}'
+                                        : 'Motor analizi')),
+                                TextButton(
+                                    onPressed: _analyzing || _position.game_over
+                                        ? null
+                                        : () {
+                                            PlayScreen.launch(context,
+                                                fen: _position.fen);
+                                          },
+                                    child: const Text(
+                                        'Buradan bilgisayarla devam et')),
+                              ]),
+                          if (_analyzing) const LinearProgressIndicator(),
+                          if (_error != null) Text(_error!),
+                          Expanded(
+                              child: CustomScrollView(
+                                  key: const ValueKey('review-move-list'),
+                                  controller: _moveScroll,
+                                  slivers: [
+                                if (_qualities.isNotEmpty)
+                                  SliverToBoxAdapter(
+                                      child: Container(
+                                    key: _summaryKey,
+                                    margin:
+                                        const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 10),
+                                    decoration: BoxDecoration(
+                                        color: const Color(0x990f0d0b),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                            color: const Color(0x557f7062))),
+                                    child: Column(children: [
+                                      Row(children: [
+                                        Expanded(
+                                            child: Text(
+                                                'Senin hamlelerin (${_player == c.Color.WHITE ? 'Beyaz' : 'Siyah'}):',
+                                                style: const TextStyle(
+                                                    color: rokBone,
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 13))),
+                                        const Tooltip(
+                                            message:
+                                                'Kısa motor analizi tahminidir. “En iyi” motorun ilk tercihidir; parlak hamle/feda tespiti değildir.',
+                                            triggerMode: TooltipTriggerMode.tap,
+                                            child: Padding(
+                                                padding: EdgeInsets.all(4),
+                                                child: Icon(Icons.info_outline,
+                                                    size: 18, color: rokBone))),
+                                      ]),
+                                      const SizedBox(height: 6),
+                                      for (final quality in [
+                                        'En iyi',
+                                        'İyi',
+                                        'İsabetsizlik',
+                                        'Hata',
+                                        'Büyük hata'
+                                      ])
+                                        Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 3),
+                                            child: Row(children: [
+                                              Icon(Icons.circle,
+                                                  size: 7,
+                                                  color: qualityColor(quality)),
+                                              const SizedBox(width: 10),
+                                              Expanded(
+                                                  child: Text(
+                                                      quality == 'En iyi'
+                                                          ? 'En İyi'
+                                                          : quality,
+                                                      style: const TextStyle(
+                                                          color: rokBone,
+                                                          fontSize: 13))),
+                                              const Text('—',
+                                                  style: TextStyle(
+                                                      color:
+                                                          Color(0xffb9aea5))),
+                                              SizedBox(
+                                                  width: 36,
+                                                  child: Text(
+                                                      '${_qualities.values.where((v) => v == quality).length}',
+                                                      textAlign:
+                                                          TextAlign.right,
+                                                      style: const TextStyle(
+                                                          color: rokBone,
+                                                          fontSize: 14,
+                                                          fontWeight: FontWeight
+                                                              .w700))),
+                                            ])),
+                                    ]),
+                                  )),
+                                SliverFixedExtentList(
+                                    itemExtent: _moveExtent,
+                                    delegate: SliverChildBuilderDelegate(
+                                        (_, i) => ListTile(
+                                            key: ValueKey(
+                                                'review-move-${i + 1}'),
+                                            selectedTileColor:
+                                                const Color(0x447f7062),
+                                            selected: _index == i + 1,
+                                            title: Text(
+                                                '${i + 1}. ${_moves![i]['san']}',
+                                                style: const TextStyle(
+                                                    color: Colors.white)),
+                                            trailing: _qualities[i] == null
+                                                ? null
+                                                : Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                        QualityBadge(
+                                                            _qualities[i]!),
+                                                        const SizedBox(
+                                                            width: 8),
+                                                        Text(_qualities[i]!,
+                                                            style: TextStyle(
+                                                                color: qualityColor(
+                                                                    _qualities[
+                                                                        i]!))),
+                                                      ]),
+                                            onTap: () => _selectMove(i + 1)),
+                                        childCount: _moves!.length)),
+                              ])),
+                        ])),
       );
 }

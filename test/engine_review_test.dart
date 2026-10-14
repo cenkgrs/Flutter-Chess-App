@@ -64,10 +64,15 @@ void main() {
             playerColor: c.Color.BLACK,
             evaluate: (_) async => const EngineEvaluation('a2a3', 0, null))));
     await tester.pumpAndSettle();
+    final boardSize =
+        tester.getSize(find.byKey(const ValueKey('review-board-area')));
+    expect(boardSize.width, 390);
+    expect(boardSize.height, greaterThan(330));
     await tester.tap(find.text('Motor analizi'));
     await tester.pumpAndSettle();
     expect(find.textContaining('Senin hamlelerin (Siyah):'), findsOneWidget);
-    expect(find.byType(QualityBadge), findsOneWidget); // list: black only
+    expect(tester.getSize(find.byKey(const ValueKey('review-board-area'))),
+        boardSize);
     await tester.tap(find.byIcon(Icons.last_page));
     await tester.pumpAndSettle();
     expect(find.byType(QualityBadge), findsNWidgets(2)); // list + board
