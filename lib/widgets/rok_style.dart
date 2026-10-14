@@ -17,67 +17,68 @@ class RokResultDialog extends StatelessWidget {
   final List<Widget> actions;
   @override
   Widget build(BuildContext context) => Dialog(
-        backgroundColor: rokBone,
+        backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: SingleChildScrollView(
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: rokWood,
-              child: Column(children: [
-                const Text('OYUN TAMAMLANDI',
-                    style: TextStyle(
-                        color: rokBone, fontSize: 10, letterSpacing: 3)),
-                const SizedBox(height: 18),
-                IconTheme(
-                    data: const IconThemeData(color: rokBone, size: 32),
-                    child: icon ?? const Icon(Icons.flag_outlined)),
-                const SizedBox(height: 12),
-                DefaultTextStyle(
-                    style: const TextStyle(
-                        color: rokBone,
-                        fontSize: 30,
-                        fontWeight: FontWeight.w600),
-                    child: title),
-              ])),
-          Padding(
-              padding: const EdgeInsets.all(20),
-              child: Theme(
-                  data: rokTheme().copyWith(
-                    textButtonTheme: TextButtonThemeData(
-                        style: TextButton.styleFrom(
-                            foregroundColor: rokGraphite,
-                            minimumSize: const Size.fromHeight(46))),
-                    filledButtonTheme: FilledButtonThemeData(
-                        style: FilledButton.styleFrom(
-                            backgroundColor: rokGraphite,
-                            foregroundColor: rokBone,
-                            minimumSize: const Size.fromHeight(50),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)))),
-                  ),
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (content != null)
-                          Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: DefaultTextStyle(
-                                  style: const TextStyle(
-                                      color: Color(0xff65584e),
-                                      height: 1.5,
-                                      fontSize: 14),
-                                  textAlign: TextAlign.center,
-                                  child: content!)),
-                        ...actions.map((action) => Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: action)),
-                      ]))),
-        ])),
+        child: DecoratedBox(
+            decoration: rokWood,
+            child: SingleChildScrollView(
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  child: Column(children: [
+                    const Text('OYUN TAMAMLANDI',
+                        style: TextStyle(
+                            color: rokBone, fontSize: 10, letterSpacing: 3)),
+                    const SizedBox(height: 18),
+                    IconTheme(
+                        data: const IconThemeData(color: rokBone, size: 32),
+                        child: icon ?? const Icon(Icons.flag_outlined)),
+                    const SizedBox(height: 12),
+                    DefaultTextStyle(
+                        style: const TextStyle(
+                            color: rokBone,
+                            fontSize: 30,
+                            fontWeight: FontWeight.w600),
+                        child: title),
+                  ])),
+              Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Theme(
+                      data: rokTheme().copyWith(
+                        textButtonTheme: TextButtonThemeData(
+                            style: TextButton.styleFrom(
+                                foregroundColor: rokBone,
+                                minimumSize: const Size.fromHeight(46))),
+                        filledButtonTheme: FilledButtonThemeData(
+                            style: FilledButton.styleFrom(
+                                backgroundColor: rokGraphite,
+                                foregroundColor: rokBone,
+                                minimumSize: const Size.fromHeight(50),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10)))),
+                      ),
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (content != null)
+                              Padding(
+                                  padding: const EdgeInsets.only(bottom: 16),
+                                  child: DefaultTextStyle(
+                                      style: const TextStyle(
+                                          color: rokBone,
+                                          height: 1.5,
+                                          fontSize: 14),
+                                      textAlign: TextAlign.center,
+                                      child: content!)),
+                            ...actions.map((action) => Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: action)),
+                          ]))),
+            ]))),
       );
 }
 
@@ -105,6 +106,48 @@ class RokDialog extends StatelessWidget {
         actions: actions,
         actionsPadding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
       ));
+}
+
+class RokWoodDialog extends StatelessWidget {
+  const RokWoodDialog(
+      {super.key,
+      required this.title,
+      required this.content,
+      this.actions = const []});
+  final Widget title, content;
+  final List<Widget> actions;
+  @override
+  Widget build(BuildContext context) => Dialog(
+        backgroundColor: Colors.transparent,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: const BorderSide(color: Color(0xff8b7966))),
+        child: DecoratedBox(
+            decoration: rokWood,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Theme(
+                  data: rokTheme(),
+                  child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        DefaultTextStyle(
+                            style: const TextStyle(
+                                color: rokBone,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w600),
+                            child: title),
+                        const SizedBox(height: 16),
+                        DefaultTextStyle(
+                            style: const TextStyle(color: rokBone, height: 1.4),
+                            child: content),
+                        const SizedBox(height: 12),
+                        ...actions,
+                      ])),
+            )),
+      );
 }
 
 const rokWood = BoxDecoration(
