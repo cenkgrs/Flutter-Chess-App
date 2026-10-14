@@ -346,6 +346,23 @@ class GameReviewScreen extends StatefulWidget {
 class _GameReviewScreenState extends State<GameReviewScreen> {
   List<Map<String, dynamic>>? _moves;
   int _index = 0;
+  final ScrollController _moveScroll = ScrollController();
+  static const double _moveExtent = 60;
+
+  void _selectMove(int index) {
+    setState(() => _index = index);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_moveScroll.hasClients) return;
+      final position = _moveScroll.position;
+      final row = index > 0 ? index - 1 : 0;
+      final target =
+          (row * _moveExtent - (position.viewportDimension - _moveExtent) / 2)
+              .clamp(0.0, position.maxScrollExtent);
+      _moveScroll.animateTo(target,
+          duration: const Duration(milliseconds: 220), curve: Curves.easeOut);
+    });
+  }
+
   bool _analyzing = false;
   String? _error;
   final Map<int, String> _qualities = {};
@@ -442,6 +459,7 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
   @override
   void dispose() {
     _analysisGeneration++;
+    _moveScroll.dispose();
     super.dispose();
   }
 
@@ -551,15 +569,13 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                     const SizedBox(height: 12),
                     Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                       IconButton(
-                          onPressed: _index == 0
-                              ? null
-                              : () => setState(() => _index = 0),
+                          onPressed: _index == 0 ? null : () => _selectMove(0),
                           icon: const Icon(Icons.first_page),
                           color: Colors.white),
                       IconButton(
                           onPressed: _index == 0
                               ? null
-                              : () => setState(() => _index--),
+                              : () => _selectMove(_index - 1),
                           icon: const Icon(Icons.chevron_left),
                           color: Colors.white),
                       Text('$_index / ${_moves!.length}',
@@ -567,13 +583,13 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                       IconButton(
                           onPressed: _index == _moves!.length
                               ? null
-                              : () => setState(() => _index++),
+                              : () => _selectMove(_index + 1),
                           icon: const Icon(Icons.chevron_right),
                           color: Colors.white),
                       IconButton(
                           onPressed: _index == _moves!.length
                               ? null
-                              : () => setState(() => _index = _moves!.length),
+                              : () => _selectMove(_moves!.length),
                           icon: const Icon(Icons.last_page),
                           color: Colors.white),
                     ]),
@@ -602,26 +618,78 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                     if (_analyzing) const LinearProgressIndicator(),
                     if (_error != null) Text(_error!),
                     if (_qualities.isNotEmpty)
-                      Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                              'Senin hamlelerin (${_player == c.Color.WHITE ? 'Beyaz' : 'Siyah'}): ${[
-                                'En iyi',
-                                'İyi',
-                                'İsabetsizlik',
-                                'Hata',
-                                'Büyük hata'
-                              ].map((q) => '$q ${_qualities.values.where((v) => v == q).length}').join(' · ')}',
-                              style: const TextStyle(fontSize: 11))),
-                    const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(
-                            'Kısa motor analizi tahminidir. “En iyi” motorun ilk tercihidir; parlak hamle/feda tespiti değildir.',
-                            style: TextStyle(fontSize: 10))),
+                      Container(
+                        margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                            color: const Color(0x990f0d0b),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0x557f7062))),
+                        child: Column(children: [
+                          Row(children: [
+                            Expanded(
+                                child: Text(
+                                    'Senin hamlelerin (${_player == c.Color.WHITE ? 'Beyaz' : 'Siyah'}):',
+                                    style: const TextStyle(
+                                        color: rokBone,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13))),
+                            const Tooltip(
+                                message:
+                                    'Kısa motor analizi tahminidir. “En iyi” motorun ilk tercihidir; parlak hamle/feda tespiti değildir.',
+                                triggerMode: TooltipTriggerMode.tap,
+                                child: Padding(
+                                    padding: EdgeInsets.all(4),
+                                    child: Icon(Icons.info_outline,
+                                        size: 18, color: rokBone))),
+                          ]),
+                          const SizedBox(height: 6),
+                          for (final quality in [
+                            'En iyi',
+                            'İyi',
+                            'İsabetsizlik',
+                            'Hata',
+                            'Büyük hata'
+                          ])
+                            Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 3),
+                                child: Row(children: [
+                                  Icon(Icons.circle,
+                                      size: 7, color: qualityColor(quality)),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                      child: Text(
+                                          quality == 'En iyi'
+                                              ? 'En İyi'
+                                              : quality,
+                                          style: const TextStyle(
+                                              color: rokBone, fontSize: 13))),
+                                  const Text('—',
+                                      style:
+                                          TextStyle(color: Color(0xffb9aea5))),
+                                  SizedBox(
+                                      width: 36,
+                                      child: Text(
+                                          '${_qualities.values.where((v) => v == quality).length}',
+                                          textAlign: TextAlign.right,
+                                          style: const TextStyle(
+                                              color: rokBone,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w700))),
+                                ])),
+                        ]),
+                      ),
                     Expanded(
                         child: ListView.builder(
+                            key: const ValueKey('review-move-list'),
+                            controller: _moveScroll,
+                            itemExtent: _moveExtent,
                             itemCount: _moves!.length,
                             itemBuilder: (_, i) => ListTile(
+                                key: ValueKey('review-move-${i + 1}'),
+                                selectedTileColor: const Color(0x447f7062),
                                 selected: _index == i + 1,
                                 title: Text('${i + 1}. ${_moves![i]['san']}',
                                     style:
@@ -638,7 +706,7 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                                                     color: qualityColor(
                                                         _qualities[i]!))),
                                           ]),
-                                onTap: () => setState(() => _index = i + 1)))),
+                                onTap: () => _selectMove(i + 1)))),
                   ]),
       );
 }
