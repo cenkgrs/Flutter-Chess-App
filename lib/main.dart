@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 import 'backend/app_backend.dart';
 import 'screens/home_menu_screen.dart';
@@ -7,6 +9,10 @@ import 'widgets/rok_style.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks(['Stockfish 18 / Flutter stockfish 1.8.1'],
+        await rootBundle.loadString('third_party/stockfish/LICENSE'));
+  });
   await AppBackend.initialize();
   runApp(const MyApp());
 }

@@ -1,5 +1,6 @@
 import 'package:chess/chess.dart' as c;
 import 'package:chess_puzzle_app/prototype/play_screen.dart';
+import 'package:chess_puzzle_app/prototype/stockfish_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -10,7 +11,15 @@ void usePhoneViewport(WidgetTester tester) {
   addTearDown(tester.view.resetDevicePixelRatio);
 }
 
-Widget playApp() => const MaterialApp(home: PlayScreen());
+Future<EngineEvaluation> fakeEngine(String fen, int elo) async {
+  final move = c.Chess.fromFEN(fen).generate_moves().first;
+  return EngineEvaluation(
+      '${move.fromAlgebraic}${move.toAlgebraic}${move.promotion?.name ?? ''}',
+      0,
+      null);
+}
+
+Widget playApp() => const MaterialApp(home: PlayScreen(evaluate: fakeEngine));
 
 Future<void> startNewGame(WidgetTester tester) async {
   await tester.tap(find.byKey(const ValueKey('inspection')));

@@ -17,6 +17,12 @@ void main() {
     expect(find.text('GİRİŞ YAP'), findsWidgets);
     expect(find.byKey(const ValueKey('email-field')), findsOneWidget);
     expect(find.byKey(const ValueKey('password-field')), findsOneWidget);
+    final input = tester.widget<TextField>(find.descendant(
+        of: find.byKey(const ValueKey('email-field')),
+        matching: find.byType(TextField)));
+    expect(input.style?.color, const Color(0xff211712));
+    expect(input.decoration?.labelStyle?.color, const Color(0xff65584e));
+    expect(input.decoration?.prefixIconColor, const Color(0xff65584e));
 
     await tester.tap(find.byKey(const ValueKey('auth-mode-toggle')));
     await tester.pump();

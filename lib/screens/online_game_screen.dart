@@ -1,4 +1,5 @@
 import '../widgets/rok_style.dart';
+import 'profile_screen.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -115,7 +116,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => RokDialog(
+      builder: (dialogContext) => RokResultDialog(
         icon: Icon(icon, size: 42),
         title: Text(outcomeLabel(outcome)),
         content:
@@ -125,6 +126,15 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
             onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Tahtaya dön'),
           ),
+          TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => GameReviewScreen(game: row)));
+              },
+              child: const Text('Motor analizi')),
           FilledButton(
             onPressed: () {
               Navigator.pop(dialogContext);

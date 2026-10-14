@@ -5,10 +5,46 @@ import 'package:chess/chess.dart' as c;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'engine.dart';
+import 'stockfish_engine.dart';
+import '../screens/profile_screen.dart';
 
 class PlayScreen extends StatefulWidget {
-  const PlayScreen({super.key, this.assistantMode = false});
+  const PlayScreen(
+      {super.key,
+      this.assistantMode = false,
+      this.initialFen,
+      this.initialElo = 1500,
+      this.evaluate});
+  final Future<EngineEvaluation> Function(String fen, int elo)? evaluate;
   final bool assistantMode;
+  final String? initialFen;
+  static Future<void> launch(BuildContext context, {String? fen}) async {
+    final elo = await showDialog<int>(
+        context: context,
+        builder: (ctx) => RokDialog(
+              title: const Text('Stockfish gücü'),
+              content: Column(mainAxisSize: MainAxisSize.min, children: [
+                const Text(
+                    'Motor güç ayarıdır; online rating ile eşdeğer değildir.'),
+                for (final value in [1320, 1500, 1800, 2100, 2400, 2800, 3190])
+                  TextButton(
+                      onPressed: () => Navigator.pop(ctx, value),
+                      child: Text('$value')),
+              ]),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Vazgeç'))
+              ],
+            ));
+    if (!context.mounted || elo == null) return;
+    await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) => PlayScreen(initialFen: fen, initialElo: elo)));
+  }
+
+  final int initialElo;
   @override
   State<PlayScreen> createState() => _PlayScreenState();
 }
@@ -16,7 +52,8 @@ class PlayScreen extends StatefulWidget {
 class _PlayScreenState extends State<PlayScreen>
     with SingleTickerProviderStateMixin {
   c.Chess game = c.Chess();
-  Difficulty difficulty = Difficulty.medium;
+  int engineElo = 1500;
+  String? startingFen;
   c.Color human = c.Color.WHITE;
   bool thinking = false, flipped = false, resigned = false;
   int generation = 0;
@@ -32,6 +69,13 @@ class _PlayScreenState extends State<PlayScreen>
   @override
   void initState() {
     super.initState();
+    engineElo = widget.initialElo;
+    startingFen = widget.initialFen;
+    if (widget.initialFen != null) {
+      game = c.Chess.fromFEN(widget.initialFen!);
+      human = game.turn;
+      flipped = human == c.Color.BLACK;
+    }
     assistantPulse = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1100),
@@ -47,7 +91,7 @@ class _PlayScreenState extends State<PlayScreen>
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => RokDialog(
+      builder: (dialogContext) => RokResultDialog(
         icon: Icon(won ? Icons.emoji_events_rounded : Icons.flag_outlined),
         title: Text(won
             ? 'Kazandın!'
@@ -59,6 +103,12 @@ class _PlayScreenState extends State<PlayScreen>
           TextButton(
               onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Tahtayı incele')),
+          TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                openAnalysis();
+              },
+              child: const Text('Motor analizi')),
           FilledButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
@@ -68,6 +118,24 @@ class _PlayScreenState extends State<PlayScreen>
         ],
       ),
     );
+  }
+
+  void openAnalysis() {
+    final replay =
+        startingFen == null ? c.Chess() : c.Chess.fromFEN(startingFen!);
+    final moves = <Map<String, dynamic>>[];
+    for (final san in game.getHistory().cast<String>()) {
+      replay.move(san);
+      moves.add({'san': san, 'fen_after': replay.fen});
+    }
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) => GameReviewScreen(
+                  game: const {},
+                  localMoves: moves,
+                  initialFen: startingFen,
+                )));
   }
 
   String get status {
@@ -105,10 +173,19 @@ class _PlayScreenState extends State<PlayScreen>
     try {
       await Future<void>.delayed(const Duration(milliseconds: 250));
       if (!mounted || ticket != generation) return;
-      final move = await ChessEngine().choose(game, difficulty);
+      final evaluation = widget.evaluate != null
+          ? await widget.evaluate!(game.fen, engineElo)
+          : await DeviceEngine.instance.evaluate(game.fen, elo: engineElo);
+      final move = evaluation.move;
       if (!mounted || ticket != generation) return;
       setState(() {
-        if (move != null) game.move(move);
+        if (move != null) {
+          game.move({
+            'from': move.substring(0, 2),
+            'to': move.substring(2, 4),
+            if (move.length > 4) 'promotion': move[4]
+          });
+        }
         assistantAdvice = null;
         thinking = false;
         refresh();
@@ -170,7 +247,7 @@ class _PlayScreenState extends State<PlayScreen>
   }
 
   Future<void> newGame() async {
-    var nextDifficulty = difficulty;
+    var nextDifficulty = engineElo;
     var nextColor = human;
     final accepted = await showDialog<bool>(
         context: context,
@@ -182,12 +259,20 @@ class _PlayScreenState extends State<PlayScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text('Rakibin seviyesi'),
-                        DropdownButton<Difficulty>(
+                        DropdownButton<int>(
                             isExpanded: true,
                             value: nextDifficulty,
-                            items: Difficulty.values
+                            items: const [
+                              1320,
+                              1500,
+                              1800,
+                              2100,
+                              2400,
+                              2800,
+                              3190
+                            ]
                                 .map((d) => DropdownMenuItem(
-                                    value: d, child: Text(d.label)))
+                                    value: d, child: Text('Stockfish · $d')))
                                 .toList(),
                             onChanged: (d) =>
                                 update(() => nextDifficulty = d!)),
@@ -207,7 +292,7 @@ class _PlayScreenState extends State<PlayScreen>
                             onChanged: (v) => update(() => nextColor = v!)),
                         const SizedBox(height: 12),
                         const Text(
-                            'Mevcut oyun sıfırlanır. Bu prototipte oyunlar süresiz oynanır.',
+                            'Stockfish güç ayarıdır; online rating ile eşdeğer değildir. Mevcut oyun sıfırlanır.',
                             style: TextStyle(fontSize: 12)),
                       ]),
                   actions: [
@@ -223,8 +308,9 @@ class _PlayScreenState extends State<PlayScreen>
     setState(() {
       generation++;
       game = c.Chess();
+      startingFen = null;
       human = nextColor;
-      difficulty = nextDifficulty;
+      engineElo = nextDifficulty;
       flipped = human == c.Color.BLACK;
       thinking = false;
       resigned = false;

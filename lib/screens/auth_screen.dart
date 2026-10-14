@@ -93,7 +93,8 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) => Scaffold(
         resizeToAvoidBottomInset: true,
         backgroundColor: const Color(0xff32180d),
-        body: DecoratedBox(
+        body: Container(
+          constraints: const BoxConstraints.expand(),
           decoration: const BoxDecoration(
             image: DecorationImage(
               image: AssetImage('lib/images/wood/background.png'),
@@ -301,6 +302,8 @@ class _AuthScreenState extends State<AuthScreen> {
     Widget? suffixIcon,
   }) =>
       TextFormField(
+        style: const TextStyle(color: Color(0xff211712)),
+        cursorColor: const Color(0xff211712),
         key: key,
         controller: controller,
         keyboardType: keyboardType,
@@ -309,6 +312,12 @@ class _AuthScreenState extends State<AuthScreen> {
         autocorrect: false,
         enableSuggestions: !obscureText,
         decoration: InputDecoration(
+          labelStyle: const TextStyle(color: Color(0xff65584e)),
+          floatingLabelStyle: const TextStyle(color: Color(0xff352a22)),
+          hintStyle: const TextStyle(color: Color(0xff65584e)),
+          prefixIconColor: const Color(0xff65584e),
+          suffixIconColor: const Color(0xff65584e),
+          errorStyle: const TextStyle(color: Color(0xff9b3028)),
           labelText: label,
           prefixIcon: Icon(icon),
           suffixIcon: suffixIcon,
