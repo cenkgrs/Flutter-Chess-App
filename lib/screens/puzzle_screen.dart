@@ -1,3 +1,4 @@
+import '../widgets/rok_style.dart';
 import 'dart:async';
 import 'package:chess/chess.dart' as c;
 import 'package:flutter/material.dart';
@@ -165,7 +166,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => RokScaffold(
         backgroundColor: const Color(0xff202120),
         appBar: AppBar(
             title: const Text('Bulmacalar'),

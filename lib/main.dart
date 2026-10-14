@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'backend/app_backend.dart';
 import 'screens/home_menu_screen.dart';
 import 'route_observer.dart';
+import 'widgets/rok_style.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,11 +20,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'ROK',
         navigatorObservers: [appRouteObserver],
-        theme: ThemeData(
-            useMaterial3: true,
-            colorScheme:
-                ColorScheme.fromSeed(seedColor: const Color(0xff202120)),
-            scaffoldBackgroundColor: const Color(0xfff5f3ee)),
+        theme: rokTheme(),
         home: const HomeMenuScreen());
   }
 }

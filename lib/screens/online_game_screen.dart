@@ -1,3 +1,4 @@
+import '../widgets/rok_style.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -114,7 +115,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => RokDialog(
         icon: Icon(icon, size: 42),
         title: Text(outcomeLabel(outcome)),
         content:
@@ -161,7 +162,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
       if (move.promotion != null) {
         final promotion = await showDialog<String>(
           context: context,
-          builder: (context) => AlertDialog(
+          builder: (context) => RokDialog(
             title: const Text('Piyonunu terfi ettir'),
             actions: ['q', 'r', 'b', 'n']
                 .map((piece) => TextButton(
@@ -250,7 +251,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
   Future<void> _resign({bool exitAfter = false}) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => RokDialog(
         title: Text(exitAfter
             ? 'Oyundan çıkmak istiyor musun?'
             : 'Teslim olmak istiyor musun?'),

@@ -1,3 +1,4 @@
+import '../widgets/rok_style.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -255,7 +256,7 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> with RouteAware {
   Future<void> _showAccountActions(BuildContext context) async {
     final signOut = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => RokDialog(
         title: const Text('Oturumu kapat'),
         content: const Text('ROK hesabından çıkmak istiyor musun?'),
         actions: [

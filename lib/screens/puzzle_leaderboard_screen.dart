@@ -1,3 +1,4 @@
+import '../widgets/rok_style.dart';
 import 'package:flutter/material.dart';
 import '../backend/app_backend.dart';
 
@@ -50,7 +51,7 @@ class _PuzzleLeaderboardScreenState extends State<PuzzleLeaderboardScreen> {
       );
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => RokScaffold(
         backgroundColor: const Color(0xff202120),
         appBar: AppBar(
             title: const Text('Bulmaca sıralaması'),

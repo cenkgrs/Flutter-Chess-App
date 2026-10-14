@@ -1,3 +1,4 @@
+import '../widgets/rok_style.dart';
 import 'package:chess/chess.dart' as c;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,7 +21,7 @@ class ProfileScreen extends StatelessWidget {
     final displayName =
         username == null || username.isEmpty ? 'ROK Oyuncusu' : username;
 
-    return Scaffold(
+    return RokScaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('PROFİLİM',
@@ -178,7 +179,7 @@ class RecentGamesScreen extends StatelessWidget {
   const RecentGamesScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => RokScaffold(
         extendBodyBehindAppBar: true,
         appBar: AppBar(
             title: const Text('SON MAÇLAR',
@@ -340,7 +341,7 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
       : c.Chess.fromFEN(_moves![_index - 1]['fen_after'] as String);
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => RokScaffold(
         appBar: AppBar(
             title: const Text('Maç inceleme'),
             backgroundColor: const Color(0xff202120),

@@ -1,3 +1,4 @@
+import '../widgets/rok_style.dart';
 import 'dart:async';
 import 'package:chess/chess.dart' as c;
 import 'package:flutter/material.dart';
@@ -5,7 +6,8 @@ import '../backend/app_backend.dart';
 import 'auth_screen.dart';
 
 class PuzzleDuelScreen extends StatefulWidget {
-  const PuzzleDuelScreen({super.key, this.request});
+  const PuzzleDuelScreen({super.key, this.request, this.gameId});
+  final String? gameId;
   final Future<Map<String, dynamic>> Function(String, Map<String, dynamic>)?
       request;
   @override
@@ -18,6 +20,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
   String? _id, _selected, _error;
   bool _busy = false, _searching = false;
   int? _rating;
+  Map<String, dynamic>? _rematch;
   Future<Map<String, dynamic>> _rpc(String name,
           [Map<String, dynamic> params = const {}]) async =>
       widget.request != null
@@ -43,14 +46,130 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
   @override
   void initState() {
     super.initState();
-    _profile();
+    if (widget.gameId != null) {
+      _id = widget.gameId;
+      _sync();
+    } else {
+      _profile();
+    }
     _timer = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (_state?['status'] == 'finished' &&
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+        _checkRematch();
+      }
       if ((_searching || (_id != null && _state?['status'] != 'finished')) &&
           WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
         _sync();
       }
     });
   }
+
+  Future<void> _checkRematch({bool request = false}) async {
+    if (_busy || _id == null) return;
+    _busy = true;
+    try {
+      final row = await _rpc(
+          request ? 'duel_rematch' : 'duel_rematch_status', {'p_match': _id});
+      if (!mounted) return;
+      final next = row['game_id'] as String?;
+      setState(() {
+        _rematch = row;
+        if (next != null) {
+          _id = next;
+          _state = null;
+          _selected = null;
+          _rematch = null;
+        }
+      });
+      if (next != null) {
+        _busy = false;
+        await _sync();
+      }
+    } catch (_) {
+      if (mounted && request) {
+        setState(() => _error = 'Rövanş gönderilemedi. Tekrar dene.');
+      }
+    } finally {
+      _busy = false;
+    }
+  }
+
+  Widget _resultDetails(Map<String, dynamic> s) =>
+      Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Card(
+            color: rokGraphite,
+            child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(children: [
+                  Icon(
+                      s['score'] == s['opponent_score']
+                          ? Icons.balance_rounded
+                          : (s['score'] as num) > (s['opponent_score'] as num)
+                              ? Icons.emoji_events_rounded
+                              : Icons.flag_outlined,
+                      color: rokBone,
+                      size: 48),
+                  const SizedBox(height: 12),
+                  Text(
+                      s['score'] == s['opponent_score']
+                          ? 'Berabere!'
+                          : (s['score'] as num) > (s['opponent_score'] as num)
+                              ? 'Kazandın!'
+                              : 'Rakibin kazandı',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          color: rokBone,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 16),
+                  Text(
+                      'Sen ${s['score']} — ${s['opponent_score']} ${s['opponent']}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: rokBone, fontSize: 20)),
+                  const Divider(height: 28, color: Color(0xff686966)),
+                  Text(
+                      'Rating değişimi: ${s['delta']} · Yeni rating: ${(s['rating'] as num) + (s['delta'] as num)}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: rokBone)),
+                  if (s['opponent_delta'] != null)
+                    Text(
+                        'Rakip rating: ${s['opponent_rating']} → ${(s['opponent_rating'] as num) + (s['opponent_delta'] as num)}',
+                        style: const TextStyle(color: rokBone)),
+                ]))),
+        FilledButton.icon(
+            onPressed: _rematch?['status'] == 'pending' &&
+                    _rematch?['incoming'] != true
+                ? null
+                : () => _checkRematch(request: true),
+            icon: const Icon(Icons.replay),
+            label: Text(_rematch?['incoming'] == true
+                ? 'RÖVANŞI KABUL ET'
+                : _rematch?['status'] == 'pending'
+                    ? 'RAKİBİN YANITI BEKLENİYOR'
+                    : 'RÖVANŞ')),
+        TextButton(onPressed: _leave, child: const Text('MENÜYE DÖN')),
+        const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Text('TUR ÖZETİ',
+                style: TextStyle(color: rokBone, letterSpacing: 1.5))),
+        for (final row in (s['history'] as List? ?? []))
+          Card(
+              color: rokGraphite,
+              child: ListTile(
+                leading: Text('${row['turn']}',
+                    style: const TextStyle(color: rokBone, fontSize: 20)),
+                title: Text(
+                    ((row['turn'] as int).isOdd == (s['is_a'] == true))
+                        ? 'Sen'
+                        : s['opponent'].toString(),
+                    style: const TextStyle(color: rokBone)),
+                subtitle: Text(
+                    '${row['seconds'] ?? '—'} sn · ${row['mistakes'] ?? '—'} hata · ${row['reason'] == 'timeout' ? 'Süre doldu' : row['reason'] == 'skip' ? 'Geçildi' : 'Çözüldü'}',
+                    style: const TextStyle(color: Color(0xffb9aea5))),
+                trailing: Text('${row['points']} puan',
+                    style: const TextStyle(color: rokBone)),
+              )),
+      ]);
 
   Future<void> _start() async {
     if (AppBackend.currentUser == null && widget.request == null) {
@@ -182,7 +301,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
     super.dispose();
   }
 
-  Widget _lobby() => Scaffold(
+  Widget _lobby() => RokScaffold(
         backgroundColor: const Color(0xff32180d),
         body: DecoratedBox(
           decoration: const BoxDecoration(
@@ -289,7 +408,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
         },
         child: s == null
             ? _lobby()
-            : Scaffold(
+            : RokScaffold(
                 backgroundColor: const Color(0xff202120),
                 appBar: AppBar(
                     title: const Text('Bulmaca Düellosu'),
@@ -307,24 +426,11 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                     child:
                         ListView(padding: const EdgeInsets.all(16), children: [
                   ...[
-                    Text('Rakip: ${s['opponent']} · Rating ${s['rating']}',
+                    Text('Rakip: ${s['opponent']}',
                         style: const TextStyle(color: Colors.white70)),
                     const SizedBox(height: 12),
                     if (finished) ...[
-                      Text(
-                          s['score'] == s['opponent_score']
-                              ? 'Berabere!'
-                              : (s['score'] as num) >
-                                      (s['opponent_score'] as num)
-                                  ? 'Kazandın!'
-                                  : 'Rakibin kazandı',
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 28)),
-                      Text(
-                          'Rating değişimi: ${s['delta']} · Yeni rating: ${(s['rating'] as num) + (s['delta'] as num)}',
-                          style: const TextStyle(color: Colors.white)),
-                      FilledButton(
-                          onPressed: _leave, child: const Text('MENÜYE DÖN')),
+                      _resultDetails(s),
                     ] else ...[
                       Text('Tur ${s['turn']}/20 · ${s['seconds_left']} sn',
                           style: const TextStyle(

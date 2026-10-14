@@ -3,6 +3,54 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:chess_puzzle_app/screens/puzzle_duel_screen.dart';
 
 void main() {
+  testWidgets('result has round details and rematch request waits for consent',
+      (tester) async {
+    String? requested;
+    await tester.pumpWidget(MaterialApp(
+        home: PuzzleDuelScreen(
+            gameId: 'match',
+            request: (name, params) async {
+              if (name == 'duel_rematch') {
+                requested = name;
+                return {
+                  'status': 'pending',
+                  'incoming': false,
+                  'game_id': null
+                };
+              }
+              if (name == 'duel_rematch_status') return {'status': 'none'};
+              return {
+                'status': 'finished',
+                'turn': 21,
+                'step': 0,
+                'score': 140,
+                'opponent_score': 0,
+                'opponent': 'Bobby',
+                'rating': 1200,
+                'delta': 16,
+                'opponent_rating': 1200,
+                'opponent_delta': -16,
+                'is_a': true,
+                'history': [
+                  {
+                    'turn': 1,
+                    'seconds': 8.5,
+                    'mistakes': 1,
+                    'points': 70,
+                    'reason': 'move'
+                  }
+                ]
+              };
+            })));
+    await tester.pumpAndSettle();
+    expect(find.text('8.5 sn · 1 hata · Çözüldü'), findsOneWidget);
+    await tester.ensureVisible(find.text('RÖVANŞ'));
+    await tester.tap(find.text('RÖVANŞ'));
+    await tester.pumpAndSettle();
+    expect(requested, 'duel_rematch');
+    expect(find.text('RAKİBİN YANITI BEKLENİYOR'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
   testWidgets('lobby uses wood matchmaking layout and cancel button',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
