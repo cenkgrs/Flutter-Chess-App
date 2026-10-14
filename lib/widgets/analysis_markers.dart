@@ -10,14 +10,15 @@ Color qualityColor(String quality) => switch (quality) {
     };
 
 class QualityBadge extends StatelessWidget {
-  const QualityBadge(this.quality, {super.key});
+  const QualityBadge(this.quality, {super.key, this.size = 20});
   final String quality;
+  final double size;
   @override
   Widget build(BuildContext context) => Tooltip(
       message: quality,
       child: Container(
-        width: 20,
-        height: 20,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
             color: qualityColor(quality),
             shape: BoxShape.circle,
@@ -30,7 +31,7 @@ class QualityBadge extends StatelessWidget {
               'İsabetsizlik' => Icons.remove_rounded,
               _ => Icons.close_rounded,
             },
-            size: 15,
+            size: size * .75,
             color: const Color(0xff13201a)),
       ));
 }
