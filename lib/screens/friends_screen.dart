@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import '../backend/friend_repository.dart';
 import '../online/time_control.dart';
 import 'online_game_screen.dart';
+import 'puzzle_duel_screen.dart';
+import '../widgets/rok_style.dart';
 
 class FriendsScreen extends StatefulWidget {
   const FriendsScreen({super.key, this.repository});
@@ -152,6 +154,37 @@ class _FriendsScreenState extends State<FriendsScreen> {
   }
 
   Future<void> _invite(String id) async {
+    final mode = await showModalBottomSheet<String>(
+        context: context,
+        builder: (ctx) => SafeArea(
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const ListTile(title: Text('OYUNA DAVET ET')),
+              ListTile(
+                  leading: const Icon(Icons.castle_outlined),
+                  title: const Text('Satranç'),
+                  onTap: () => Navigator.pop(ctx, 'chess')),
+              ListTile(
+                  leading: const Icon(Icons.bolt_outlined),
+                  title: const Text('Bulmaca Düellosu'),
+                  subtitle: const Text('10 bulmaca · 30 saniyelik turlar'),
+                  onTap: () => Navigator.pop(ctx, 'duel')),
+            ])));
+    if (!mounted || mode == null) return;
+    if (mode == 'duel') {
+      setState(() => _busy = true);
+      try {
+        await _repo.inviteDuel(id);
+        await _load();
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Düello daveti gönderilemedi.')));
+        }
+      } finally {
+        if (mounted) setState(() => _busy = false);
+      }
+      return;
+    }
     final control = await showModalBottomSheet<TimeControl>(
         context: context,
         builder: (context) => SafeArea(
@@ -180,11 +213,18 @@ class _FriendsScreenState extends State<FriendsScreen> {
   Future<void> _respond(Map<String, dynamic> invite, bool accept) async {
     setState(() => _busy = true);
     try {
-      final game = await _repo.respond(invite['id'] as String, accept);
+      final duel = invite['kind'] == 'duel';
+      final game = duel
+          ? await _repo.respondDuel(invite['id'] as String, accept)
+          : await _repo.respond(invite['id'] as String, accept);
       if (!mounted) return;
       if (game != null) {
-        await Navigator.push(context,
-            MaterialPageRoute(builder: (_) => OnlineGameScreen(gameId: game)));
+        await Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => duel
+                    ? PuzzleDuelScreen(gameId: game)
+                    : OnlineGameScreen(gameId: game)));
       }
       await _load();
     } catch (_) {
@@ -207,7 +247,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
   @override
   Widget build(BuildContext context) => Theme(
-        data: ThemeData.dark().copyWith(
+        data: rokTheme().copyWith(
             scaffoldBackgroundColor: const Color(0xff202120),
             colorScheme: const ColorScheme.dark(
                 primary: Color(0xfff3eee7), surface: Color(0xff2b2c2b)),
@@ -257,18 +297,25 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                Text(
-                                                    '${invite['username']} · ${invite['minutes']}+${invite['increment']}'),
+                                                Text(invite['kind'] == 'duel'
+                                                    ? '${invite['username']} · Bulmaca Düellosu'
+                                                    : '${invite['username']} · ${invite['minutes']}+${invite['increment']}'),
                                                 if (invite['status'] ==
                                                     'accepted')
                                                   TextButton(
                                                       onPressed: () => Navigator.push(
                                                           context,
                                                           MaterialPageRoute(
-                                                              builder: (_) => OnlineGameScreen(
-                                                                  gameId: invite[
-                                                                          'game_id']
-                                                                      as String))),
+                                                              builder: (_) => invite[
+                                                                          'kind'] ==
+                                                                      'duel'
+                                                                  ? PuzzleDuelScreen(
+                                                                      gameId: invite['game_id']
+                                                                          as String)
+                                                                  : OnlineGameScreen(
+                                                                      gameId: invite[
+                                                                              'game_id']
+                                                                          as String))),
                                                       child: const Text(
                                                           'Maça katıl'))
                                                 else if (invite['incoming'] ==

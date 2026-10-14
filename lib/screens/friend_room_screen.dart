@@ -1,3 +1,4 @@
+import '../widgets/rok_style.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -114,7 +115,7 @@ class _FriendRoomScreenState extends State<FriendRoomScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => RokScaffold(
         backgroundColor: const Color(0xff32180d),
         appBar: AppBar(
           title: const Text(

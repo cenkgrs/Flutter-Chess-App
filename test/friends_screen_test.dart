@@ -11,6 +11,11 @@ class FakeFriends extends FriendRepository {
   ];
   String? lastAction;
   @override
+  Future<void> inviteDuel(String id) async {
+    lastAction = 'duel';
+  }
+
+  @override
   Future<List<Map<String, dynamic>>> list() async => rows;
   @override
   Future<List<Map<String, dynamic>>> search(String query) async => [
@@ -24,6 +29,19 @@ class FakeFriends extends FriendRepository {
 }
 
 void main() {
+  testWidgets('friend invitation offers chess and puzzle duel', (tester) async {
+    final repo = FakeFriends();
+    repo.rows.first['status'] = 'accepted';
+    await tester.pumpWidget(MaterialApp(home: FriendsScreen(repository: repo)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Oyuna davet et'));
+    await tester.pumpAndSettle();
+    expect(find.text('Satranç'), findsOneWidget);
+    await tester.tap(find.text('Bulmaca Düellosu'));
+    await tester.pumpAndSettle();
+    expect(repo.lastAction, 'duel');
+    await tester.pumpWidget(const SizedBox());
+  });
   testWidgets('incoming request can be accepted and player can be searched',
       (tester) async {
     final repo = FakeFriends();

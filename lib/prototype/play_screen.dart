@@ -1,3 +1,4 @@
+import '../widgets/rok_style.dart';
 import 'dart:math' as math;
 
 import 'package:chess/chess.dart' as c;
@@ -46,7 +47,7 @@ class _PlayScreenState extends State<PlayScreen>
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => RokDialog(
         icon: Icon(won ? Icons.emoji_events_rounded : Icons.flag_outlined),
         title: Text(won
             ? 'Kazandın!'
@@ -131,7 +132,7 @@ class _PlayScreenState extends State<PlayScreen>
         final ticket = generation;
         final promotion = await showDialog<String>(
             context: context,
-            builder: (context) => AlertDialog(
+            builder: (context) => RokDialog(
                   title: const Text('Piyonunu terfi ettir'),
                   content: Wrap(
                       spacing: 8,
@@ -174,7 +175,7 @@ class _PlayScreenState extends State<PlayScreen>
     final accepted = await showDialog<bool>(
         context: context,
         builder: (context) => StatefulBuilder(
-            builder: (context, update) => AlertDialog(
+            builder: (context, update) => RokDialog(
                   title: const Text('Yeni bir oyun'),
                   content: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -254,7 +255,7 @@ class _PlayScreenState extends State<PlayScreen>
   Future<void> resign() async {
     final yes = await showDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
+        builder: (context) => RokDialog(
                 title: const Text('Teslim olmak istiyor musun?'),
                 actions: [
                   TextButton(

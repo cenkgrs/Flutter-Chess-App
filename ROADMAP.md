@@ -7,6 +7,25 @@
 
 # Bu sürümün kurulumu
 
+## Arkadaş düellosu, rövanş ve ortak tasarım (14 Ekim)
+
+Önceki migration'ların ardından ROK projesine sırayla:
+
+1. `supabase/migrations/20261014120000_duel_invites_and_results.sql`
+2. `supabase/migrations/20261014121000_duel_result_details.sql`
+
+- Arkadaşlar → Oyuna davet et → Satranç veya Bulmaca Düellosu.
+  Kabul edilen düello iki tarafta aynı maç kimliğiyle açılır.
+- Sonuç ekranında iki tarafın skor/rating bilgisi ve 20 turun süresi,
+  hata sayısı, puanı gösterilir. Eski tur kayıtlarındaki eksik ölçümler `—` olur.
+- Rövanş yalnızca bitmiş maçın iki oyuncusunca istenebilir. İkinci oyuncu kabul
+  etmeden maç başlamaz. Arkadaş olmayan rastgele rakipler de maç sonu rövanş yapabilir.
+  Davet 5 dakika geçerlidir; bitiş ekranı açıkken durum 2 saniyede yenilenir.
+- `lib/widgets/rok_style.dart`: yeni sayfalarda `RokScaffold`, onay ve sonuç
+  pencerelerinde `RokDialog` kullanılmalı. Global tema koyu kart/kemik rengi
+  düğmeler sağlar. Mevcut özel ahşap oyun tahtası ekranları korunur.
+- Yerel SQL/widget testleri canlı iki cihaz testinin yerine geçmez.
+
 ## Doğrudan davet ve Bulmaca Düellosu (13 Ekim)
 
 ROK projesinde önceki migration'ların ardından sırayla:
