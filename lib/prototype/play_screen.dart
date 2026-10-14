@@ -21,7 +21,7 @@ class PlayScreen extends StatefulWidget {
   static Future<void> launch(BuildContext context, {String? fen}) async {
     final elo = await showDialog<int>(
         context: context,
-        builder: (ctx) => RokDialog(
+        builder: (ctx) => RokWoodDialog(
               title: const Text('Stockfish gücü'),
               content: Column(mainAxisSize: MainAxisSize.min, children: [
                 const Text(
@@ -133,6 +133,7 @@ class _PlayScreenState extends State<PlayScreen>
         MaterialPageRoute(
             builder: (_) => GameReviewScreen(
                   game: const {},
+                  playerColor: human,
                   localMoves: moves,
                   initialFen: startingFen,
                 )));

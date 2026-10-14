@@ -9,6 +9,7 @@ import '../online/game_result.dart';
 import 'friends_screen.dart';
 import '../prototype/play_screen.dart';
 import '../prototype/stockfish_engine.dart';
+import '../widgets/analysis_markers.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -327,10 +328,17 @@ class _OutcomeIcon extends StatelessWidget {
 
 class GameReviewScreen extends StatefulWidget {
   const GameReviewScreen(
-      {super.key, required this.game, this.localMoves, this.initialFen});
+      {super.key,
+      required this.game,
+      this.localMoves,
+      this.initialFen,
+      this.playerColor,
+      this.evaluate});
+  final Future<EngineEvaluation> Function(String fen)? evaluate;
   final Map<String, dynamic> game;
   final List<Map<String, dynamic>>? localMoves;
   final String? initialFen;
+  final c.Color? playerColor;
   @override
   State<GameReviewScreen> createState() => _GameReviewScreenState();
 }
@@ -341,6 +349,15 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
   bool _analyzing = false;
   String? _error;
   final Map<int, String> _qualities = {};
+  final Map<int, EngineEvaluation> _evaluations = {};
+  final Map<int, String> _destinations = {};
+  int _progress = 0;
+  c.Color get _player =>
+      widget.playerColor ??
+      (widget.game['black_id'] != null &&
+              widget.game['black_id'] == AppBackend.currentUser?.id
+          ? c.Color.BLACK
+          : c.Color.WHITE);
   int _analysisGeneration = 0;
   @override
   void initState() {
@@ -366,6 +383,8 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
   c.Chess get _start => widget.initialFen == null
       ? c.Chess()
       : c.Chess.fromFEN(widget.initialFen!);
+  Future<EngineEvaluation> _evaluate(String fen) =>
+      widget.evaluate?.call(fen) ?? DeviceEngine.instance.evaluate(fen);
 
   Future<void> _analyze() async {
     final ticket = ++_analysisGeneration;
@@ -373,28 +392,40 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
       _analyzing = true;
       _error = null;
       _qualities.clear();
+      _evaluations.clear();
+      _destinations.clear();
+      _progress = 0;
     });
     var position = _start;
     try {
-      var before = await DeviceEngine.instance.evaluate(position.fen);
+      var before = await _evaluate(position.fen);
+      if (!mounted || ticket != _analysisGeneration) return;
+      setState(() => _evaluations[0] = before);
       for (var i = 0; i < _moves!.length; i++) {
         if (!mounted || ticket != _analysisGeneration) return;
         final san = _moves![i]['san'] as String;
+        final ourMove = position.turn == _player;
         if (!position.move(san)) throw StateError('Eksik hamle geçmişi');
         final played = position.history.last.move;
         final uci =
             '${played.fromAlgebraic}${played.toAlgebraic}${played.promotion?.name ?? ''}';
         final after = position.game_over
             ? EngineEvaluation(null, 0, position.in_checkmate ? -1 : null)
-            : await DeviceEngine.instance.evaluate(position.fen);
+            : await _evaluate(position.fen);
         if (!mounted || ticket != _analysisGeneration) return;
         if ((before.cp == null && before.mate == null) ||
             (after.cp == null && after.mate == null)) {
           throw StateError('Motor değerlendirmesi alınamadı');
         }
         final loss = (before.score + after.score).clamp(0, 200000);
-        setState(
-            () => _qualities[i] = moveQuality(loss, best: before.move == uci));
+        setState(() {
+          _evaluations[i + 1] = after;
+          _progress = i + 1;
+          if (ourMove) {
+            _qualities[i] = moveQuality(loss, best: before.move == uci);
+            _destinations[i] = played.toAlgebraic;
+          }
+        });
         before = after;
       }
     } catch (_) {
@@ -432,42 +463,85 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                 : Column(children: [
                     Flexible(
                         child: AspectRatio(
-                            aspectRatio: 1,
+                            aspectRatio: 1.12,
                             child: Padding(
                                 padding: const EdgeInsets.all(8),
-                                child: GridView.builder(
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    itemCount: 64,
-                                    gridDelegate:
-                                        const SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: 8),
-                                    itemBuilder: (context, i) {
-                                      final file = i % 8, rank = 8 - i ~/ 8;
-                                      final piece = _position
-                                          .get('${'abcdefgh'[file]}$rank');
-                                      return ColoredBox(
-                                          color: (i ~/ 8 + file).isEven
-                                              ? const Color(0xffd9b77e)
-                                              : const Color(0xff85552f),
-                                          child: piece == null
-                                              ? const SizedBox()
-                                              : Image.asset(
-                                                  'lib/images/wood/${const {
-                                                    'p': 'pawn',
-                                                    'r': 'rook',
-                                                    'n': 'knight',
-                                                    'b': 'bishop',
-                                                    'q': 'queen',
-                                                    'k': 'king'
-                                                  }[piece.type.name]}.png',
-                                                  color: piece.color ==
-                                                          c.Color.WHITE
-                                                      ? const Color(0xfffff5df)
-                                                      : const Color(0xff48291c),
-                                                  colorBlendMode:
-                                                      BlendMode.modulate));
-                                    })))),
+                                child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Expanded(
+                                          child: AspectRatio(
+                                              aspectRatio: 1,
+                                              child: GridView.builder(
+                                                  physics:
+                                                      const NeverScrollableScrollPhysics(),
+                                                  itemCount: 64,
+                                                  gridDelegate:
+                                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                                          crossAxisCount: 8),
+                                                  itemBuilder: (context, i) {
+                                                    final file = i % 8,
+                                                        rank = 8 - i ~/ 8;
+                                                    final piece = _position.get(
+                                                        '${'abcdefgh'[file]}$rank');
+                                                    final badge = _destinations[
+                                                                _index - 1] ==
+                                                            '${'abcdefgh'[file]}$rank'
+                                                        ? _qualities[_index - 1]
+                                                        : null;
+                                                    return ColoredBox(
+                                                        color: (i ~/ 8 + file)
+                                                                .isEven
+                                                            ? const Color(
+                                                                0xffd9b77e)
+                                                            : const Color(
+                                                                0xff85552f),
+                                                        child: Stack(
+                                                            fit:
+                                                                StackFit.expand,
+                                                            children: [
+                                                              piece == null
+                                                                  ? const SizedBox()
+                                                                  : Image.asset(
+                                                                      'lib/images/wood/${const {
+                                                                        'p':
+                                                                            'pawn',
+                                                                        'r':
+                                                                            'rook',
+                                                                        'n':
+                                                                            'knight',
+                                                                        'b':
+                                                                            'bishop',
+                                                                        'q':
+                                                                            'queen',
+                                                                        'k':
+                                                                            'king'
+                                                                      }[piece.type.name]}.png',
+                                                                      color: piece.color ==
+                                                                              c.Color
+                                                                                  .WHITE
+                                                                          ? const Color(
+                                                                              0xfffff5df)
+                                                                          : const Color(
+                                                                              0xff48291c),
+                                                                      colorBlendMode:
+                                                                          BlendMode
+                                                                              .modulate),
+                                                              if (badge != null)
+                                                                Positioned(
+                                                                    right: 0,
+                                                                    top: 0,
+                                                                    child: QualityBadge(
+                                                                        badge)),
+                                                            ]));
+                                                  }))),
+                                      const SizedBox(width: 8),
+                                      EvaluationBar(
+                                          evaluation: _evaluations[_index],
+                                          whiteToMove:
+                                              _position.turn == c.Color.WHITE),
+                                    ])))),
                     Text(
                         _index == 0
                             ? 'Başlangıç konumu'
@@ -513,7 +587,7 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                                   : _analyze,
                               icon: const Icon(Icons.analytics_outlined),
                               label: Text(_analyzing
-                                  ? 'Analiz ${_qualities.length}/${_moves!.length}'
+                                  ? 'Analiz $_progress/${_moves!.length}'
                                   : 'Motor analizi')),
                           TextButton(
                               onPressed: _analyzing || _position.game_over
@@ -531,22 +605,13 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                       Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: Text(
-                              ['Beyaz', 'Siyah'].asMap().entries.map((side) {
-                                final firstWhite = _start.turn == c.Color.WHITE;
-                                final labels = _qualities.entries
-                                    .where((e) =>
-                                        (e.key + (firstWhite ? 0 : 1)) % 2 ==
-                                        side.key)
-                                    .map((e) => e.value)
-                                    .toList();
-                                return '${side.value}: ${[
-                                  'En iyi',
-                                  'İyi',
-                                  'İsabetsizlik',
-                                  'Hata',
-                                  'Büyük hata'
-                                ].map((q) => '$q ${labels.where((v) => v == q).length}').join(' · ')}';
-                              }).join('\n'),
+                              'Senin hamlelerin (${_player == c.Color.WHITE ? 'Beyaz' : 'Siyah'}): ${[
+                                'En iyi',
+                                'İyi',
+                                'İsabetsizlik',
+                                'Hata',
+                                'Büyük hata'
+                              ].map((q) => '$q ${_qualities.values.where((v) => v == q).length}').join(' · ')}',
                               style: const TextStyle(fontSize: 11))),
                     const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12),
@@ -561,7 +626,18 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                                 title: Text('${i + 1}. ${_moves![i]['san']}',
                                     style:
                                         const TextStyle(color: Colors.white)),
-                                trailing: Text(_qualities[i] ?? ''),
+                                trailing: _qualities[i] == null
+                                    ? null
+                                    : Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                            QualityBadge(_qualities[i]!),
+                                            const SizedBox(width: 8),
+                                            Text(_qualities[i]!,
+                                                style: TextStyle(
+                                                    color: qualityColor(
+                                                        _qualities[i]!))),
+                                          ]),
                                 onTap: () => setState(() => _index = i + 1)))),
                   ]),
       );
