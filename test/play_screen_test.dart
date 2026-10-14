@@ -1,6 +1,7 @@
 import 'package:chess/chess.dart' as c;
 import 'package:chess_puzzle_app/prototype/play_screen.dart';
 import 'package:chess_puzzle_app/prototype/stockfish_engine.dart';
+import 'package:chess_puzzle_app/prototype/engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -36,6 +37,42 @@ Future<void> move(WidgetTester tester, String from, String to) async {
 }
 
 void main() {
+  testWidgets('Queued premove executes only after the opponent replies',
+      (tester) async {
+    usePhoneViewport(tester);
+    await tester.pumpWidget(playApp());
+    await move(tester, 'e2', 'e4');
+    await move(tester, 'g1', 'f3');
+    final dynamic state = tester.state(find.byType(PlayScreen));
+    expect(state.game.get('g1'), isNotNull);
+    expect(state.premove, isNotNull);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(state.game.get('f3')?.type, c.PieceType.KNIGHT);
+    expect(state.premove, isNull);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets('Assistant stays below a full-size board without a modal',
+      (tester) async {
+    usePhoneViewport(tester);
+    await tester
+        .pumpWidget(const MaterialApp(home: PlayScreen(assistantMode: true)));
+    final dynamic state = tester.state(find.byType(PlayScreen));
+    final before = tester.getRect(find.byKey(const ValueKey('square-a8')));
+    state.setState(() {
+      state.assistantAdvice =
+          const ChessAdvice('Nc3', 'b1', 'c3', ['Nc3'], 'Öneri', 'Açıklama');
+    });
+    await tester.pump();
+    final after = tester.getRect(find.byKey(const ValueKey('square-a8')));
+    expect(after, before);
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(
+        tester.getTopLeft(find.textContaining('Öneri')).dy,
+        greaterThan(
+            tester.getBottomLeft(find.byKey(const ValueKey('square-a1'))).dy));
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('Checkmate shows a result and keeps an exit after dismissal',
       (tester) async {
     usePhoneViewport(tester);

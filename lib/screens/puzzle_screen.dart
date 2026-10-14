@@ -1,3 +1,4 @@
+import '../l10n/app_language.dart';
 import '../widgets/rok_style.dart';
 import 'dart:async';
 import 'package:chess/chess.dart' as c;
@@ -132,11 +133,11 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
         final promotion = await showDialog<String>(
             context: context,
             builder: (ctx) => SimpleDialog(
-                title: const Text('Terfi'),
+                title: const LText('Terfi'),
                 children: ['q', 'r', 'b', 'n']
                     .map((p) => SimpleDialogOption(
                           onPressed: () => Navigator.pop(ctx, p),
-                          child: Text({
+                          child: LText({
                             'q': 'Vezir',
                             'r': 'Kale',
                             'b': 'Fil',
@@ -169,11 +170,11 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
   Widget build(BuildContext context) => RokScaffold(
         backgroundColor: const Color(0xff202120),
         appBar: AppBar(
-            title: const Text('Bulmacalar'),
+            title: const LText('Bulmacalar'),
             actions: [
               if (AppBackend.currentUser != null)
                 IconButton(
-                  tooltip: 'Bulmaca sıralaması',
+                  tooltip: tr(context, 'Bulmaca sıralaması'),
                   icon: const Icon(Icons.emoji_events_outlined),
                   onPressed: () => Navigator.push(
                       context,
@@ -191,23 +192,23 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
                       MaterialPageRoute(builder: (_) => const AuthScreen()));
                   if (mounted && AppBackend.currentUser != null) load();
                 },
-                child: const Text('Bulmacalar için giriş yap'),
+                child: const LText('Bulmacalar için giriş yap'),
               ))
             : SafeArea(
                 child: SingleChildScrollView(
                     child: Column(children: [
                 Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Text(
+                    child: LText(
                       'Seviyen: ${attempt?['rating'] ?? 1200}  ·  Puan: ${attempt?['points'] ?? 0}',
                       style: const TextStyle(color: Colors.white, fontSize: 18),
                     )),
                 if (attempt != null && attempt!['empty'] != true) ...[
-                  Text('Bulmaca zorluğu: ${attempt!['difficulty']}',
+                  LText('Bulmaca zorluğu: ${attempt!['difficulty']}',
                       style: const TextStyle(color: Colors.white70)),
                   ValueListenableBuilder<int>(
                       valueListenable: elapsed,
-                      builder: (_, seconds, __) => Text(
+                      builder: (_, seconds, __) => LText(
                           '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}',
                           style: const TextStyle(color: Colors.white70))),
                   Padding(
@@ -270,7 +271,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
                 if (busy) const LinearProgressIndicator(),
                 Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Text(
+                    child: LText(
                         attempt?['empty'] == true
                             ? 'Bu seviyede yeni bulmaca havuzu hazırlanıyor. Daha sonra tekrar gel.'
                             : message,
@@ -280,21 +281,21 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
                   Wrap(spacing: 8, children: [
                     TextButton(
                         onPressed: busy ? null : () => action('hint'),
-                        child: const Text('İpucu')),
+                        child: const LText('İpucu')),
                     TextButton(
                         onPressed: busy ? null : () => action('reveal'),
-                        child: const Text('Çözümü göster')),
+                        child: const LText('Çözümü göster')),
                     TextButton(
                         onPressed: busy ? null : () => action('skip'),
-                        child: const Text('Geç')),
+                        child: const LText('Geç')),
                   ])
                 else
                   FilledButton(
                       onPressed: busy ? null : load,
-                      child: const Text('Sonraki bulmaca')),
+                      child: const LText('Sonraki bulmaca')),
                 const Padding(
                     padding: EdgeInsets.all(16),
-                    child: Text(
+                    child: LText(
                         'Zorluk + hız bonusu · İpucu puan kazandırmaz\nYanlış denemeler puanı azaltır.',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.white54))),

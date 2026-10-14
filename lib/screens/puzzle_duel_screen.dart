@@ -1,3 +1,4 @@
+import '../l10n/app_language.dart';
 import '../widgets/rok_style.dart';
 import 'dart:async';
 import 'package:chess/chess.dart' as c;
@@ -110,7 +111,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                       color: rokBone,
                       size: 48),
                   const SizedBox(height: 12),
-                  Text(
+                  LText(
                       s['score'] == s['opponent_score']
                           ? 'Berabere!'
                           : (s['score'] as num) > (s['opponent_score'] as num)
@@ -122,17 +123,17 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                           fontSize: 28,
                           fontWeight: FontWeight.w600)),
                   const SizedBox(height: 16),
-                  Text(
+                  LText(
                       'Sen ${s['score']} — ${s['opponent_score']} ${s['opponent']}',
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: rokBone, fontSize: 20)),
                   const Divider(height: 28, color: Color(0xff686966)),
-                  Text(
+                  LText(
                       'Rating değişimi: ${s['delta']} · Yeni rating: ${(s['rating'] as num) + (s['delta'] as num)}',
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: rokBone)),
                   if (s['opponent_delta'] != null)
-                    Text(
+                    LText(
                         'Rakip rating: ${s['opponent_rating']} → ${(s['opponent_rating'] as num) + (s['opponent_delta'] as num)}',
                         style: const TextStyle(color: rokBone)),
                 ]))),
@@ -142,31 +143,31 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                 ? null
                 : () => _checkRematch(request: true),
             icon: const Icon(Icons.replay),
-            label: Text(_rematch?['incoming'] == true
+            label: LText(_rematch?['incoming'] == true
                 ? 'RÖVANŞI KABUL ET'
                 : _rematch?['status'] == 'pending'
                     ? 'RAKİBİN YANITI BEKLENİYOR'
                     : 'RÖVANŞ')),
-        TextButton(onPressed: _leave, child: const Text('MENÜYE DÖN')),
+        TextButton(onPressed: _leave, child: const LText('MENÜYE DÖN')),
         const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
-            child: Text('TUR ÖZETİ',
+            child: LText('TUR ÖZETİ',
                 style: TextStyle(color: rokBone, letterSpacing: 1.5))),
         for (final row in (s['history'] as List? ?? []))
           Card(
               color: rokGraphite,
               child: ListTile(
-                leading: Text('${row['turn']}',
+                leading: LText('${row['turn']}',
                     style: const TextStyle(color: rokBone, fontSize: 20)),
-                title: Text(
+                title: LText(
                     ((row['turn'] as int).isOdd == (s['is_a'] == true))
                         ? 'Sen'
                         : s['opponent'].toString(),
                     style: const TextStyle(color: rokBone)),
-                subtitle: Text(
+                subtitle: LText(
                     '${row['seconds'] ?? '—'} sn · ${row['mistakes'] ?? '—'} hata · ${row['reason'] == 'timeout' ? 'Süre doldu' : row['reason'] == 'skip' ? 'Geçildi' : 'Çözüldü'}',
                     style: const TextStyle(color: Color(0xffb9aea5))),
-                trailing: Text('${row['points']} puan',
+                trailing: LText('${row['points']} puan',
                     style: const TextStyle(color: rokBone)),
               )),
       ]);
@@ -262,11 +263,11 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
       final piece = await showDialog<String>(
           context: context,
           builder: (context) => SimpleDialog(
-              title: const Text('Terfi'),
+              title: const LText('Terfi'),
               children: ['q', 'r', 'b', 'n']
                   .map((p) => SimpleDialogOption(
                       onPressed: () => Navigator.pop(context, p),
-                      child: Text({
+                      child: LText({
                         'q': 'Vezir',
                         'r': 'Kale',
                         'b': 'Fil',
@@ -324,7 +325,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                                         alignment: Alignment.centerLeft,
                                         child: IconButton(
                                             onPressed: _leave,
-                                            tooltip: 'Kapat',
+                                            tooltip: tr(context, 'Kapat'),
                                             icon:
                                                 const Icon(Icons.close_rounded),
                                             color: const Color(0xfff3eee7))),
@@ -343,7 +344,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                                       const Icon(Icons.bolt_outlined,
                                           color: Color(0xfff3eee7), size: 64),
                                     const SizedBox(height: 30),
-                                    Text(
+                                    LText(
                                         _error != null
                                             ? 'BAĞLANTI KURULAMADI'
                                             : _searching
@@ -356,7 +357,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                                             fontWeight: FontWeight.w700,
                                             letterSpacing: 1.8)),
                                     const SizedBox(height: 10),
-                                    Text(
+                                    LText(
                                         _error ??
                                             'Kişi başı 10 bulmaca · 20 tur',
                                         textAlign: TextAlign.center,
@@ -364,12 +365,12 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                                             color: Color(0xffb9aea5),
                                             fontSize: 17)),
                                     const SizedBox(height: 24),
-                                    Text('Rekabetçi rating: ${_rating ?? '—'}',
+                                    LText('Rekabetçi rating: ${_rating ?? '—'}',
                                         style: const TextStyle(
                                             color: Color(0xfff3eee7),
                                             height: 1.7)),
                                     const SizedBox(height: 8),
-                                    const Text(
+                                    const LText(
                                         'Tur başına 30 saniye\nHız puan kazandırır, yanlışlar puanı azaltır.',
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
@@ -386,7 +387,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                                                 const Color(0xfff3eee7),
                                             side: const BorderSide(
                                                 color: Color(0x99f3eee7))),
-                                        child: Text(_searching
+                                        child: LText(_searching
                                             ? 'ARAMAYI İPTAL ET'
                                             : 'RAKİP ARA')),
                                   ]))),
@@ -411,7 +412,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
             : RokScaffold(
                 backgroundColor: const Color(0xff202120),
                 appBar: AppBar(
-                    title: const Text('Bulmaca Düellosu'),
+                    title: const LText('Bulmaca Düellosu'),
                     backgroundColor: const Color(0xff202120),
                     foregroundColor: Colors.white,
                     leading: IconButton(
@@ -419,23 +420,23 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                     actions: [
                       Padding(
                           padding: const EdgeInsets.all(12),
-                          child: Text('${s['score']} : ${s['opponent_score']}',
+                          child: LText('${s['score']} : ${s['opponent_score']}',
                               style: const TextStyle(fontSize: 20)))
                     ]),
                 body: SafeArea(
                     child:
                         ListView(padding: const EdgeInsets.all(16), children: [
                   ...[
-                    Text('Rakip: ${s['opponent']}',
+                    LText('Rakip: ${s['opponent']}',
                         style: const TextStyle(color: Colors.white70)),
                     const SizedBox(height: 12),
                     if (finished) ...[
                       _resultDetails(s),
                     ] else ...[
-                      Text('Tur ${s['turn']}/20 · ${s['seconds_left']} sn',
+                      LText('Tur ${s['turn']}/20 · ${s['seconds_left']} sn',
                           style: const TextStyle(
                               color: Colors.white, fontSize: 20)),
-                      Text(
+                      LText(
                           s['my_turn'] == true
                               ? 'Sıra sende · Hata: ${s['mistakes']}'
                               : 'Rakibin bulmacayı çözüyor…',
@@ -491,14 +492,14 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                       if (s['my_turn'] == true)
                         TextButton(
                             onPressed: _busy ? null : () => _move('skip'),
-                            child: const Text('Bu turu geç (0 puan)')),
-                      const Text(
+                            child: const LText('Bu turu geç (0 puan)')),
+                      const LText(
                           'Çıkarsan süre işlemeye devam eder. Bu ekrandan maça geri dönebilirsin.',
                           style: TextStyle(color: Colors.white54)),
                     ],
                   ],
                   if (_error != null)
-                    Text(_error!,
+                    LText(_error!,
                         style: const TextStyle(color: Colors.orangeAccent)),
                 ])),
               ));

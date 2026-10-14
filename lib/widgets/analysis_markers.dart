@@ -1,3 +1,4 @@
+import '../l10n/app_language.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../prototype/stockfish_engine.dart';
@@ -88,7 +89,7 @@ class EvaluationBar extends StatelessWidget {
                               ])))),
               const SizedBox(height: 5),
               FittedBox(
-                  child: Text(label,
+                  child: LText(label,
                       style:
                           const TextStyle(color: Colors.white, fontSize: 11))),
             ])));

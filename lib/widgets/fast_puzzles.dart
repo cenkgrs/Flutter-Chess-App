@@ -1,3 +1,4 @@
+import '../l10n/app_language.dart';
 import 'package:chess_puzzle_app/game_board.dart';
 import 'package:flutter/material.dart';
 
@@ -42,7 +43,7 @@ class FastPuzzles extends StatelessWidget {
                 padding: EdgeInsets.all(8),
                 child: Column(
                   children: [
-                    Text('Puzzle'),
+                    LText('Puzzle'),
                   ],
                 )),
           ),

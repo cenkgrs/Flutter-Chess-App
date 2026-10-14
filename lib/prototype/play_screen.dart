@@ -1,3 +1,4 @@
+import '../l10n/app_language.dart';
 import '../widgets/rok_style.dart';
 import 'dart:math' as math;
 
@@ -7,6 +8,9 @@ import 'package:flutter/services.dart';
 import 'engine.dart';
 import 'stockfish_engine.dart';
 import '../screens/profile_screen.dart';
+import '../widgets/board_annotations.dart';
+import 'premove.dart';
+import '../ads/match_ads.dart';
 
 class PlayScreen extends StatefulWidget {
   const PlayScreen(
@@ -22,19 +26,19 @@ class PlayScreen extends StatefulWidget {
     final elo = await showDialog<int>(
         context: context,
         builder: (ctx) => RokWoodDialog(
-              title: const Text('Stockfish gücü'),
+              title: const LText('Stockfish gücü'),
               content: Column(mainAxisSize: MainAxisSize.min, children: [
-                const Text(
+                const LText(
                     'Motor güç ayarıdır; online rating ile eşdeğer değildir.'),
                 for (final value in [1320, 1500, 1800, 2100, 2400, 2800, 3190])
                   TextButton(
                       onPressed: () => Navigator.pop(ctx, value),
-                      child: Text('$value')),
+                      child: LText('$value')),
               ]),
               actions: [
                 TextButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Vazgeç'))
+                    child: const LText('Vazgeç'))
               ],
             ));
     if (!context.mounted || elo == null) return;
@@ -64,11 +68,32 @@ class _PlayScreenState extends State<PlayScreen>
   c.Move? last;
   ChessAdvice? assistantAdvice;
   bool resultShown = false;
+  Premove? premove;
+  final drawing = BoardDrawingController();
+
+  void queuePremove(String square) {
+    if (ended) return;
+    if (game.get(square)?.color == human) {
+      setState(() => selected = square);
+    } else if (selected != null) {
+      setState(() {
+        premove = Premove(selected!, square);
+        selected = null;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: LText('Ön hamle: ${premove!.from} → ${premove!.to}'),
+          action: SnackBarAction(
+              label: tr(context, 'İptal'),
+              onPressed: () => setState(() => premove = null))));
+    }
+  }
+
   late final AnimationController assistantPulse;
 
   @override
   void initState() {
     super.initState();
+    MatchAds.instance.preload();
     engineElo = widget.initialElo;
     startingFen = widget.initialFen;
     if (widget.initialFen != null) {
@@ -93,28 +118,28 @@ class _PlayScreenState extends State<PlayScreen>
       barrierDismissible: false,
       builder: (dialogContext) => RokResultDialog(
         icon: Icon(won ? Icons.emoji_events_rounded : Icons.flag_outlined),
-        title: Text(won
+        title: LText(won
             ? 'Kazandın!'
             : resigned || game.in_checkmate
                 ? 'Kaybettin'
                 : 'Berabere'),
-        content: Text(status),
+        content: LText(status),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Tahtayı incele')),
+              child: const LText('Tahtayı incele')),
           TextButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
                 openAnalysis();
               },
-              child: const Text('Motor analizi')),
+              child: const LText('Motor analizi')),
           FilledButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(dialogContext);
-                Navigator.maybePop(context);
+                await leaveCompletedGame();
               },
-              child: const Text('Menüye dön')),
+              child: const LText('Menüye dön')),
         ],
       ),
     );
@@ -137,6 +162,12 @@ class _PlayScreenState extends State<PlayScreen>
                   localMoves: moves,
                   initialFen: startingFen,
                 )));
+  }
+
+  Future<void> leaveCompletedGame() async {
+    await MatchAds.instance
+        .showIfReady('offline-${identityHashCode(this)}-$generation');
+    if (mounted) Navigator.maybePop(context);
   }
 
   String get status {
@@ -192,6 +223,19 @@ class _PlayScreenState extends State<PlayScreen>
         refresh();
       });
       announceResult();
+      final queued = premove;
+      premove = null;
+      if (!ended && queued != null) {
+        final next = queued.resolve(game);
+        if (next != null) {
+          setState(() {
+            game.move(next);
+            refresh();
+          });
+          await ai();
+          announceResult();
+        }
+      }
     } catch (_) {
       if (!mounted || ticket != generation) return;
       setState(() {
@@ -202,7 +246,12 @@ class _PlayScreenState extends State<PlayScreen>
   }
 
   Future<void> tap(String square) async {
-    if (thinking || ended || game.turn != human) return;
+    if (ended) return;
+    if (thinking || game.turn != human) {
+      queuePremove(square);
+      return;
+    }
+    premove = null;
     final candidates = targets.where((m) => m.toAlgebraic == square).toList();
     if (candidates.isNotEmpty) {
       var move = candidates.first;
@@ -211,13 +260,13 @@ class _PlayScreenState extends State<PlayScreen>
         final promotion = await showDialog<String>(
             context: context,
             builder: (context) => RokDialog(
-                  title: const Text('Piyonunu terfi ettir'),
+                  title: const LText('Piyonunu terfi ettir'),
                   content: Wrap(
                       spacing: 8,
                       children: ['q', 'r', 'b', 'n']
                           .map((p) => TextButton(
                                 onPressed: () => Navigator.pop(context, p),
-                                child: Text({
+                                child: LText({
                                   'q': 'Vezir',
                                   'r': 'Kale',
                                   'b': 'Fil',
@@ -254,12 +303,12 @@ class _PlayScreenState extends State<PlayScreen>
         context: context,
         builder: (context) => StatefulBuilder(
             builder: (context, update) => RokDialog(
-                  title: const Text('Yeni bir oyun'),
+                  title: const LText('Yeni bir oyun'),
                   content: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Rakibin seviyesi'),
+                        const LText('Rakibin seviyesi'),
                         DropdownButton<int>(
                             isExpanded: true,
                             value: nextDifficulty,
@@ -273,42 +322,44 @@ class _PlayScreenState extends State<PlayScreen>
                               3190
                             ]
                                 .map((d) => DropdownMenuItem(
-                                    value: d, child: Text('Stockfish · $d')))
+                                    value: d, child: LText('Stockfish · $d')))
                                 .toList(),
                             onChanged: (d) =>
                                 update(() => nextDifficulty = d!)),
                         const SizedBox(height: 16),
-                        const Text('Taş rengin'),
+                        const LText('Taş rengin'),
                         DropdownButton<c.Color>(
                             isExpanded: true,
                             value: nextColor,
                             items: const [
                               DropdownMenuItem(
                                   value: c.Color.WHITE,
-                                  child: Text('Beyaz · İlk hamle sende')),
+                                  child: LText('Beyaz · İlk hamle sende')),
                               DropdownMenuItem(
                                   value: c.Color.BLACK,
-                                  child: Text('Siyah · Bilgisayar başlar'))
+                                  child: LText('Siyah · Bilgisayar başlar'))
                             ],
                             onChanged: (v) => update(() => nextColor = v!)),
                         const SizedBox(height: 12),
-                        const Text(
+                        const LText(
                             'Stockfish güç ayarıdır; online rating ile eşdeğer değildir. Mevcut oyun sıfırlanır.',
                             style: TextStyle(fontSize: 12)),
                       ]),
                   actions: [
                     TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Vazgeç')),
+                        child: const LText('Vazgeç')),
                     FilledButton(
                         onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Oyuna başla'))
+                        child: const LText('Oyuna başla'))
                   ],
                 )));
     if (!mounted || accepted != true) return;
     setState(() {
       generation++;
       game = c.Chess();
+      MatchAds.instance.preload();
+      premove = null;
       startingFen = null;
       human = nextColor;
       engineElo = nextDifficulty;
@@ -324,6 +375,7 @@ class _PlayScreenState extends State<PlayScreen>
   }
 
   void undo() {
+    premove = null;
     if (game.history.isEmpty) return;
     setState(() {
       generation++;
@@ -343,14 +395,14 @@ class _PlayScreenState extends State<PlayScreen>
     final yes = await showDialog<bool>(
         context: context,
         builder: (context) => RokDialog(
-                title: const Text('Teslim olmak istiyor musun?'),
+                title: const LText('Teslim olmak istiyor musun?'),
                 actions: [
                   TextButton(
                       onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Devam et')),
+                      child: const LText('Devam et')),
                   FilledButton(
                       onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Teslim ol'))
+                      child: const LText('Teslim ol'))
                 ]));
     if (!mounted || yes != true) return;
     setState(() {
@@ -367,6 +419,7 @@ class _PlayScreenState extends State<PlayScreen>
   void dispose() {
     generation++;
     assistantPulse.dispose();
+    drawing.dispose();
     super.dispose();
   }
 
@@ -400,7 +453,7 @@ class _PlayScreenState extends State<PlayScreen>
                     height: 42,
                     child: Center(
                       child: ended
-                          ? Text(status,
+                          ? LText(status,
                               style: const TextStyle(
                                   color: Color(0xfff3eee7),
                                   fontWeight: FontWeight.bold))
@@ -415,7 +468,11 @@ class _PlayScreenState extends State<PlayScreen>
                       width: boardSize,
                       height: boardSize,
                       child: Stack(children: [
-                        Positioned.fill(child: boardWidget()),
+                        Positioned.fill(
+                            child: BoardAnnotations(
+                                controller: drawing,
+                                flipped: flipped,
+                                child: boardWidget())),
                         if (assistantAdvice != null)
                           Positioned.fill(
                             child: IgnorePointer(
@@ -432,12 +489,15 @@ class _PlayScreenState extends State<PlayScreen>
                       ]),
                     ),
                   ),
-                  const Spacer(),
+                  if (widget.assistantMode && assistantAdvice != null)
+                    Expanded(child: _assistantPanel())
+                  else
+                    const Spacer(),
                   if (ended)
                     TextButton.icon(
-                      onPressed: () => Navigator.maybePop(context),
+                      onPressed: leaveCompletedGame,
                       icon: const Icon(Icons.arrow_back),
-                      label: const Text('Menüye dön'),
+                      label: const LText('Menüye dön'),
                       style: TextButton.styleFrom(
                           foregroundColor: const Color(0xfff3eee7)),
                     ),
@@ -446,6 +506,8 @@ class _PlayScreenState extends State<PlayScreen>
                 ]),
               );
             }),
+            Positioned(
+                top: 8, left: 2, child: BoardDrawingTools(controller: drawing)),
             if (widget.assistantMode)
               Positioned(
                 top: 8,
@@ -461,7 +523,7 @@ class _PlayScreenState extends State<PlayScreen>
                   ),
                   child: IconButton.filledTonal(
                     key: const ValueKey('assistant-info'),
-                    tooltip: 'Asistana sor',
+                    tooltip: tr(context, 'Asistana sor'),
                     onPressed: !ended && !thinking && game.turn == human
                         ? _showAssistant
                         : null,
@@ -476,45 +538,37 @@ class _PlayScreenState extends State<PlayScreen>
   }
 
   Future<void> _showAssistant() async {
+    final fen = game.fen;
     final advice = await ChessEngine().explain(game);
-    if (!mounted) return;
+    if (!mounted || game.fen != fen) return;
     setState(() => assistantAdvice = advice);
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: math.min(570, MediaQuery.sizeOf(context).height * .68),
-        decoration: const BoxDecoration(
-          color: Color(0xfff3eee7),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(children: [
-          Align(
-            alignment: Alignment.topRight,
-            child: IconButton(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.close),
-            ),
-          ),
-          Expanded(
-            child: Image.asset('lib/images/assistant-strategist.png',
-                fit: BoxFit.contain),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(22, 8, 22, 24),
-            child: Text(
-              advice == null
-                  ? 'Bu konumda oynanabilecek bir hamle kalmadı.'
-                  : '${advice.firstSentence}\n\n${advice.secondSentence}\n\nAna varyant: ${advice.variation.join('  ')}',
-              style: const TextStyle(
-                  color: Color(0xff211712), fontSize: 16, height: 1.4),
-            ),
-          ),
-        ]),
-      ),
-    );
   }
+
+  Widget _assistantPanel() => LayoutBuilder(
+      builder: (context, bounds) => SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          child: Column(children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: IconButton(
+                onPressed: () => setState(() => assistantAdvice = null),
+                icon: const Icon(Icons.close),
+              ),
+            ),
+            SizedBox(
+              height: math.min(120, bounds.maxHeight * .38),
+              child: Image.asset('lib/images/assistant-strategist.png',
+                  fit: BoxFit.contain),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 6, 4, 10),
+              child: LText(
+                '${assistantAdvice!.firstSentence}\n${assistantAdvice!.secondSentence}\nAna varyant: ${assistantAdvice!.variation.join('  ')}',
+                style:
+                    const TextStyle(color: rokBone, fontSize: 12, height: 1.35),
+              ),
+            ),
+          ])));
 
   Future<void> openReview() async {
     await showModalBottomSheet<void>(
@@ -560,11 +614,9 @@ class _PlayScreenState extends State<PlayScreen>
 
               return Listener(
                 onPointerDown: (event) {
+                  if (event.buttons != 1) return;
                   final square = squareAt(event.localPosition);
-                  if (!thinking &&
-                      !ended &&
-                      game.turn == human &&
-                      game.get(square)?.color == human) {
+                  if (!ended && game.get(square)?.color == human) {
                     setState(() {
                       dragFrom = square;
                       dragPosition = event.localPosition;
@@ -590,7 +642,7 @@ class _PlayScreenState extends State<PlayScreen>
                     dragFrom = null;
                     dragPosition = null;
                   });
-                  if (from == null || thinking || ended || game.turn != human) {
+                  if (from == null || ended) {
                     return;
                   }
                   if (event.localPosition.dx < 0 ||
@@ -601,6 +653,11 @@ class _PlayScreenState extends State<PlayScreen>
                   }
                   final to = squareAt(event.localPosition);
                   if (from == to) return;
+                  if (thinking || game.turn != human) {
+                    selected = from;
+                    queuePremove(to);
+                    return;
+                  }
                   setState(() {
                     selected = from;
                     targets = game.generate_moves({'square': from});
@@ -634,9 +691,11 @@ class _PlayScreenState extends State<PlayScreen>
                           ? const Color(0x99a73e32)
                           : selected == square
                               ? const Color(0x99d39a35)
-                              : recent
-                                  ? const Color(0x667a743e)
-                                  : Colors.transparent;
+                              : premove?.from == square || premove?.to == square
+                                  ? const Color(0x996b83ba)
+                                  : recent
+                                      ? const Color(0x667a743e)
+                                      : Colors.transparent;
                       return Semantics(
                           label:
                               '$square ${piece == null ? 'boş' : '${piece.color == c.Color.WHITE ? 'beyaz' : 'siyah'} ${piece.type.name}'}',
@@ -675,7 +734,7 @@ class _PlayScreenState extends State<PlayScreen>
                                         Positioned(
                                             top: 2,
                                             left: 3,
-                                            child: Text('$rank',
+                                            child: LText('$rank',
                                                 style: TextStyle(
                                                     fontSize: 10,
                                                     fontWeight: FontWeight.w600,
@@ -688,7 +747,7 @@ class _PlayScreenState extends State<PlayScreen>
                                         Positioned(
                                             bottom: 1,
                                             right: 3,
-                                            child: Text('abcdefgh'[file],
+                                            child: LText('abcdefgh'[file],
                                                 style: TextStyle(
                                                     fontSize: 10,
                                                     fontWeight: FontWeight.w600,
@@ -773,7 +832,7 @@ class _PlayScreenState extends State<PlayScreen>
           const Icon(Icons.manage_search_rounded,
               size: 30, color: Color(0xff2d2118)),
           const SizedBox(width: 9),
-          const Text('İNCELEME',
+          const LText('İNCELEME',
               style: TextStyle(
                   color: Color(0xff2d2118),
                   fontFamily: 'serif',
@@ -784,12 +843,12 @@ class _PlayScreenState extends State<PlayScreen>
           TextButton.icon(
             onPressed: () => Navigator.pop(sheetContext),
             icon: const Icon(Icons.close, size: 20),
-            label: const Text('Kapat'),
+            label: const LText('Kapat'),
           ),
         ]),
         const Divider(height: 20, color: Color(0xffddd3c2)),
         if (game.turn != human || ended || error != null) ...[
-          Text(status,
+          LText(status,
               style: const TextStyle(
                   color: Color(0xff755b3e), fontWeight: FontWeight.w600)),
           const SizedBox(height: 9),
@@ -799,14 +858,14 @@ class _PlayScreenState extends State<PlayScreen>
               size: 23, color: Color(0xff2d2118)),
           const SizedBox(width: 9),
           const Expanded(
-            child: Text('Hamle geçmişi',
+            child: LText('Hamle geçmişi',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
           ),
           IconButton(
             key: const ValueKey('new-game'),
-            tooltip: 'Yeni oyun',
+            tooltip: tr(context, 'Yeni oyun'),
             onPressed: () {
               Navigator.pop(sheetContext);
               newGame();
@@ -814,7 +873,7 @@ class _PlayScreenState extends State<PlayScreen>
             icon: const Icon(Icons.restart_alt_rounded, size: 21),
           ),
           IconButton(
-            tooltip: 'PGN kopyala',
+            tooltip: tr(context, 'PGN kopyala'),
             onPressed: notation.isEmpty ? null : copyPgn,
             icon: const Icon(Icons.copy_rounded, size: 20),
           ),
@@ -831,7 +890,7 @@ class _PlayScreenState extends State<PlayScreen>
             ),
             child: notation.isEmpty
                 ? const Center(
-                    child: Text('Henüz hamle yapılmadı',
+                    child: LText('Henüz hamle yapılmadı',
                         style: TextStyle(color: Color(0xff827566))))
                 : ListView.builder(
                     itemCount: (notation.length + 1) ~/ 2,
@@ -840,12 +899,12 @@ class _PlayScreenState extends State<PlayScreen>
                       child: Row(children: [
                         SizedBox(
                           width: 34,
-                          child: Text('${i + 1}.',
+                          child: LText('${i + 1}.',
                               style: const TextStyle(color: Color(0xff9a8974))),
                         ),
-                        Expanded(child: Text(notation[i * 2])),
+                        Expanded(child: LText(notation[i * 2])),
                         Expanded(
-                          child: Text(i * 2 + 1 < notation.length
+                          child: LText(i * 2 + 1 < notation.length
                               ? notation[i * 2 + 1]
                               : '…'),
                         ),
@@ -898,8 +957,8 @@ class _PlayScreenState extends State<PlayScreen>
   Future<void> copyPgn() async {
     await Clipboard.setData(ClipboardData(text: game.pgn()));
     if (mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('PGN panoya kopyalandı')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: LText('PGN panoya kopyalandı')));
     }
   }
 }
@@ -922,7 +981,7 @@ class _TurnIndicator extends StatelessWidget {
         child: const Row(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.circle, size: 8, color: Color(0xffffd889)),
           SizedBox(width: 9),
-          Text('Sıra sende',
+          LText('Sıra sende',
               style: TextStyle(
                   color: Color(0xffffe2a9),
                   fontFamily: 'serif',
@@ -956,7 +1015,7 @@ class _InspectionButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
           ),
           icon: const Icon(Icons.manage_search_rounded, size: 22),
-          label: const Text('İNCELEME',
+          label: const LText('İNCELEME',
               style: TextStyle(
                   fontFamily: 'serif',
                   fontSize: 13,
@@ -992,7 +1051,7 @@ class _ReviewAction extends StatelessWidget {
         icon: Icon(icon, size: 20),
         label: FittedBox(
           fit: BoxFit.scaleDown,
-          child: Text(label, maxLines: 1),
+          child: LText(label, maxLines: 1),
         ),
       );
 }
