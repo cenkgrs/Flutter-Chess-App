@@ -1,3 +1,4 @@
+import '../l10n/app_language.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -139,7 +140,7 @@ class _MatchmakingScreenState extends State<MatchmakingScreen> {
                         ),
                       ),
                     const SizedBox(height: 30),
-                    Text(
+                    LText(
                       _error != null
                           ? 'BAĞLANTI KURULAMADI'
                           : _gameId != null
@@ -154,7 +155,7 @@ class _MatchmakingScreenState extends State<MatchmakingScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Text(
+                    LText(
                       _error ??
                           '${widget.control.pool.label} · ${widget.control.label}',
                       textAlign: TextAlign.center,
@@ -165,14 +166,14 @@ class _MatchmakingScreenState extends State<MatchmakingScreen> {
                     ),
                     if (_gameId != null) ...[
                       const SizedBox(height: 18),
-                      const Text(
+                      const LText(
                         'Çevrimiçi tahta bağlantısı hazırlanıyor.',
                         style: TextStyle(color: Color(0xffb9aea5)),
                       ),
                     ],
                     if (_gameId == null && _error == null) ...[
                       const SizedBox(height: 24),
-                      Text(
+                      LText(
                         _population == null
                             ? 'Oyuncu sayısı güncelleniyor…'
                             : 'Bu sürede ${_population!['same_control']} diğer oyuncu\n'
@@ -192,7 +193,7 @@ class _MatchmakingScreenState extends State<MatchmakingScreen> {
                         side: const BorderSide(color: Color(0x99f3eee7)),
                       ),
                       child:
-                          Text(_gameId == null ? 'ARAMAYI İPTAL ET' : 'KAPAT'),
+                          LText(_gameId == null ? 'ARAMAYI İPTAL ET' : 'KAPAT'),
                     ),
                   ],
                 ),

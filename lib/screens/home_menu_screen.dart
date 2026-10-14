@@ -1,3 +1,4 @@
+import '../l10n/app_language.dart';
 import '../widgets/rok_style.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -177,7 +178,7 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> with RouteAware {
           child: FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: Text(
+            child: LText(
               'ROK',
               maxLines: 1,
               style: TextStyle(
@@ -206,7 +207,7 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> with RouteAware {
           width: 53,
           child: FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(
+            child: LText(
               username ?? 'Misafir',
               maxLines: 1,
               style: const TextStyle(color: mutedBone, fontSize: 15),
@@ -232,7 +233,7 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> with RouteAware {
             width: 38,
             child: FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(
+              child: LText(
                 user == null ? 'Giriş' : 'Çıkış',
                 maxLines: 1,
                 style: const TextStyle(
@@ -252,16 +253,16 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> with RouteAware {
     final signOut = await showDialog<bool>(
       context: context,
       builder: (context) => RokDialog(
-        title: const Text('Oturumu kapat'),
-        content: const Text('ROK hesabından çıkmak istiyor musun?'),
+        title: const LText('Oturumu kapat'),
+        content: const LText('ROK hesabından çıkmak istiyor musun?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Vazgeç'),
+            child: const LText('Vazgeç'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Çıkış yap'),
+            child: const LText('Çıkış yap'),
           ),
         ],
       ),
@@ -327,7 +328,7 @@ class _RatingsStrip extends StatelessWidget {
       future: GameRepository().loadRatings(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return const Text('Rating yüklenemedi',
+          return const LText('Rating yüklenemedi',
               style: TextStyle(color: HomeMenuScreen.bone));
         }
         if (!snapshot.hasData) {
@@ -347,7 +348,7 @@ class _RatingsStrip extends StatelessWidget {
             Expanded(
               child: Column(
                 children: [
-                  Text(
+                  LText(
                     SpeedPool.values[index].label,
                     style: const TextStyle(
                       color: HomeMenuScreen.mutedBone,
@@ -355,7 +356,7 @@ class _RatingsStrip extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 5),
-                  Text(
+                  LText(
                     '${ratings.ratingFor(SpeedPool.values[index])}',
                     style: const TextStyle(
                       color: HomeMenuScreen.bone,
@@ -413,7 +414,7 @@ class _PrimaryAction extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      LText(
                         'OYUNA BAŞLA',
                         maxLines: 1,
                         overflow: TextOverflow.fade,
@@ -426,7 +427,7 @@ class _PrimaryAction extends StatelessWidget {
                         ),
                       ),
                       SizedBox(height: 5),
-                      Text(
+                      LText(
                         'Dereceli çevrimiçi eşleşme',
                         maxLines: 1,
                         overflow: TextOverflow.fade,
@@ -483,7 +484,7 @@ class _SecondaryAction extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      LText(
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.fade,
@@ -495,7 +496,7 @@ class _SecondaryAction extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
+                      LText(
                         subtitle,
                         maxLines: 1,
                         overflow: TextOverflow.fade,
@@ -558,7 +559,7 @@ class _TimeControlSheet extends StatelessWidget {
               children: [
                 Icon(Icons.timer_outlined, color: HomeMenuScreen.ink),
                 SizedBox(width: 10),
-                Text(
+                LText(
                   'SÜRE SEÇ',
                   style: TextStyle(
                     color: HomeMenuScreen.ink,
@@ -582,7 +583,7 @@ class _TimeControlSheet extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        LText(
                           '${pool.label} · ${pool.description}',
                           style: const TextStyle(
                             color: Color(0xff665a52),
@@ -603,7 +604,7 @@ class _TimeControlSheet extends StatelessWidget {
                                     side: const BorderSide(
                                         color: Color(0xffb9aea5)),
                                   ),
-                                  child: Text(
+                                  child: LText(
                                     control.label,
                                     style: const TextStyle(
                                         fontWeight: FontWeight.w700),

@@ -1,3 +1,4 @@
+import '../l10n/app_language.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -98,7 +99,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
       await _load();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(action == 'send'
+            content: LText(action == 'send'
                 ? 'Arkadaşlık isteği gönderildi.'
                 : action == 'accept'
                     ? 'Arkadaşlık isteği kabul edildi.'
@@ -106,8 +107,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('İşlem tamamlanamadı. Tekrar dene.')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: LText('İşlem tamamlanamadı. Tekrar dene.')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -120,7 +121,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
     final incoming = link?['incoming'] == true;
     Widget button(String label, String action) => TextButton(
         onPressed: _busy ? null : () => _act(person['id'] as String, action),
-        child: Text(label));
+        child: LText(label));
     return Card(
         child: Padding(
             padding: const EdgeInsets.all(12),
@@ -148,7 +149,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                       onPressed:
                           _busy ? null : () => _invite(person['id'] as String),
                       icon: const Icon(Icons.sports_esports_outlined),
-                      label: const Text('Oyuna davet et')),
+                      label: const LText('Oyuna davet et')),
               ],
             )));
   }
@@ -158,15 +159,15 @@ class _FriendsScreenState extends State<FriendsScreen> {
         context: context,
         builder: (ctx) => SafeArea(
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
-              const ListTile(title: Text('OYUNA DAVET ET')),
+              const ListTile(title: LText('OYUNA DAVET ET')),
               ListTile(
                   leading: const Icon(Icons.castle_outlined),
-                  title: const Text('Satranç'),
+                  title: const LText('Satranç'),
                   onTap: () => Navigator.pop(ctx, 'chess')),
               ListTile(
                   leading: const Icon(Icons.bolt_outlined),
-                  title: const Text('Bulmaca Düellosu'),
-                  subtitle: const Text('10 bulmaca · 30 saniyelik turlar'),
+                  title: const LText('Bulmaca Düellosu'),
+                  subtitle: const LText('10 bulmaca · 30 saniyelik turlar'),
                   onTap: () => Navigator.pop(ctx, 'duel')),
             ])));
     if (!mounted || mode == null) return;
@@ -178,7 +179,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
       } catch (_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Düello daveti gönderilemedi.')));
+              const SnackBar(content: LText('Düello daveti gönderilemedi.')));
         }
       } finally {
         if (mounted) setState(() => _busy = false);
@@ -189,10 +190,10 @@ class _FriendsScreenState extends State<FriendsScreen> {
         context: context,
         builder: (context) => SafeArea(
                 child: ListView(children: [
-              const ListTile(title: Text('Oyun süresi seç')),
+              const ListTile(title: LText('Oyun süresi seç')),
               for (final c in TimeControl.presets)
                 ListTile(
-                    title: Text('${c.pool.label} · ${c.label}'),
+                    title: LText('${c.pool.label} · ${c.label}'),
                     onTap: () => Navigator.pop(context, c)),
             ])));
     if (control == null || !mounted) return;
@@ -202,8 +203,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
       await _load();
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Davet gönderilemedi. Tekrar dene.')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: LText('Davet gönderilemedi. Tekrar dene.')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -230,7 +231,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
+            content: LText(
                 'Davet açılamadı. Süresi dolmuş olabilir veya oyunculardan biri maçta.')));
       }
     } finally {
@@ -262,7 +263,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
               foregroundColor: const Color(0xfff3eee7),
               systemOverlayStyle: SystemUiOverlayStyle.light
                   .copyWith(statusBarColor: Colors.transparent),
-              title: const Text('ARKADAŞLAR',
+              title: const LText('ARKADAŞLAR',
                   style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -271,7 +272,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 IconButton(
                     onPressed: _load,
                     icon: const Icon(Icons.refresh),
-                    tooltip: 'Yenile')
+                    tooltip: tr(context, 'Yenile'))
               ]),
           body: DecoratedBox(
               decoration: const BoxDecoration(
@@ -297,7 +298,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                Text(invite['kind'] == 'duel'
+                                                LText(invite['kind'] == 'duel'
                                                     ? '${invite['username']} · Bulmaca Düellosu'
                                                     : '${invite['username']} · ${invite['minutes']}+${invite['increment']}'),
                                                 if (invite['status'] ==
@@ -316,7 +317,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                                                       gameId: invite[
                                                                               'game_id']
                                                                           as String))),
-                                                      child: const Text(
+                                                      child: const LText(
                                                           'Maça katıl'))
                                                 else if (invite['incoming'] ==
                                                     true)
@@ -326,18 +327,18 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                                             ? null
                                                             : () => _respond(
                                                                 invite, true),
-                                                        child: const Text(
+                                                        child: const LText(
                                                             'Daveti kabul et')),
                                                     TextButton(
                                                         onPressed: _busy
                                                             ? null
                                                             : () => _respond(
                                                                 invite, false),
-                                                        child: const Text(
+                                                        child: const LText(
                                                             'Daveti reddet')),
                                                   ])
                                                 else
-                                                  const Text(
+                                                  const LText(
                                                       'Davet gönderildi · 5 dakika geçerli'),
                                               ]))),
                                 TextField(
@@ -345,21 +346,23 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                     maxLength: 20,
                                     onSubmitted: (_) => _search(),
                                     decoration: InputDecoration(
-                                        labelText: 'Kullanıcı adı ara',
-                                        hintText: 'En az 3 karakter',
+                                        labelText:
+                                            tr(context, 'Kullanıcı adı ara'),
+                                        hintText:
+                                            tr(context, 'En az 3 karakter'),
                                         suffixIcon: IconButton(
                                             onPressed:
                                                 _searching ? null : _search,
-                                            tooltip: 'Ara',
+                                            tooltip: tr(context, 'Ara'),
                                             icon: const Icon(Icons.search)))),
                                 if (_searching) const LinearProgressIndicator(),
-                                if (_searchError != null) Text(_searchError!),
+                                if (_searchError != null) LText(_searchError!),
                                 ..._results.map(_person),
                                 const SizedBox(height: 24),
                                 if (_loading)
                                   const Center(
                                       child: CircularProgressIndicator()),
-                                if (_error != null) Text(_error!),
+                                if (_error != null) LText(_error!),
                                 for (final section in [
                                   ('GELEN İSTEKLER', 'incoming'),
                                   ('ARKADAŞLARIM', 'accepted'),
@@ -368,7 +371,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                   Padding(
                                       padding: const EdgeInsets.symmetric(
                                           vertical: 16),
-                                      child: Text(section.$1,
+                                      child: LText(section.$1,
                                           style: const TextStyle(
                                               letterSpacing: 1.5))),
                                   ..._friends
@@ -382,7 +385,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                 if (!_loading &&
                                     _error == null &&
                                     _friends.isEmpty)
-                                  const Text(
+                                  const LText(
                                       'Henüz arkadaşın veya bekleyen isteğin yok.'),
                               ]))))),
         ),
@@ -436,7 +439,7 @@ class _FriendRequestLabelState extends State<FriendRequestLabel> {
   }
 
   @override
-  Widget build(BuildContext context) => Text(
+  Widget build(BuildContext context) => LText(
       _invites > 0
           ? 'Arkadaşlar · $_invites maç daveti'
           : _count > 0

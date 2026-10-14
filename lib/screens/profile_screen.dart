@@ -11,6 +11,8 @@ import 'friends_screen.dart';
 import '../prototype/play_screen.dart';
 import '../prototype/stockfish_engine.dart';
 import '../widgets/analysis_markers.dart';
+import '../ads/match_ads.dart';
+import '../l10n/app_language.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -19,7 +21,11 @@ class ProfileScreen extends StatelessWidget {
   static const mutedBone = Color(0xffb9aea5);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+      listenable: AppLanguage.instance,
+      builder: (context, _) => _buildProfile(context));
+
+  Widget _buildProfile(BuildContext context) {
     final user = AppBackend.currentUser;
     final username = user?.userMetadata?['username']?.toString().trim();
     final displayName =
@@ -28,7 +34,7 @@ class ProfileScreen extends StatelessWidget {
     return RokScaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('PROFİLİM',
+        title: const LText('PROFİLİM',
             style: TextStyle(
                 fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 1.8)),
         backgroundColor: Colors.transparent,
@@ -99,13 +105,55 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 28),
-                const Text('HESAP',
+                const LText('HESAP',
                     style: TextStyle(
                         color: mutedBone,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.6)),
                 const SizedBox(height: 10),
+                _ProfileLink(
+                    icon: Icons.language,
+                    title: 'Dil',
+                    subtitle: AppLanguage.instance.locale?.languageCode
+                            .toUpperCase() ??
+                        'Cihaz dili',
+                    onTap: () => showDialog<void>(
+                        context: context,
+                        builder: (dialog) => RokWoodDialog(
+                            title: const LText('Dil'),
+                            content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  for (final option in <String?, String>{
+                                    null: 'Cihaz dili',
+                                    'tr': 'Türkçe',
+                                    'en': 'English',
+                                    'de': 'Deutsch',
+                                    'ru': 'Русский'
+                                  }.entries)
+                                    ListTile(
+                                        title: LText(option.value),
+                                        trailing: AppLanguage.instance.locale
+                                                    ?.languageCode ==
+                                                option.key
+                                            ? const Icon(Icons.check)
+                                            : null,
+                                        onTap: () {
+                                          AppLanguage.instance.set(option.key);
+                                          Navigator.pop(dialog);
+                                        }),
+                                ])))),
+                const SizedBox(height: 12),
+                ValueListenableBuilder<bool>(
+                    valueListenable: MatchAds.instance.privacyRequired,
+                    builder: (_, required, __) => required
+                        ? _ProfileLink(
+                            icon: Icons.privacy_tip_outlined,
+                            title: 'Reklam gizlilik tercihleri',
+                            subtitle: 'İzinlerini yönet',
+                            onTap: MatchAds.instance.privacyOptions)
+                        : const SizedBox.shrink()),
                 _ProfileLink(
                   icon: Icons.history_rounded,
                   title: 'Son Maçlar',
@@ -170,14 +218,14 @@ class _ProfileLink extends StatelessWidget {
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
           leading: Icon(icon, color: ProfileScreen.bone, size: 28),
-          title: Text(title,
+          title: LText(title,
               style: const TextStyle(
                   color: ProfileScreen.bone,
                   fontWeight: FontWeight.w600,
                   fontSize: 17)),
           subtitle: Padding(
             padding: const EdgeInsets.only(top: 4),
-            child: Text(subtitle,
+            child: LText(subtitle,
                 style: const TextStyle(
                     color: ProfileScreen.mutedBone, height: 1.35)),
           ),
@@ -194,7 +242,7 @@ class RecentGamesScreen extends StatelessWidget {
   Widget build(BuildContext context) => RokScaffold(
         extendBodyBehindAppBar: true,
         appBar: AppBar(
-            title: const Text('SON MAÇLAR',
+            title: const LText('SON MAÇLAR',
                 style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -222,7 +270,7 @@ class RecentGamesScreen extends StatelessWidget {
                       builder: (context, snapshot) {
                         if (snapshot.hasError) {
                           return const Center(
-                              child: Text('Maç geçmişi yüklenemedi.',
+                              child: LText('Maç geçmişi yüklenemedi.',
                                   style: TextStyle(color: Color(0xfff3eee7))));
                         }
                         if (!snapshot.hasData) {
@@ -232,7 +280,7 @@ class RecentGamesScreen extends StatelessWidget {
                         }
                         if (snapshot.data!.isEmpty) {
                           return const Center(
-                              child: Text('Henüz tamamlanmış maç yok.',
+                              child: LText('Henüz tamamlanmış maç yok.',
                                   style: TextStyle(color: Color(0xfff3eee7))));
                         }
                         return ListView.separated(
@@ -263,12 +311,12 @@ class RecentGamesScreen extends StatelessWidget {
                                     textColor: const Color(0xfff3eee7),
                                     iconColor: const Color(0xfff3eee7),
                                     leading: _OutcomeIcon(outcome: outcome),
-                                    title: Text(
+                                    title: LText(
                                         opponent?['username']?.toString() ??
                                             'Oyuncu',
                                         style: const TextStyle(
                                             fontWeight: FontWeight.w600)),
-                                    subtitle: Text(
+                                    subtitle: LText(
                                         [
                                           '${game['pool'].toString().toUpperCase()} · ${game['initial_minutes']}+${game['increment_seconds']}',
                                           outcomeLabel(outcome),
@@ -473,12 +521,12 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
   @override
   Widget build(BuildContext context) => RokScaffold(
         appBar: AppBar(
-            title: const Text('Maç inceleme'),
+            title: const LText('Maç inceleme'),
             backgroundColor: const Color(0xff202120),
             foregroundColor: const Color(0xfff3eee7)),
         backgroundColor: const Color(0xff3b1e0f),
         body: _moves == null && _error != null
-            ? Center(child: TextButton(onPressed: _load, child: Text(_error!)))
+            ? Center(child: TextButton(onPressed: _load, child: LText(_error!)))
             : _moves == null
                 ? const Center(child: CircularProgressIndicator())
                 : LayoutBuilder(
@@ -563,7 +611,7 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                                             whiteToMove: _position.turn ==
                                                 c.Color.WHITE),
                                       ]))),
-                          Text(
+                          LText(
                               _index == 0
                                   ? 'Başlangıç konumu'
                                   : '$_index. ${_moves![_index - 1]['san']}',
@@ -585,7 +633,7 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                                         : () => _selectMove(_index - 1),
                                     icon: const Icon(Icons.chevron_left),
                                     color: Colors.white),
-                                Text('$_index / ${_moves!.length}',
+                                LText('$_index / ${_moves!.length}',
                                     style:
                                         const TextStyle(color: Colors.white)),
                                 IconButton(
@@ -610,7 +658,7 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                                         ? null
                                         : _analyze,
                                     icon: const Icon(Icons.analytics_outlined),
-                                    label: Text(_analyzing
+                                    label: LText(_analyzing
                                         ? 'Analiz $_progress/${_moves!.length}'
                                         : 'Motor analizi')),
                                 TextButton(
@@ -620,11 +668,11 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                                             PlayScreen.launch(context,
                                                 fen: _position.fen);
                                           },
-                                    child: const Text(
+                                    child: const LText(
                                         'Buradan bilgisayarla devam et')),
                               ]),
                           if (_analyzing) const LinearProgressIndicator(),
-                          if (_error != null) Text(_error!),
+                          if (_error != null) LText(_error!),
                           Expanded(
                               child: CustomScrollView(
                                   key: const ValueKey('review-move-list'),
@@ -646,7 +694,7 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                                     child: Column(children: [
                                       Row(children: [
                                         Expanded(
-                                            child: Text(
+                                            child: LText(
                                                 'Senin hamlelerin (${_player == c.Color.WHITE ? 'Beyaz' : 'Siyah'}):',
                                                 style: const TextStyle(
                                                     color: rokBone,
@@ -678,20 +726,20 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                                                   color: qualityColor(quality)),
                                               const SizedBox(width: 10),
                                               Expanded(
-                                                  child: Text(
+                                                  child: LText(
                                                       quality == 'En iyi'
                                                           ? 'En İyi'
                                                           : quality,
                                                       style: const TextStyle(
                                                           color: rokBone,
                                                           fontSize: 13))),
-                                              const Text('—',
+                                              const LText('—',
                                                   style: TextStyle(
                                                       color:
                                                           Color(0xffb9aea5))),
                                               SizedBox(
                                                   width: 36,
-                                                  child: Text(
+                                                  child: LText(
                                                       '${_qualities.values.where((v) => v == quality).length}',
                                                       textAlign:
                                                           TextAlign.right,
@@ -712,7 +760,7 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                                             selectedTileColor:
                                                 const Color(0x447f7062),
                                             selected: _index == i + 1,
-                                            title: Text(
+                                            title: LText(
                                                 '${i + 1}. ${_moves![i]['san']}',
                                                 style: const TextStyle(
                                                     color: Colors.white)),
@@ -726,7 +774,7 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                                                             _qualities[i]!),
                                                         const SizedBox(
                                                             width: 8),
-                                                        Text(_qualities[i]!,
+                                                        LText(_qualities[i]!,
                                                             style: TextStyle(
                                                                 color: qualityColor(
                                                                     _qualities[

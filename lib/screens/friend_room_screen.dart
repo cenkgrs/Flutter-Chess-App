@@ -1,3 +1,4 @@
+import '../l10n/app_language.dart';
 import '../widgets/rok_style.dart';
 import 'dart:async';
 
@@ -118,7 +119,7 @@ class _FriendRoomScreenState extends State<FriendRoomScreen> {
   Widget build(BuildContext context) => RokScaffold(
         backgroundColor: const Color(0xff32180d),
         appBar: AppBar(
-          title: const Text(
+          title: const LText(
             'ARKADAŞLA OYNA',
             style: TextStyle(
               fontSize: 17,
@@ -157,7 +158,7 @@ class _FriendRoomScreenState extends State<FriendRoomScreen> {
                       items: TimeControl.presets
                           .map((x) => DropdownMenuItem(
                               value: x,
-                              child: Text('${x.pool.label} · ${x.label}')))
+                              child: LText('${x.pool.label} · ${x.label}')))
                           .toList(),
                       onChanged: (x) => setState(() => _control = x!)),
                   const SizedBox(height: 16),
@@ -165,9 +166,9 @@ class _FriendRoomScreenState extends State<FriendRoomScreen> {
                     FilledButton(
                         onPressed: _busy ? null : _create,
                         style: _primaryButtonStyle(),
-                        child: const Text('DAVET KODU OLUŞTUR'))
+                        child: const LText('DAVET KODU OLUŞTUR'))
                   else ...[
-                    const Text('DAVET KODUN',
+                    const LText('DAVET KODUN',
                         style: TextStyle(
                             color: _mutedBone,
                             fontWeight: FontWeight.w600,
@@ -186,8 +187,8 @@ class _FriendRoomScreenState extends State<FriendRoomScreen> {
                         style:
                             TextButton.styleFrom(foregroundColor: _mutedBone),
                         icon: const Icon(Icons.copy_rounded),
-                        label: const Text('Kodu kopyala')),
-                    const Text(
+                        label: const LText('Kodu kopyala')),
+                    const LText(
                       'Arkadaşın katıldığında oyun otomatik açılır.',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: _mutedBone),
@@ -216,12 +217,12 @@ class _FriendRoomScreenState extends State<FriendRoomScreen> {
                   FilledButton(
                       onPressed: _busy ? null : _join,
                       style: _primaryButtonStyle(),
-                      child: const Text('ODAYA KATIL')),
+                      child: const LText('ODAYA KATIL')),
                 ])),
             if (_error != null)
               Padding(
                   padding: const EdgeInsets.only(top: 14),
-                  child: Text(_error!,
+                  child: LText(_error!,
                       style: const TextStyle(color: Color(0xffffd0c8)))),
           ]),
         ),
@@ -232,7 +233,7 @@ class _FriendRoomScreenState extends State<FriendRoomScreen> {
     required IconData icon,
   }) =>
       InputDecoration(
-        labelText: label,
+        labelText: tr(context, label),
         labelStyle: const TextStyle(color: _mutedBone),
         prefixIcon: Icon(icon, color: _mutedBone),
         counterStyle: const TextStyle(color: _mutedBone),
@@ -280,7 +281,7 @@ class _FriendRoomScreenState extends State<FriendRoomScreen> {
           Row(children: [
             Icon(icon, color: _bone, size: 23),
             const SizedBox(width: 10),
-            Text(title,
+            LText(title,
                 style: const TextStyle(
                     color: _bone,
                     fontSize: 17,

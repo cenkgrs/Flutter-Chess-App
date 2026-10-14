@@ -1,3 +1,4 @@
+import '../l10n/app_language.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -58,7 +59,8 @@ class _AuthScreenState extends State<AuthScreen> {
       if (_register && response.session == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Doğrulama bağlantısını e-posta adresine gönderdik.'),
+            content:
+                LText('Doğrulama bağlantısını e-posta adresine gönderdik.'),
           ),
         );
       } else {
@@ -122,7 +124,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   const Icon(Icons.castle_rounded,
                       color: Color(0xfff3eee7), size: 48),
                   const SizedBox(height: 12),
-                  const Text(
+                  const LText(
                     'ROK',
                     textAlign: TextAlign.center,
                     style: TextStyle(
@@ -152,7 +154,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Text(
+                          LText(
                             _register ? 'HESAP OLUŞTUR' : 'GİRİŞ YAP',
                             style: const TextStyle(
                               color: Color(0xff211712),
@@ -162,7 +164,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                           ),
                           const SizedBox(height: 7),
-                          Text(
+                          LText(
                             _register
                                 ? 'Ratingini oluştur, çevrimiçi oynamaya başla.'
                                 : 'Ratingin ve oyunların kaldığı yerden devam etsin.',
@@ -224,7 +226,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                           if (_error != null) ...[
                             const SizedBox(height: 14),
-                            Text(
+                            LText(
                               _error!,
                               key: const ValueKey('auth-error'),
                               style: const TextStyle(
@@ -253,7 +255,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                       color: Color(0xfff3eee7),
                                     ),
                                   )
-                                : Text(
+                                : LText(
                                     _register ? 'KAYIT OL' : 'GİRİŞ YAP',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w700,
@@ -270,7 +272,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                       _register = !_register;
                                       _error = null;
                                     }),
-                            child: Text(
+                            child: LText(
                               _register
                                   ? 'Zaten hesabın var mı? Giriş yap'
                                   : 'Hesabın yok mu? Kayıt ol',
@@ -308,7 +310,10 @@ class _AuthScreenState extends State<AuthScreen> {
         controller: controller,
         keyboardType: keyboardType,
         obscureText: obscureText,
-        validator: validator,
+        validator: (value) {
+          final error = validator(value);
+          return error == null ? null : tr(context, error);
+        },
         autocorrect: false,
         enableSuggestions: !obscureText,
         decoration: InputDecoration(
@@ -318,7 +323,7 @@ class _AuthScreenState extends State<AuthScreen> {
           prefixIconColor: const Color(0xff65584e),
           suffixIconColor: const Color(0xff65584e),
           errorStyle: const TextStyle(color: Color(0xff9b3028)),
-          labelText: label,
+          labelText: tr(context, label),
           prefixIcon: Icon(icon),
           suffixIcon: suffixIcon,
           filled: true,

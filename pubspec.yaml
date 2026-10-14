@@ -7,6 +7,10 @@ environment:
   sdk: '>=3.0.0-229.0.dev <4.0.0'
 
 dependencies:
+  google_mobile_ads: ^9.1.0
+  shared_preferences: ^2.5.4
+  flutter_localizations:
+    sdk: flutter
   chess: ^0.8.1
   stockfish:
     path: third_party/stockfish

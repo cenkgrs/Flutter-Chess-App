@@ -1,3 +1,4 @@
+import '../l10n/app_language.dart';
 import '../widgets/rok_style.dart';
 import 'profile_screen.dart';
 import 'dart:async';
@@ -9,6 +10,9 @@ import 'package:flutter/material.dart';
 import '../backend/app_backend.dart';
 import '../backend/game_repository.dart';
 import '../online/game_result.dart';
+import '../widgets/board_annotations.dart';
+import '../prototype/premove.dart';
+import '../ads/match_ads.dart';
 
 class OnlineGameScreen extends StatefulWidget {
   const OnlineGameScreen({super.key, required this.gameId});
@@ -30,6 +34,25 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
   final ValueNotifier<Offset?> _dragPosition = ValueNotifier(null);
   List<c.Move> _targets = [];
   bool _sending = false;
+  Premove? _premove;
+  final _drawing = BoardDrawingController();
+  void _queuePremove(String square) {
+    final mine = _isWhite ? c.Color.WHITE : c.Color.BLACK;
+    if (_game.get(square)?.color == mine) {
+      setState(() => _selected = square);
+    } else if (_selected != null) {
+      setState(() {
+        _premove = Premove(_selected!, square);
+        _selected = null;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: LText('Ön hamle: ${_premove!.from} → ${_premove!.to}'),
+          action: SnackBarAction(
+              label: tr(context, 'İptal'),
+              onPressed: () => setState(() => _premove = null))));
+    }
+  }
+
   String? _error;
   bool _finishSent = false;
   bool _resultShown = false;
@@ -45,6 +68,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
   @override
   void initState() {
     super.initState();
+    MatchAds.instance.preload();
     _subscription = _repository.watchGame(widget.gameId).listen(
       _applySnapshot,
       onError: (_) {
@@ -94,10 +118,17 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
         _error = null;
       });
       if (row['status'] != 'active' && !_resultShown && !_leaving) {
+        _premove = null;
         _resultShown = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && !_leaving) _showResult(row);
         });
+      }
+      if (_myTurn && !_sending && _premove != null) {
+        final queued = _premove!;
+        _premove = null;
+        final move = queued.resolve(_game);
+        if (move != null) _send(move);
       }
     } catch (_) {
       setState(() => _error = 'Sunucudan geçersiz oyun konumu geldi.');
@@ -118,13 +149,13 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
       barrierDismissible: false,
       builder: (dialogContext) => RokResultDialog(
         icon: Icon(icon, size: 42),
-        title: Text(outcomeLabel(outcome)),
+        title: LText(outcomeLabel(outcome)),
         content:
-            reason.isEmpty ? null : Text(reason, textAlign: TextAlign.center),
+            reason.isEmpty ? null : LText(reason, textAlign: TextAlign.center),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Tahtaya dön'),
+            child: const LText('Tahtaya dön'),
           ),
           TextButton(
               onPressed: () {
@@ -134,13 +165,14 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                     MaterialPageRoute(
                         builder: (_) => GameReviewScreen(game: row)));
               },
-              child: const Text('Motor analizi')),
+              child: const LText('Motor analizi')),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(dialogContext);
-              Navigator.maybePop(context);
+              await MatchAds.instance.showIfReady(widget.gameId);
+              if (mounted) Navigator.maybePop(context);
             },
-            child: const Text('Menüye dön'),
+            child: const LText('Menüye dön'),
           ),
         ],
       ),
@@ -165,7 +197,12 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
   }
 
   Future<void> _tap(String square) async {
-    if (!_myTurn || _sending || _row == null) return;
+    if (_sending || _row == null || _row!['status'] != 'active') return;
+    if (!_myTurn) {
+      _queuePremove(square);
+      return;
+    }
+    _premove = null;
     final candidates = _targets.where((move) => move.toAlgebraic == square);
     if (candidates.isNotEmpty) {
       var move = candidates.first;
@@ -173,11 +210,11 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
         final promotion = await showDialog<String>(
           context: context,
           builder: (context) => RokDialog(
-            title: const Text('Piyonunu terfi ettir'),
+            title: const LText('Piyonunu terfi ettir'),
             actions: ['q', 'r', 'b', 'n']
                 .map((piece) => TextButton(
                       onPressed: () => Navigator.pop(context, piece),
-                      child: Text(const {
+                      child: LText(const {
                         'q': 'Vezir',
                         'r': 'Kale',
                         'b': 'Fil',
@@ -262,19 +299,19 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => RokDialog(
-        title: Text(exitAfter
+        title: LText(exitAfter
             ? 'Oyundan çıkmak istiyor musun?'
             : 'Teslim olmak istiyor musun?'),
         content: exitAfter
-            ? const Text('Devam eden oyundan çıkmak teslim olmak sayılır.')
+            ? const LText('Devam eden oyundan çıkmak teslim olmak sayılır.')
             : null,
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Devam et')),
+              child: const LText('Devam et')),
           FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Teslim ol')),
+              child: const LText('Teslim ol')),
         ],
       ),
     );
@@ -293,11 +330,12 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
     }
   }
 
-  void _exit() {
+  void _exit() async {
     if (_row?['status'] == 'active') {
       _resign(exitAfter: true);
     } else {
-      Navigator.maybePop(context);
+      if (_row != null) await MatchAds.instance.showIfReady(widget.gameId);
+      if (mounted) Navigator.maybePop(context);
     }
   }
 
@@ -306,6 +344,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
     _subscription?.cancel();
     _clockTimer?.cancel();
     _dragPosition.dispose();
+    _drawing.dispose();
     super.dispose();
   }
 
@@ -327,7 +366,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                     child: _error == null
                         ? const CircularProgressIndicator(
                             color: Color(0xfff3eee7))
-                        : Text(_error!,
+                        : LText(_error!,
                             style: const TextStyle(color: Color(0xfff3eee7))),
                   )
                 : LayoutBuilder(
@@ -350,12 +389,12 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                                 IconButton(
                                   key: const ValueKey('online-exit'),
                                   onPressed: _exit,
-                                  tooltip: 'Oyundan çık',
+                                  tooltip: tr(context, 'Oyundan çık'),
                                   icon: const Icon(Icons.arrow_back_rounded),
                                   color: const Color(0xfff3eee7),
                                 ),
                                 const Spacer(),
-                                const Text(
+                                const LText(
                                   'ÇEVRİMİÇİ OYUN',
                                   style: TextStyle(
                                     color: Color(0xfff3eee7),
@@ -365,7 +404,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                                   ),
                                 ),
                                 const Spacer(),
-                                const SizedBox(width: 48),
+                                BoardDrawingTools(controller: _drawing),
                               ],
                             ),
                           ),
@@ -382,7 +421,10 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                           SizedBox(
                             width: boardSize,
                             height: boardSize,
-                            child: _board(),
+                            child: BoardAnnotations(
+                                controller: _drawing,
+                                flipped: _flipped,
+                                child: _board()),
                           ),
                           const SizedBox(height: 10),
                           _PlayerBar(
@@ -396,14 +438,14 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                           ),
                           const Spacer(),
                           if (_error != null)
-                            Text(_error!,
+                            LText(_error!,
                                 style:
                                     const TextStyle(color: Color(0xffffd8c7))),
                           if (active)
                             TextButton.icon(
                               onPressed: _resign,
                               icon: const Icon(Icons.flag_outlined),
-                              label: const Text('Teslim ol'),
+                              label: const LText('Teslim ol'),
                               style: TextButton.styleFrom(
                                   foregroundColor: const Color(0xfff3eee7)),
                             )
@@ -448,9 +490,10 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
 
               return Listener(
                 onPointerDown: (event) {
+                  if (event.buttons != 1) return;
                   final square = squareAt(event.localPosition);
                   final mine = _isWhite ? c.Color.WHITE : c.Color.BLACK;
-                  if (_myTurn &&
+                  if (_row?['status'] == 'active' &&
                       !_sending &&
                       _game.get(square)?.color == mine) {
                     setState(() {
@@ -478,7 +521,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                   setState(() {
                     _dragFrom = null;
                   });
-                  if (from == null || !_myTurn || _sending) return;
+                  if (from == null || _sending) return;
                   if (event.localPosition.dx < 0 ||
                       event.localPosition.dy < 0 ||
                       event.localPosition.dx >= boardBox.maxWidth ||
@@ -487,6 +530,11 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                   }
                   final to = squareAt(event.localPosition);
                   if (from == to) return;
+                  if (!_myTurn) {
+                    _selected = from;
+                    _queuePremove(to);
+                    return;
+                  }
                   setState(() {
                     _selected = from;
                     _targets = _game.generate_moves({'square': from});
@@ -515,9 +563,12 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                         child: ColoredBox(
                           color: _selected == square
                               ? const Color(0xffb5823b)
-                              : light
-                                  ? const Color(0xffd9b77e)
-                                  : const Color(0xff85552f),
+                              : _premove?.from == square ||
+                                      _premove?.to == square
+                                  ? const Color(0xff7985a2)
+                                  : light
+                                      ? const Color(0xffd9b77e)
+                                      : const Color(0xff85552f),
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
@@ -666,7 +717,7 @@ class _PlayerBarState extends State<_PlayerBar> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       child: Row(
         children: [
-          Text(widget.label,
+          LText(widget.label,
               style: const TextStyle(
                   color: Color(0xfff3eee7), fontWeight: FontWeight.w600)),
           const Spacer(),
@@ -678,7 +729,7 @@ class _PlayerBarState extends State<_PlayerBar> {
                   : const Color(0xff202120),
               borderRadius: BorderRadius.circular(7),
             ),
-            child: Text(
+            child: LText(
               time,
               style: TextStyle(
                 color: widget.highlighted
@@ -733,7 +784,7 @@ class _GameResultBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                LText(
                   outcomeLabel(outcome),
                   style: const TextStyle(
                     color: Color(0xfff3eee7),
@@ -741,12 +792,12 @@ class _GameResultBar extends StatelessWidget {
                   ),
                 ),
                 if (reason.isNotEmpty)
-                  Text(reason,
+                  LText(reason,
                       style: const TextStyle(color: Color(0xffbdb7af))),
               ],
             ),
           ),
-          TextButton(onPressed: onExit, child: const Text('Çık')),
+          TextButton(onPressed: onExit, child: const LText('Çık')),
         ],
       ),
     );

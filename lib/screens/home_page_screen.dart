@@ -1,3 +1,4 @@
+import '../l10n/app_language.dart';
 import 'package:chess_puzzle_app/game_board.dart';
 import 'package:chess_puzzle_app/values/colors.dart';
 import 'package:chess_puzzle_app/widgets/bottom_navbar.dart';
@@ -24,7 +25,7 @@ class HomeScreen extends StatelessWidget {
           floatingActionButtonLocation:
               FloatingActionButtonLocation.centerDocked,
           appBar: AppBar(
-              backgroundColor: themeColor, title: const Text('Chess Puzzle')),
+              backgroundColor: themeColor, title: const LText('Chess Puzzle')),
           body: ListView(
             children: const <Widget>[FastPuzzles()],
           ),

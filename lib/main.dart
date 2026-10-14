@@ -6,6 +6,9 @@ import 'backend/app_backend.dart';
 import 'screens/home_menu_screen.dart';
 import 'route_observer.dart';
 import 'widgets/rok_style.dart';
+import 'ads/match_ads.dart';
+import 'l10n/app_language.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,7 +17,10 @@ Future<void> main() async {
         await rootBundle.loadString('third_party/stockfish/LICENSE'));
   });
   await AppBackend.initialize();
+  await AppLanguage.instance.load();
   runApp(const MyApp());
+  WidgetsBinding.instance
+      .addPostFrameCallback((_) => MatchAds.instance.initialize());
 }
 
 class MyApp extends StatelessWidget {
@@ -22,11 +28,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'ROK',
-        navigatorObservers: [appRouteObserver],
-        theme: rokTheme(),
-        home: const HomeMenuScreen());
+    return ListenableBuilder(
+        listenable: AppLanguage.instance,
+        builder: (_, __) => MaterialApp(
+            locale: AppLanguage.instance.locale,
+            supportedLocales: AppLanguage.supported,
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            localeResolutionCallback: (device, supported) => supported
+                .firstWhere((l) => l.languageCode == device?.languageCode,
+                    orElse: () => const Locale('en')),
+            debugShowCheckedModeBanner: false,
+            title: 'ROK',
+            navigatorObservers: [appRouteObserver],
+            theme: rokTheme(),
+            home: const HomeMenuScreen()));
   }
 }

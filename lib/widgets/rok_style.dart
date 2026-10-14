@@ -1,3 +1,4 @@
+import '../l10n/app_language.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -30,7 +31,7 @@ class RokResultDialog extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
                   child: Column(children: [
-                    const Text('OYUN TAMAMLANDI',
+                    const LText('OYUN TAMAMLANDI',
                         style: TextStyle(
                             color: rokBone, fontSize: 10, letterSpacing: 3)),
                     const SizedBox(height: 18),

@@ -1,3 +1,4 @@
+import '../l10n/app_language.dart';
 import '../widgets/rok_style.dart';
 import 'package:flutter/material.dart';
 import '../backend/app_backend.dart';
@@ -38,12 +39,12 @@ class _PuzzleLeaderboardScreenState extends State<PuzzleLeaderboardScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         child: ListTile(
           textColor: const Color(0xfff3eee7),
-          leading: Text('#${row['place']}',
+          leading: LText('#${row['place']}',
               style: const TextStyle(fontSize: 20, color: Color(0xfff3eee7))),
-          title: Text('${row['username']}${own ? ' · Sen' : ''}'),
-          subtitle: Text("Seviye ${row['rating']} · ${row['played']} bulmaca",
+          title: LText('${row['username']}${own ? ' · Sen' : ''}'),
+          subtitle: LText("Seviye ${row['rating']} · ${row['played']} bulmaca",
               style: const TextStyle(color: Color(0xffb9aea5))),
-          trailing: Text("${row['points']}\nPUAN",
+          trailing: LText("${row['points']}\nPUAN",
               textAlign: TextAlign.right,
               style: const TextStyle(
                   fontWeight: FontWeight.w700, color: Color(0xfff3eee7))),
@@ -54,14 +55,14 @@ class _PuzzleLeaderboardScreenState extends State<PuzzleLeaderboardScreen> {
   Widget build(BuildContext context) => RokScaffold(
         backgroundColor: const Color(0xff202120),
         appBar: AppBar(
-            title: const Text('Bulmaca sıralaması'),
+            title: const LText('Bulmaca sıralaması'),
             backgroundColor: const Color(0xff202120),
             foregroundColor: const Color(0xfff3eee7),
             actions: [
               IconButton(
                   onPressed: _refresh,
                   icon: const Icon(Icons.refresh),
-                  tooltip: 'Yenile')
+                  tooltip: tr(context, 'Yenile'))
             ]),
         body: FutureBuilder<Map<String, dynamic>>(
           future: _data,
@@ -74,7 +75,7 @@ class _PuzzleLeaderboardScreenState extends State<PuzzleLeaderboardScreen> {
               return Center(
                   child: TextButton(
                       onPressed: _refresh,
-                      child: const Text('Sıralama yüklenemedi. Tekrar dene',
+                      child: const LText('Sıralama yüklenemedi. Tekrar dene',
                           style: TextStyle(color: Color(0xfff3eee7)))));
             }
             final rows = snapshot.data!['leaders'] as List;
@@ -85,18 +86,18 @@ class _PuzzleLeaderboardScreenState extends State<PuzzleLeaderboardScreen> {
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(16),
                   children: [
-                    const Text('TÜM ZAMANLAR · İLK 100',
+                    const LText('TÜM ZAMANLAR · İLK 100',
                         style: TextStyle(
                             color: Color(0xffb9aea5), letterSpacing: 1.5)),
                     const SizedBox(height: 16),
                     if (me != null)
                       _entry(me, own: true)
                     else
-                      const Text('İlk bulmacanı tamamla, sıralamaya katıl.',
+                      const LText('İlk bulmacanı tamamla, sıralamaya katıl.',
                           style: TextStyle(color: Color(0xfff3eee7))),
                     const Divider(height: 32, color: Color(0xff454645)),
                     if (rows.isEmpty)
-                      const Text('Henüz sıralamada oyuncu yok.',
+                      const LText('Henüz sıralamada oyuncu yok.',
                           style: TextStyle(color: Color(0xfff3eee7))),
                     for (final row in rows) _entry(row as Map),
                   ],
