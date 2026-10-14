@@ -6,6 +6,37 @@ import 'package:chess/chess.dart' as c;
 import 'package:chess_puzzle_app/widgets/analysis_markers.dart';
 
 void main() {
+  testWidgets('Navigation scrolls the move list to last and first positions',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final board = c.Chess();
+    final moves = <Map<String, dynamic>>[];
+    for (var i = 0; i < 10; i++) {
+      for (final san in ['Nf3', 'Nf6', 'Ng1', 'Ng8']) {
+        board.move(san);
+        moves.add({'san': san, 'fen_after': board.fen});
+      }
+    }
+    await tester.pumpWidget(
+        MaterialApp(home: GameReviewScreen(game: const {}, localMoves: moves)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.last_page));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('review-move-40')).hitTestable(),
+        findsOneWidget);
+    await tester.tap(find.byIcon(Icons.chevron_left));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('review-move-39')).hitTestable(),
+        findsOneWidget);
+    await tester.tap(find.byIcon(Icons.first_page));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('review-move-1')).hitTestable(),
+        findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
   test('Evaluation bar always uses white perspective', () {
     expect(whiteAdvantage(const EngineEvaluation(null, 0, null), true), .5);
     expect(whiteAdvantage(const EngineEvaluation(null, 300, null), true),
