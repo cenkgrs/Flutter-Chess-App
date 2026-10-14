@@ -51,3 +51,8 @@ app.*.map.json
 
 # Local Supabase build-time configuration
 supabase.env.json
+# Native build outputs (AGP 9 / vendored engine).
+android/.kotlin/
+android/build/
+third_party/stockfish/android/.cxx/
+third_party/stockfish/ios/Stockfish/src/*.nnue

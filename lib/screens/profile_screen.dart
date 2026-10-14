@@ -7,6 +7,8 @@ import '../backend/app_backend.dart';
 import '../backend/game_repository.dart';
 import '../online/game_result.dart';
 import 'friends_screen.dart';
+import '../prototype/play_screen.dart';
+import '../prototype/stockfish_engine.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -121,6 +123,14 @@ class ProfileScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(builder: (_) => const FriendsScreen()),
                   ),
+                ),
+                const SizedBox(height: 12),
+                _ProfileLink(
+                  icon: Icons.description_outlined,
+                  title: 'Açık kaynak lisansları',
+                  subtitle: 'Stockfish ve kullanılan kütüphaneler',
+                  onTap: () =>
+                      showLicensePage(context: context, applicationName: 'ROK'),
                 ),
               ],
             ),
@@ -316,8 +326,11 @@ class _OutcomeIcon extends StatelessWidget {
 }
 
 class GameReviewScreen extends StatefulWidget {
-  const GameReviewScreen({super.key, required this.game});
+  const GameReviewScreen(
+      {super.key, required this.game, this.localMoves, this.initialFen});
   final Map<String, dynamic> game;
+  final List<Map<String, dynamic>>? localMoves;
+  final String? initialFen;
   @override
   State<GameReviewScreen> createState() => _GameReviewScreenState();
 }
@@ -325,6 +338,10 @@ class GameReviewScreen extends StatefulWidget {
 class _GameReviewScreenState extends State<GameReviewScreen> {
   List<Map<String, dynamic>>? _moves;
   int _index = 0;
+  bool _analyzing = false;
+  String? _error;
+  final Map<int, String> _qualities = {};
+  int _analysisGeneration = 0;
   @override
   void initState() {
     super.initState();
@@ -332,12 +349,73 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
   }
 
   Future<void> _load() async {
-    final moves = await GameRepository().gameMoves(widget.game['id'] as String);
-    if (mounted) setState(() => _moves = moves);
+    try {
+      final moves = widget.localMoves ??
+          await GameRepository().gameMoves(widget.game['id'] as String);
+      if (mounted) {
+        setState(() {
+          _moves = moves;
+          _error = null;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Maç yüklenemedi. Tekrar dene.');
+    }
+  }
+
+  c.Chess get _start => widget.initialFen == null
+      ? c.Chess()
+      : c.Chess.fromFEN(widget.initialFen!);
+
+  Future<void> _analyze() async {
+    final ticket = ++_analysisGeneration;
+    setState(() {
+      _analyzing = true;
+      _error = null;
+      _qualities.clear();
+    });
+    var position = _start;
+    try {
+      var before = await DeviceEngine.instance.evaluate(position.fen);
+      for (var i = 0; i < _moves!.length; i++) {
+        if (!mounted || ticket != _analysisGeneration) return;
+        final san = _moves![i]['san'] as String;
+        if (!position.move(san)) throw StateError('Eksik hamle geçmişi');
+        final played = position.history.last.move;
+        final uci =
+            '${played.fromAlgebraic}${played.toAlgebraic}${played.promotion?.name ?? ''}';
+        final after = position.game_over
+            ? EngineEvaluation(null, 0, position.in_checkmate ? -1 : null)
+            : await DeviceEngine.instance.evaluate(position.fen);
+        if (!mounted || ticket != _analysisGeneration) return;
+        if ((before.cp == null && before.mate == null) ||
+            (after.cp == null && after.mate == null)) {
+          throw StateError('Motor değerlendirmesi alınamadı');
+        }
+        final loss = (before.score + after.score).clamp(0, 200000);
+        setState(
+            () => _qualities[i] = moveQuality(loss, best: before.move == uci));
+        before = after;
+      }
+    } catch (_) {
+      if (mounted && ticket == _analysisGeneration) {
+        setState(() => _error = 'Analiz tamamlanamadı. Tekrar deneyebilirsin.');
+      }
+    } finally {
+      if (mounted && ticket == _analysisGeneration) {
+        setState(() => _analyzing = false);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _analysisGeneration++;
+    super.dispose();
   }
 
   c.Chess get _position => _index == 0
-      ? c.Chess()
+      ? _start
       : c.Chess.fromFEN(_moves![_index - 1]['fen_after'] as String);
 
   @override
@@ -347,85 +425,144 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
             backgroundColor: const Color(0xff202120),
             foregroundColor: const Color(0xfff3eee7)),
         backgroundColor: const Color(0xff3b1e0f),
-        body: _moves == null
-            ? const Center(child: CircularProgressIndicator())
-            : Column(children: [
-                const SizedBox(height: 18),
-                AspectRatio(
-                    aspectRatio: 1,
-                    child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: GridView.builder(
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: 64,
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 8),
-                            itemBuilder: (context, i) {
-                              final file = i % 8, rank = 8 - i ~/ 8;
-                              final piece =
-                                  _position.get('${'abcdefgh'[file]}$rank');
-                              return ColoredBox(
-                                  color: (i ~/ 8 + file).isEven
-                                      ? const Color(0xffd9b77e)
-                                      : const Color(0xff85552f),
-                                  child: piece == null
-                                      ? const SizedBox()
-                                      : Image.asset(
-                                          'lib/images/wood/${const {
-                                            'p': 'pawn',
-                                            'r': 'rook',
-                                            'n': 'knight',
-                                            'b': 'bishop',
-                                            'q': 'queen',
-                                            'k': 'king'
-                                          }[piece.type.name]}.png',
-                                          color: piece.color == c.Color.WHITE
-                                              ? const Color(0xfffff5df)
-                                              : const Color(0xff48291c),
-                                          colorBlendMode: BlendMode.modulate));
-                            }))),
-                Text(
-                    _index == 0
-                        ? 'Başlangıç konumu'
-                        : '$_index. ${_moves![_index - 1]['san']}',
-                    style: const TextStyle(
-                        color: Color(0xfff3eee7), fontSize: 17)),
-                const SizedBox(height: 12),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  IconButton(
-                      onPressed:
-                          _index == 0 ? null : () => setState(() => _index = 0),
-                      icon: const Icon(Icons.first_page),
-                      color: Colors.white),
-                  IconButton(
-                      onPressed:
-                          _index == 0 ? null : () => setState(() => _index--),
-                      icon: const Icon(Icons.chevron_left),
-                      color: Colors.white),
-                  Text('$_index / ${_moves!.length}',
-                      style: const TextStyle(color: Colors.white)),
-                  IconButton(
-                      onPressed: _index == _moves!.length
-                          ? null
-                          : () => setState(() => _index++),
-                      icon: const Icon(Icons.chevron_right),
-                      color: Colors.white),
-                  IconButton(
-                      onPressed: _index == _moves!.length
-                          ? null
-                          : () => setState(() => _index = _moves!.length),
-                      icon: const Icon(Icons.last_page),
-                      color: Colors.white),
-                ]),
-                Expanded(
-                    child: ListView.builder(
-                        itemCount: _moves!.length,
-                        itemBuilder: (_, i) => ListTile(
-                            selected: _index == i + 1,
-                            title: Text('${i + 1}. ${_moves![i]['san']}',
-                                style: const TextStyle(color: Colors.white)),
-                            onTap: () => setState(() => _index = i + 1)))),
-              ]),
+        body: _moves == null && _error != null
+            ? Center(child: TextButton(onPressed: _load, child: Text(_error!)))
+            : _moves == null
+                ? const Center(child: CircularProgressIndicator())
+                : Column(children: [
+                    Flexible(
+                        child: AspectRatio(
+                            aspectRatio: 1,
+                            child: Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: GridView.builder(
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount: 64,
+                                    gridDelegate:
+                                        const SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 8),
+                                    itemBuilder: (context, i) {
+                                      final file = i % 8, rank = 8 - i ~/ 8;
+                                      final piece = _position
+                                          .get('${'abcdefgh'[file]}$rank');
+                                      return ColoredBox(
+                                          color: (i ~/ 8 + file).isEven
+                                              ? const Color(0xffd9b77e)
+                                              : const Color(0xff85552f),
+                                          child: piece == null
+                                              ? const SizedBox()
+                                              : Image.asset(
+                                                  'lib/images/wood/${const {
+                                                    'p': 'pawn',
+                                                    'r': 'rook',
+                                                    'n': 'knight',
+                                                    'b': 'bishop',
+                                                    'q': 'queen',
+                                                    'k': 'king'
+                                                  }[piece.type.name]}.png',
+                                                  color: piece.color ==
+                                                          c.Color.WHITE
+                                                      ? const Color(0xfffff5df)
+                                                      : const Color(0xff48291c),
+                                                  colorBlendMode:
+                                                      BlendMode.modulate));
+                                    })))),
+                    Text(
+                        _index == 0
+                            ? 'Başlangıç konumu'
+                            : '$_index. ${_moves![_index - 1]['san']}',
+                        style: const TextStyle(
+                            color: Color(0xfff3eee7), fontSize: 17)),
+                    const SizedBox(height: 12),
+                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      IconButton(
+                          onPressed: _index == 0
+                              ? null
+                              : () => setState(() => _index = 0),
+                          icon: const Icon(Icons.first_page),
+                          color: Colors.white),
+                      IconButton(
+                          onPressed: _index == 0
+                              ? null
+                              : () => setState(() => _index--),
+                          icon: const Icon(Icons.chevron_left),
+                          color: Colors.white),
+                      Text('$_index / ${_moves!.length}',
+                          style: const TextStyle(color: Colors.white)),
+                      IconButton(
+                          onPressed: _index == _moves!.length
+                              ? null
+                              : () => setState(() => _index++),
+                          icon: const Icon(Icons.chevron_right),
+                          color: Colors.white),
+                      IconButton(
+                          onPressed: _index == _moves!.length
+                              ? null
+                              : () => setState(() => _index = _moves!.length),
+                          icon: const Icon(Icons.last_page),
+                          color: Colors.white),
+                    ]),
+                    Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 8,
+                        children: [
+                          FilledButton.icon(
+                              onPressed: _analyzing || _moves!.isEmpty
+                                  ? null
+                                  : _analyze,
+                              icon: const Icon(Icons.analytics_outlined),
+                              label: Text(_analyzing
+                                  ? 'Analiz ${_qualities.length}/${_moves!.length}'
+                                  : 'Motor analizi')),
+                          TextButton(
+                              onPressed: _analyzing || _position.game_over
+                                  ? null
+                                  : () {
+                                      PlayScreen.launch(context,
+                                          fen: _position.fen);
+                                    },
+                              child:
+                                  const Text('Buradan bilgisayarla devam et')),
+                        ]),
+                    if (_analyzing) const LinearProgressIndicator(),
+                    if (_error != null) Text(_error!),
+                    if (_qualities.isNotEmpty)
+                      Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                              ['Beyaz', 'Siyah'].asMap().entries.map((side) {
+                                final firstWhite = _start.turn == c.Color.WHITE;
+                                final labels = _qualities.entries
+                                    .where((e) =>
+                                        (e.key + (firstWhite ? 0 : 1)) % 2 ==
+                                        side.key)
+                                    .map((e) => e.value)
+                                    .toList();
+                                return '${side.value}: ${[
+                                  'En iyi',
+                                  'İyi',
+                                  'İsabetsizlik',
+                                  'Hata',
+                                  'Büyük hata'
+                                ].map((q) => '$q ${labels.where((v) => v == q).length}').join(' · ')}';
+                              }).join('\n'),
+                              style: const TextStyle(fontSize: 11))),
+                    const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                            'Kısa motor analizi tahminidir. “En iyi” motorun ilk tercihidir; parlak hamle/feda tespiti değildir.',
+                            style: TextStyle(fontSize: 10))),
+                    Expanded(
+                        child: ListView.builder(
+                            itemCount: _moves!.length,
+                            itemBuilder: (_, i) => ListTile(
+                                selected: _index == i + 1,
+                                title: Text('${i + 1}. ${_moves![i]['san']}',
+                                    style:
+                                        const TextStyle(color: Colors.white)),
+                                trailing: Text(_qualities[i] ?? ''),
+                                onTap: () => setState(() => _index = i + 1)))),
+                  ]),
       );
 }

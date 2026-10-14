@@ -8,6 +8,8 @@ environment:
 
 dependencies:
   chess: ^0.8.1
+  stockfish:
+    path: third_party/stockfish
   flutter:
     sdk: flutter
   http: ^0.13.5
@@ -26,6 +28,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - third_party/stockfish/LICENSE
     - lib/images/
     - lib/images/wood/
 

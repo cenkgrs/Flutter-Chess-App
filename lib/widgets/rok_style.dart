@@ -4,6 +4,83 @@ import 'package:flutter/services.dart';
 const rokBone = Color(0xfff3eee7);
 const rokGraphite = Color(0xff202120);
 
+/// Match results use a dedicated, full-width action layout, not a generic alert.
+class RokResultDialog extends StatelessWidget {
+  const RokResultDialog(
+      {super.key,
+      this.icon,
+      required this.title,
+      this.content,
+      required this.actions});
+  final Widget? icon, content;
+  final Widget title;
+  final List<Widget> actions;
+  @override
+  Widget build(BuildContext context) => Dialog(
+        backgroundColor: rokBone,
+        surfaceTintColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: rokWood,
+              child: Column(children: [
+                const Text('OYUN TAMAMLANDI',
+                    style: TextStyle(
+                        color: rokBone, fontSize: 10, letterSpacing: 3)),
+                const SizedBox(height: 18),
+                IconTheme(
+                    data: const IconThemeData(color: rokBone, size: 32),
+                    child: icon ?? const Icon(Icons.flag_outlined)),
+                const SizedBox(height: 12),
+                DefaultTextStyle(
+                    style: const TextStyle(
+                        color: rokBone,
+                        fontSize: 30,
+                        fontWeight: FontWeight.w600),
+                    child: title),
+              ])),
+          Padding(
+              padding: const EdgeInsets.all(20),
+              child: Theme(
+                  data: rokTheme().copyWith(
+                    textButtonTheme: TextButtonThemeData(
+                        style: TextButton.styleFrom(
+                            foregroundColor: rokGraphite,
+                            minimumSize: const Size.fromHeight(46))),
+                    filledButtonTheme: FilledButtonThemeData(
+                        style: FilledButton.styleFrom(
+                            backgroundColor: rokGraphite,
+                            foregroundColor: rokBone,
+                            minimumSize: const Size.fromHeight(50),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)))),
+                  ),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (content != null)
+                          Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: DefaultTextStyle(
+                                  style: const TextStyle(
+                                      color: Color(0xff65584e),
+                                      height: 1.5,
+                                      fontSize: 14),
+                                  textAlign: TextAlign.center,
+                                  child: content!)),
+                        ...actions.map((action) => Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: action)),
+                      ]))),
+        ])),
+      );
+}
+
 class RokDialog extends StatelessWidget {
   const RokDialog(
       {super.key, this.icon, this.title, this.content, this.actions});

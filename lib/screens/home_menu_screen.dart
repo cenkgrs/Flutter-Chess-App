@@ -115,12 +115,7 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> with RouteAware {
                                   icon: Icons.memory_rounded,
                                   title: 'Bilgisayara karşı',
                                   subtitle: 'Çevrimdışı antrenman',
-                                  onTap: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const PlayScreen(),
-                                    ),
-                                  ),
+                                  onTap: () => PlayScreen.launch(context),
                                 ),
                                 const _MenuDivider(),
                                 _SecondaryAction(
