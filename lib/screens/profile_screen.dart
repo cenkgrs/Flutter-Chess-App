@@ -13,6 +13,7 @@ import '../prototype/stockfish_engine.dart';
 import '../widgets/analysis_markers.dart';
 import '../ads/match_ads.dart';
 import '../l10n/app_language.dart';
+import 'delete_account_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -182,6 +183,18 @@ class ProfileScreen extends StatelessWidget {
                   onTap: () =>
                       showLicensePage(context: context, applicationName: 'ROK'),
                 ),
+                if (user != null) ...[
+                  const SizedBox(height: 24),
+                  _ProfileLink(
+                      icon: Icons.delete_forever_outlined,
+                      title: 'Hesabımı sil',
+                      subtitle:
+                          'Hesabını ve ilişkili verilerini kalıcı olarak kaldır',
+                      onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const DeleteAccountScreen()))),
+                ],
               ],
             ),
           ),
