@@ -76,11 +76,25 @@ class GameRepository {
       .from('games')
       .stream(primaryKey: ['id'])
       .eq('id', gameId)
-      .map((rows) => rows.single)
+      .map((rows) => <String, dynamic>{
+            ...rows.single,
+            '_received_at': DateTime.now().toUtc().toIso8601String(),
+          })
       .distinct((previous, next) =>
           previous['updated_at'] == next['updated_at'] &&
           previous['status'] == next['status'] &&
           previous['ply'] == next['ply']);
+
+  Future<Map<String, dynamic>> fetchGame(String gameId) async {
+    final response = await AppBackend.client.rpc(
+      'get_game_state',
+      params: {'p_game_id': gameId},
+    );
+    return <String, dynamic>{
+      ...Map<String, dynamic>.from(response as Map),
+      '_received_at': DateTime.now().toUtc().toIso8601String(),
+    };
+  }
 
   Future<Map<String, dynamic>> submitMove({
     required String gameId,

@@ -4,8 +4,10 @@ ROK, `stockfish` Flutter paketinin **1.8.1** sürümünü `third_party/stockfish
 altında kaynaklarıyla içerir. Android Gradle dosyası jcenter yerine
 mavenCentral, AGP 9.1.0 ve açık namespace kullanacak şekilde uyarlanmıştır.
 Motor algoritması değiştirilmemiştir.
-Paket ve içindeki motor GPL-3.0 kapsamındadır; podspec içindeki MIT metadata
-etiketi motorun GPL lisansının yerine geçmez.
+Paket ve içindeki motor GPL-3.0-or-later kapsamındadır. ROK'un tamamı,
+Stockfish ile doğrudan bağlantılı dağıtımın koşullarını açıkça karşılamak için
+`COPYING.md` ile GPL-3.0-or-later altında yayımlanır. Podspec metadata etiketi de
+aynı lisansla eşleştirilmiştir.
 
 - Tam paket kaynağı: https://pub.dev/api/archives/stockfish-1.8.1.tar.gz
 - Paket lisansı: https://pub.dev/packages/stockfish/license
@@ -14,11 +16,23 @@ etiketi motorun GPL lisansının yerine geçmez.
 - Ağ dosyaları: nn-c288c895ea92.nnue ve nn-37f18f62d772.nnue;
   paket bunları derleme sırasında indirir, kullanıcı cihazında indirme yapılmaz.
 
-Dağıtım öncesi: dağıtılan binary ile eşleşen paket/motor kaynaklarını, ağ
-dosyalarını, lisansları ve ROK kaynak/derleme talimatlarını erişilebilir bir
-yayınla arşivleyin. ROK kaynaklarının yayın adresi henüz belirlenmedi.
-Bu dosya hukuki uygunluk onayı değildir; iOS/App Store dağıtım şartları ve
-birleşik uygulamanın GPL uyumluluğu yayın öncesinde kontrol edilmelidir.
+ROK tam kaynak deposu: https://github.com/cenkgrs/Flutter-Chess-App
+
+Release uygulaması, dağıtılan binary ile birebir eşleşen herkese açık 40
+karakterli commit'i
+`--dart-define=ROK_SOURCE_REVISION=<40-karakterli-commit>` ile belirtmeden
+başlatılamaz. Uygulamadaki Açık Kaynak Lisansları ekranı bu kesin revizyona
+bağlanır.
+
+NNUE ağları derleme sırasında aşağıdaki sabit içerik adreslerinden alınır ve
+SHA-256 değerleri podspec tarafından doğrulanır:
+
+- nn-c288c895ea92.nnue — `c288c895ea924429ea9092e3f36b2b3c1f00f2a3a4c759ff7e57e79e3b43e4a7`
+- nn-37f18f62d772.nnue — `37f18f62d772f3107e1d6aaca3898c130c3c86f2ab63e6555fbbca20635a899d`
+
+Dağıtım commit'i; ROK, Flutter wrapper, Stockfish kaynakları, build
+betikleri, lisanslar ve ağların sabit adresleri/checksum'larını birlikte içerir.
+Bu dosya hukuki danışmanlık değildir.
 
 ## Davranış
 

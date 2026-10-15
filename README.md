@@ -30,3 +30,21 @@ flutter build apk --debug
 
 Web release çıktısı `build/web`, Android debug APK çıktısı ise
 `build/app/outputs/flutter-apk/app-debug.apk` altında oluşur.
+
+## Lisans ve release kaynağı
+
+ROK ve uygulamaya doğrudan bağlı Stockfish motoru GPL-3.0-or-later altında
+dağıtılır. Tam koşullar [COPYING.md](COPYING.md), motor ve NNUE ayrıntıları
+[STOCKFISH_NOTICES.md](STOCKFISH_NOTICES.md) içindedir.
+
+App Store/Play release'i, herkese açık kaynak deposundaki birebir 40 karakterli
+commit belirtilmeden çalışmaz:
+
+```sh
+flutter build ipa --release \
+  --dart-define=ROK_SOURCE_REVISION=<40-character-public-commit>
+```
+
+Derlemeden önce çalışma ağacının temiz, belirtilen revizyonun `HEAD` ile aynı ve
+GitHub'da erişilebilir olduğunu doğrulayın. Uygulama içindeki Profil → Açık
+kaynak lisansları sayfası doğrudan bu revizyona bağlanır.

@@ -142,4 +142,37 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
+
+  testWidgets('leaving an active duel confirms and forfeits exactly once',
+      (tester) async {
+    var forfeits = 0;
+    await tester.pumpWidget(MaterialApp(
+        home: PuzzleDuelScreen(
+            gameId: 'match',
+            request: (name, params) async {
+              if (name == 'duel_forfeit') {
+                forfeits++;
+                return <String, dynamic>{};
+              }
+              return {
+                'status': 'active',
+                'turn': 2,
+                'step': 0,
+                'my_turn': false,
+                'fen': null,
+                'score': 0,
+                'opponent_score': 0,
+                'opponent': 'Bobby',
+                'rating': 1200,
+                'seconds_left': 30,
+              };
+            })));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+    expect(find.text('Düellodan çıkmak istiyor musun?'), findsOneWidget);
+    await tester.tap(find.text('Düellodan çık'));
+    await tester.pumpAndSettle();
+    expect(forfeits, 1);
+  });
 }

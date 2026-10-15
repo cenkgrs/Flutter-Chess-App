@@ -17,6 +17,7 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^0.13.5
+  url_launcher: ^6.3.3
 
   provider: 
   supabase_flutter: ^2.14.2
@@ -32,6 +33,8 @@ flutter:
   uses-material-design: true
 
   assets:
+    - COPYING.md
+    - STOCKFISH_NOTICES.md
     - third_party/stockfish/LICENSE
     - lib/images/
     - lib/images/wood/

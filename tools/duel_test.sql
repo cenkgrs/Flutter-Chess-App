@@ -30,7 +30,20 @@ do $$ declare d public.puzzle_duels; s jsonb; previous integer; begin
  assert (select count(*) from public.duel_ratings where played=1)=2;
  perform public.duel_state(d.id);
  assert (select count(*) from public.duel_ratings where played=1)=2,'rating duplicated';
- assert (select score_a>score_b from public.puzzle_duels where id=d.id);
+assert (select score_a>score_b from public.puzzle_duels where id=d.id);
+end $$;
+-- Forfeit is idempotent and awards rating only once.
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',true);
+select public.duel_matchmaking();
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',true);
+select public.duel_matchmaking();
+do $$ declare gid uuid; before_played integer; begin
+ select id into gid from public.puzzle_duels where status='active' order by started_at desc limit 1;
+ select sum(played) into before_played from public.duel_ratings;
+ perform public.duel_forfeit(gid);
+ perform public.duel_forfeit(gid);
+ assert (select status='finished' from public.puzzle_duels where id=gid);
+ assert (select sum(played) from public.duel_ratings)=before_played+2,'forfeit rating duplicated';
 end $$;
 -- A new match handles both disconnected players without getting stuck.
 select public.duel_matchmaking();

@@ -1,5 +1,97 @@
 // English, German, Russian. Turkish source keys keep the existing copy auditable.
 const translations = <String, List<String>>{
+  'ROK ve uygulamaya bağlı Stockfish motoru GPL-3.0-or-later altında dağıtılır.':
+      [
+    'ROK and its linked Stockfish engine are distributed under GPL-3.0-or-later.',
+    'ROK und die eingebundene Stockfish-Engine werden unter GPL-3.0-or-later vertrieben.',
+    'ROK и связанный с ним движок Stockfish распространяются по лицензии GPL-3.0-or-later.'
+  ],
+  'Kaynağı inceleme, değiştirme ve aynı lisansla yeniden dağıtma hakkına sahipsin. Yazılım herhangi bir garanti olmadan sunulur.':
+      [
+    'You may inspect, modify, and redistribute the source under the same license. The software is provided without warranty.',
+    'Du darfst den Quellcode prüfen, ändern und unter derselben Lizenz weitergeben. Die Software wird ohne Gewährleistung bereitgestellt.',
+    'Вы можете изучать, изменять и распространять исходный код по той же лицензии. Программа предоставляется без гарантий.'
+  ],
+  'Kaynak revizyonu': [
+    'Source revision',
+    'Quellcode-Revision',
+    'Ревизия исходного кода'
+  ],
+  'Tam kaynak kodunu aç': [
+    'Open complete source code',
+    'Vollständigen Quellcode öffnen',
+    'Открыть полный исходный код'
+  ],
+  'GPL-3.0 lisansını görüntüle': [
+    'View GPL-3.0 license',
+    'GPL-3.0-Lizenz anzeigen',
+    'Открыть лицензию GPL-3.0'
+  ],
+  'Bildirimler yükleniyor…': [
+    'Loading notices…',
+    'Hinweise werden geladen…',
+    'Загрузка уведомлений…'
+  ],
+  'Gizlilik Politikası': [
+    'Privacy Policy',
+    'Datenschutzerklärung',
+    'Политика конфиденциальности'
+  ],
+  'Verilerinin nasıl işlendiğini incele': [
+    'See how your data is handled',
+    'Erfahre, wie deine Daten verarbeitet werden',
+    'Узнайте, как обрабатываются ваши данные'
+  ],
+  'Destek': ['Support', 'Support', 'Поддержка'],
+  'Yardım ve iletişim seçenekleri': [
+    'Help and contact options',
+    'Hilfe und Kontaktmöglichkeiten',
+    'Помощь и способы связи'
+  ],
+  'Bağlantı açılamadı. Tekrar dene.': [
+    'Could not open the link. Try again.',
+    'Link konnte nicht geöffnet werden. Erneut versuchen.',
+    'Не удалось открыть ссылку. Повторите попытку.'
+  ],
+  'DEVAM EDEN MAÇ': ['ONGOING GAME', 'LAUFENDE PARTIE', 'ТЕКУЩАЯ ПАРТИЯ'],
+  'Tahtaya dön ve güncel konumdan devam et': [
+    'Return to the board and continue from the current position',
+    'Zum Brett zurückkehren und aus der aktuellen Stellung weiterspielen',
+    'Вернуться к доске и продолжить с текущей позиции'
+  ],
+  'Oyuna bağlanılamadı. Yeniden deneniyor…': [
+    'Could not connect to the game. Retrying…',
+    'Verbindung zur Partie fehlgeschlagen. Neuer Versuch…',
+    'Не удалось подключиться к партии. Повторная попытка…'
+  ],
+  'Bağlantı kesildi. Oyun yeniden eşitleniyor…': [
+    'Connection lost. Resyncing the game…',
+    'Verbindung unterbrochen. Partie wird synchronisiert…',
+    'Соединение потеряно. Партия синхронизируется…'
+  ],
+  'Düellodan çıkmak istiyor musun?': [
+    'Leave the duel?',
+    'Duell verlassen?',
+    'Выйти из дуэли?'
+  ],
+  'Devam eden düellodan çıkarsan rakibin kazanır.': [
+    'If you leave an active duel, your opponent wins.',
+    'Wenn du ein laufendes Duell verlässt, gewinnt dein Gegner.',
+    'Если выйти из активной дуэли, соперник победит.'
+  ],
+  'Düellodan çık': ['Leave duel', 'Duell verlassen', 'Выйти из дуэли'],
+  'Düellodan çıkış doğrulanamadı. Tekrar dene.': [
+    'Could not confirm leaving the duel. Try again.',
+    'Das Verlassen des Duells konnte nicht bestätigt werden. Erneut versuchen.',
+    'Не удалось подтвердить выход из дуэли. Повторите попытку.'
+  ],
+  'Maçtan ayrıldı': ['Left the match', 'Partie verlassen', 'Вышел из матча'],
+  'Uygulamayı arka plana alırsan süre işlemeye devam eder. Geri düğmesiyle ayrılmak hükmen yenilgidir.':
+      [
+    'The clock keeps running in the background. Leaving with the back button is a forfeit.',
+    'Im Hintergrund läuft die Uhr weiter. Verlassen per Zurück-Taste gilt als Aufgabe.',
+    'В фоне время продолжает идти. Выход кнопкой «Назад» считается поражением.'
+  ],
   'Hesabımı sil': [
     'Delete my account',
     'Mein Konto löschen',
