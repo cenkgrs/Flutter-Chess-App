@@ -11,6 +11,7 @@ import '../prototype/play_screen.dart';
 import 'auth_screen.dart';
 import 'friend_room_screen.dart';
 import 'matchmaking_screen.dart';
+import 'online_game_screen.dart';
 import 'profile_screen.dart';
 import 'puzzle_screen.dart';
 import 'puzzle_duel_screen.dart';
@@ -29,10 +30,38 @@ class HomeMenuScreen extends StatefulWidget {
   State<HomeMenuScreen> createState() => _HomeMenuScreenState();
 }
 
-class _HomeMenuScreenState extends State<HomeMenuScreen> with RouteAware {
+class _HomeMenuScreenState extends State<HomeMenuScreen>
+    with RouteAware, WidgetsBindingObserver {
   static const bone = HomeMenuScreen.bone;
   static const mutedBone = HomeMenuScreen.mutedBone;
   static const divider = HomeMenuScreen.divider;
+  String? _activeGameId;
+  bool _checkingActiveGame = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkActiveGame();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _checkActiveGame();
+  }
+
+  Future<void> _checkActiveGame() async {
+    if (_checkingActiveGame || AppBackend.currentUser == null) return;
+    _checkingActiveGame = true;
+    try {
+      final id = await GameRepository().findActiveGame();
+      if (mounted) setState(() => _activeGameId = id);
+    } catch (_) {
+      // Keep the menu usable while offline; the next resume retries.
+    } finally {
+      _checkingActiveGame = false;
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -43,11 +72,15 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> with RouteAware {
 
   @override
   void didPopNext() {
-    if (mounted) setState(() {});
+    if (mounted) {
+      setState(() {});
+      _checkActiveGame();
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     appRouteObserver.unsubscribe(this);
     super.dispose();
   }
@@ -98,6 +131,22 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> with RouteAware {
                             child: Column(
                               children: [
                                 _RatingsStrip(user: user),
+                                if (user != null && _activeGameId != null) ...[
+                                  const SizedBox(height: 22),
+                                  _ActiveGameCard(
+                                    onTap: () async {
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => OnlineGameScreen(
+                                            gameId: _activeGameId!,
+                                          ),
+                                        ),
+                                      );
+                                      _checkActiveGame();
+                                    },
+                                  ),
+                                ],
                                 const SizedBox(height: 45),
                                 _PrimaryAction(
                                   key: const ValueKey('online-play'),
@@ -443,6 +492,56 @@ class _PrimaryAction extends StatelessWidget {
                 const Icon(Icons.chevron_right_rounded,
                     color: HomeMenuScreen.bone, size: 31),
                 const SizedBox(width: 18),
+              ],
+            ),
+          ),
+        ),
+      );
+}
+
+class _ActiveGameCard extends StatelessWidget {
+  const _ActiveGameCard({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: const ValueKey('resume-online-game'),
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+            decoration: BoxDecoration(
+              color: const Color(0xff744326),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xffd9b77e)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.sync_rounded, color: HomeMenuScreen.bone),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      LText(
+                        'DEVAM EDEN MAÇ',
+                        style: TextStyle(
+                          color: HomeMenuScreen.bone,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(height: 3),
+                      LText(
+                        'Tahtaya dön ve güncel konumdan devam et',
+                        style: TextStyle(color: HomeMenuScreen.mutedBone),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: HomeMenuScreen.bone),
               ],
             ),
           ),

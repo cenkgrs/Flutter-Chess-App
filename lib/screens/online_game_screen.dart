@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import '../backend/app_backend.dart';
 import '../backend/game_repository.dart';
 import '../online/game_result.dart';
+import '../online/game_sync.dart';
 import '../widgets/board_annotations.dart';
 import '../prototype/premove.dart';
 import '../ads/match_ads.dart';
@@ -23,10 +24,12 @@ class OnlineGameScreen extends StatefulWidget {
   State<OnlineGameScreen> createState() => _OnlineGameScreenState();
 }
 
-class _OnlineGameScreenState extends State<OnlineGameScreen> {
+class _OnlineGameScreenState extends State<OnlineGameScreen>
+    with WidgetsBindingObserver {
   final _repository = GameRepository();
   StreamSubscription<Map<String, dynamic>>? _subscription;
   Timer? _clockTimer;
+  Timer? _reconnectTimer;
   Map<String, dynamic>? _row;
   c.Chess _game = c.Chess();
   String? _selected;
@@ -57,6 +60,8 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
   bool _finishSent = false;
   bool _resultShown = false;
   bool _leaving = false;
+  bool _refreshing = false;
+  int _reconnectAttempt = 0;
 
   String get _myId => AppBackend.currentUser!.id;
   bool get _isWhite => _row?['white_id'] == _myId;
@@ -68,16 +73,71 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     MatchAds.instance.preload();
-    _subscription = _repository.watchGame(widget.gameId).listen(
-      _applySnapshot,
-      onError: (_) {
-        if (mounted) setState(() => _error = 'Oyun bağlantısı kesildi.');
-      },
-    );
+    _connectAndRefresh();
     _clockTimer = Timer.periodic(const Duration(milliseconds: 250), (_) {
       if (mounted && _row?['status'] == 'active') _checkTimeout();
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _connectAndRefresh();
+    }
+  }
+
+  Future<void> _connectAndRefresh() async {
+    _reconnectTimer?.cancel();
+    await _subscription?.cancel();
+    if (!mounted) return;
+    _subscription = _repository.watchGame(widget.gameId).listen(
+      (row) {
+        _reconnectAttempt = 0;
+        _applySnapshot(row);
+      },
+      onError: (_) => _connectionLost(),
+      onDone: _connectionLost,
+    );
+    await _refreshGame();
+  }
+
+  Future<void> _refreshGame() async {
+    if (_refreshing) return;
+    _refreshing = true;
+    try {
+      final row = await _repository.fetchGame(widget.gameId);
+      if (mounted) {
+        _reconnectAttempt = 0;
+        _applySnapshot(row);
+        _checkTimeout();
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = _row == null
+            ? 'Oyuna bağlanılamadı. Yeniden deneniyor…'
+            : 'Bağlantı kesildi. Oyun yeniden eşitleniyor…');
+        _scheduleReconnect();
+      }
+    } finally {
+      _refreshing = false;
+    }
+  }
+
+  void _connectionLost() {
+    if (!mounted) return;
+    setState(() => _error = _row == null
+        ? 'Oyuna bağlanılamadı. Yeniden deneniyor…'
+        : 'Bağlantı kesildi. Oyun yeniden eşitleniyor…');
+    _scheduleReconnect();
+  }
+
+  void _scheduleReconnect() {
+    if (_reconnectTimer?.isActive == true || _leaving || !mounted) return;
+    final seconds = math.min(30, 1 << math.min(_reconnectAttempt, 5));
+    _reconnectAttempt++;
+    _reconnectTimer = Timer(Duration(seconds: seconds), _connectAndRefresh);
   }
 
   void _checkTimeout() {
@@ -106,6 +166,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
 
   void _applySnapshot(Map<String, dynamic> row) {
     if (!mounted) return;
+    if (!shouldApplyGameSnapshot(_row, row)) return;
     try {
       _dragPosition.value = null;
       setState(() {
@@ -182,18 +243,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
   ({int white, int black}) get _clocks {
     final row = _row;
     if (row == null) return (white: 0, black: 0);
-    var white = row['white_ms'] as int;
-    var black = row['black_ms'] as int;
-    if (row['status'] == 'active') {
-      final updated = DateTime.parse(row['updated_at'] as String).toUtc();
-      final elapsed = DateTime.now().toUtc().difference(updated).inMilliseconds;
-      if (_game.turn == c.Color.WHITE) {
-        white = math.max(0, white - elapsed);
-      } else {
-        black = math.max(0, black - elapsed);
-      }
-    }
-    return (white: white, black: black);
+    return gameClocks(row);
   }
 
   Future<void> _tap(String square) async {
@@ -273,6 +323,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
           _sending = false;
           _error = 'Hamle gönderilemedi; konum yenileniyor.';
         });
+        await _refreshGame();
       }
     }
   }
@@ -341,8 +392,10 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _subscription?.cancel();
     _clockTimer?.cancel();
+    _reconnectTimer?.cancel();
     _dragPosition.dispose();
     _drawing.dispose();
     super.dispose();
@@ -374,8 +427,8 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                       final boardSize =
                           math.min(box.maxWidth, box.maxHeight - 235);
                       final row = _row!;
-                      final updatedAt =
-                          DateTime.parse(row['updated_at'] as String).toUtc();
+                      final clocks = _clocks;
+                      final clockAnchor = DateTime.now().toUtc();
                       final active = row['status'] == 'active';
                       final topColor = _flipped ? c.Color.WHITE : c.Color.BLACK;
                       final bottomColor =
@@ -411,9 +464,9 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                           _PlayerBar(
                             label: _flipped ? 'Beyaz' : 'Siyah',
                             milliseconds: _flipped
-                                ? row['white_ms'] as int
-                                : row['black_ms'] as int,
-                            updatedAt: updatedAt,
+                                ? clocks.white
+                                : clocks.black,
+                            updatedAt: clockAnchor,
                             running: active && _game.turn == topColor,
                             highlighted: active && _game.turn == topColor,
                           ),
@@ -430,9 +483,9 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                           _PlayerBar(
                             label: _flipped ? 'Siyah · Sen' : 'Beyaz · Sen',
                             milliseconds: _flipped
-                                ? row['black_ms'] as int
-                                : row['white_ms'] as int,
-                            updatedAt: updatedAt,
+                                ? clocks.black
+                                : clocks.white,
+                            updatedAt: clockAnchor,
                             running: active && _game.turn == bottomColor,
                             highlighted: _myTurn,
                           ),

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:chess/chess.dart' as c;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../backend/app_backend.dart';
 import '../backend/game_repository.dart';
@@ -14,12 +15,37 @@ import '../widgets/analysis_markers.dart';
 import '../ads/match_ads.dart';
 import '../l10n/app_language.dart';
 import 'delete_account_screen.dart';
+import 'open_source_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({super.key, this.openLink});
+
+  final Future<bool> Function(Uri uri)? openLink;
 
   static const bone = Color(0xfff3eee7);
   static const mutedBone = Color(0xffb9aea5);
+  static final privacyUri =
+      Uri.parse('https://cenkgrs.github.io/rok-site/privacy.html');
+  static final supportUri =
+      Uri.parse('https://cenkgrs.github.io/rok-site/support.html');
+
+  Future<void> _openLink(BuildContext context, Uri uri) async {
+    try {
+      final opened = await (openLink?.call(uri) ??
+          launchUrl(uri, mode: LaunchMode.externalApplication));
+      if (!opened && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: LText('Bağlantı açılamadı. Tekrar dene.')),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: LText('Bağlantı açılamadı. Tekrar dene.')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -180,8 +206,28 @@ class ProfileScreen extends StatelessWidget {
                   icon: Icons.description_outlined,
                   title: 'Açık kaynak lisansları',
                   subtitle: 'Stockfish ve kullanılan kütüphaneler',
-                  onTap: () =>
-                      showLicensePage(context: context, applicationName: 'ROK'),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => OpenSourceScreen(openLink: openLink),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _ProfileLink(
+                  key: const ValueKey('privacy-policy-link'),
+                  icon: Icons.policy_outlined,
+                  title: 'Gizlilik Politikası',
+                  subtitle: 'Verilerinin nasıl işlendiğini incele',
+                  onTap: () => _openLink(context, privacyUri),
+                ),
+                const SizedBox(height: 12),
+                _ProfileLink(
+                  key: const ValueKey('support-link'),
+                  icon: Icons.support_agent_outlined,
+                  title: 'Destek',
+                  subtitle: 'Yardım ve iletişim seçenekleri',
+                  onTap: () => _openLink(context, supportUri),
                 ),
                 if (user != null) ...[
                   const SizedBox(height: 24),
@@ -206,6 +252,7 @@ class ProfileScreen extends StatelessWidget {
 
 class _ProfileLink extends StatelessWidget {
   const _ProfileLink({
+    super.key,
     required this.icon,
     required this.title,
     required this.subtitle,

@@ -8,13 +8,17 @@ import 'route_observer.dart';
 import 'widgets/rok_style.dart';
 import 'ads/match_ads.dart';
 import 'l10n/app_language.dart';
+import 'legal/open_source_compliance.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  verifyReleaseSourceIsPinned();
   LicenseRegistry.addLicense(() async* {
-    yield LicenseEntryWithLineBreaks(['Stockfish 18 / Flutter stockfish 1.8.1'],
-        await rootBundle.loadString('third_party/stockfish/LICENSE'));
+    yield LicenseEntryWithLineBreaks(
+      ['ROK', 'Stockfish 18 / Flutter stockfish 1.8.1'],
+      await rootBundle.loadString('third_party/stockfish/LICENSE'),
+    );
   });
   await AppBackend.initialize();
   await AppLanguage.instance.load();

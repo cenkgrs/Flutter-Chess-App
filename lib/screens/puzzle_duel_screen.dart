@@ -165,7 +165,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                         : s['opponent'].toString(),
                     style: const TextStyle(color: rokBone)),
                 subtitle: LText(
-                    '${row['seconds'] ?? '—'} sn · ${row['mistakes'] ?? '—'} hata · ${row['reason'] == 'timeout' ? 'Süre doldu' : row['reason'] == 'skip' ? 'Geçildi' : 'Çözüldü'}',
+                    '${row['seconds'] ?? '—'} sn · ${row['mistakes'] ?? '—'} hata · ${row['reason'] == 'timeout' ? 'Süre doldu' : row['reason'] == 'skip' ? 'Geçildi' : row['reason'] == 'forfeit' ? 'Maçtan ayrıldı' : 'Çözüldü'}',
                     style: const TextStyle(color: Color(0xffb9aea5))),
                 trailing: LText('${row['points']} puan',
                     style: const TextStyle(color: rokBone)),
@@ -283,6 +283,39 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
 
   Future<void> _leave() async {
     if (_busy) return;
+    if (_id != null && _state?['status'] == 'active') {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => RokDialog(
+          title: const LText('Düellodan çıkmak istiyor musun?'),
+          content:
+              const LText('Devam eden düellodan çıkarsan rakibin kazanır.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const LText('Devam et'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const LText('Düellodan çık'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+      setState(() => _busy = true);
+      try {
+        await _rpc('duel_forfeit', {'p_id': _id});
+      } catch (_) {
+        if (mounted) {
+          setState(() {
+            _busy = false;
+            _error = 'Düellodan çıkış doğrulanamadı. Tekrar dene.';
+          });
+        }
+        return;
+      }
+    }
     if (_id == null && _searching) {
       try {
         await _rpc('duel_matchmaking', {'p_cancel': true});
@@ -494,7 +527,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                             onPressed: _busy ? null : () => _move('skip'),
                             child: const LText('Bu turu geç (0 puan)')),
                       const LText(
-                          'Çıkarsan süre işlemeye devam eder. Bu ekrandan maça geri dönebilirsin.',
+                          'Uygulamayı arka plana alırsan süre işlemeye devam eder. Geri düğmesiyle ayrılmak hükmen yenilgidir.',
                           style: TextStyle(color: Colors.white54)),
                     ],
                   ],

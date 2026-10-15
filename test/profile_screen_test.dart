@@ -11,4 +11,30 @@ void main() {
     expect(find.text('Son Maçlar'), findsOneWidget);
     expect(find.text('Arkadaşlar'), findsOneWidget);
   });
+
+  testWidgets('profile opens privacy and support URLs', (tester) async {
+    final opened = <Uri>[];
+    await tester
+        .pumpWidget(MaterialApp(home: ProfileScreen(openLink: (uri) async {
+      opened.add(uri);
+      return true;
+    })));
+
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('privacy-policy-link')),
+      300,
+      scrollable: find.byType(Scrollable),
+    );
+    await tester.tap(find.byKey(const ValueKey('privacy-policy-link')));
+    await tester.pump();
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('support-link')),
+      200,
+      scrollable: find.byType(Scrollable),
+    );
+    await tester.tap(find.byKey(const ValueKey('support-link')));
+    await tester.pump();
+
+    expect(opened, [ProfileScreen.privacyUri, ProfileScreen.supportUri]);
+  });
 }

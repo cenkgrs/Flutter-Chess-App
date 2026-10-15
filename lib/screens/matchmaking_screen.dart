@@ -33,6 +33,13 @@ class _MatchmakingScreenState extends State<MatchmakingScreen> {
 
   Future<void> _start() async {
     try {
+      // Re-enter an unfinished game instead of creating a second queue entry.
+      final activeGame = await _games.findActiveGame();
+      if (!mounted) return;
+      if (activeGame != null) {
+        _openGame(activeGame);
+        return;
+      }
       final result = await _games.joinQueue(widget.control);
       if (!mounted) return;
       if (result.gameId != null) {
