@@ -1,5 +1,71 @@
 // English, German, Russian. Turkish source keys keep the existing copy auditable.
 const translations = <String, List<String>>{
+  'Hesabımı sil': [
+    'Delete my account',
+    'Mein Konto löschen',
+    'Удалить аккаунт'
+  ],
+  'Hesabını ve ilişkili verilerini kalıcı olarak kaldır': [
+    'Permanently remove your account and related data',
+    'Konto und zugehörige Daten dauerhaft entfernen',
+    'Безвозвратно удалить аккаунт и связанные данные'
+  ],
+  'Hesabını kalıcı olarak sil?': [
+    'Permanently delete your account?',
+    'Konto dauerhaft löschen?',
+    'Удалить аккаунт навсегда?'
+  ],
+  'Bu işlem geri alınamaz. Devam etmek istediğinden emin misin?': [
+    'This cannot be undone. Are you sure you want to continue?',
+    'Dies kann nicht rückgängig gemacht werden. Wirklich fortfahren?',
+    'Это действие нельзя отменить. Продолжить?'
+  ],
+  'Kalıcı olarak sil': [
+    'Delete permanently',
+    'Dauerhaft löschen',
+    'Удалить навсегда'
+  ],
+  'Bu işlem geri alınamaz.': [
+    'This cannot be undone.',
+    'Dies kann nicht rückgängig gemacht werden.',
+    'Это действие нельзя отменить.'
+  ],
+  'Hesabın, profilin, ratinglerin, bulmaca ilerlemen, arkadaşlıkların ve davetlerin kalıcı olarak silinir.':
+      [
+    'Your account, profile, ratings, puzzle progress, friendships and invitations will be permanently deleted.',
+    'Dein Konto, Profil, deine Wertungen, Aufgabenfortschritte, Freundschaften und Einladungen werden dauerhaft gelöscht.',
+    'Аккаунт, профиль, рейтинги, прогресс задач, друзья и приглашения будут удалены навсегда.'
+  ],
+  'Sana ait maç ve düello kayıtları rakiplerinin geçmişinden de kaldırılır. Devam eden oyunların sona erer; rakiplerin hesapları ve mevcut ratingleri korunur.':
+      [
+    'Your match and duel records will also disappear from opponents’ histories. Active games will end; opponents’ accounts and current ratings are preserved.',
+    'Deine Partien und Duelle verschwinden auch aus dem Verlauf deiner Gegner. Laufende Spiele enden; gegnerische Konten und Wertungen bleiben erhalten.',
+    'Ваши партии и дуэли исчезнут также из истории соперников. Текущие игры завершатся; аккаунты и рейтинги соперников сохранятся.'
+  ],
+  'Silme işlemi sunucuda tamamlandığında onay gösterilir ve oturumun kapatılır.':
+      [
+    'Once deletion completes on the server, confirmation is shown and you are signed out.',
+    'Nach der Löschung auf dem Server wird eine Bestätigung angezeigt und du wirst abgemeldet.',
+    'После удаления на сервере появится подтверждение, и вы выйдете из аккаунта.'
+  ],
+  'Verilerimin kalıcı olarak silineceğini anlıyorum.': [
+    'I understand my data will be permanently deleted.',
+    'Ich verstehe, dass meine Daten dauerhaft gelöscht werden.',
+    'Я понимаю, что мои данные будут удалены навсегда.'
+  ],
+  'Siliniyor…': ['Deleting…', 'Wird gelöscht…', 'Удаление…'],
+  'Hesabın silindi': ['Account deleted', 'Konto gelöscht', 'Аккаунт удалён'],
+  'Hesabın ve ilişkili oyun verilerin kaldırıldı. Oturumun kapatıldı.': [
+    'Your account and related game data have been removed. You have been signed out.',
+    'Dein Konto und zugehörige Spieldaten wurden entfernt. Du bist abgemeldet.',
+    'Аккаунт и связанные игровые данные удалены. Вы вышли из аккаунта.'
+  ],
+  'Silme işlemi doğrulanamadı. Bağlantını kontrol edip tekrar dene. Sorun sürerse destekle iletişime geç.':
+      [
+    'Deletion could not be confirmed. Check your connection and retry. Contact support if the problem persists.',
+    'Die Löschung konnte nicht bestätigt werden. Verbindung prüfen und erneut versuchen. Bei weiteren Problemen den Support kontaktieren.',
+    'Не удалось подтвердить удаление. Проверьте соединение и повторите попытку. Если проблема сохраняется, обратитесь в поддержку.'
+  ],
   'Misafir': ['Guest', 'Gast', 'Гость'],
   'Oyuncu': ['Player', 'Spieler', 'Игрок'],
   'ROK Oyuncusu': ['ROK Player', 'ROK-Spieler', 'Игрок ROK'],
