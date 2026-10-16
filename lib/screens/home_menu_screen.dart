@@ -9,6 +9,7 @@ import '../backend/game_repository.dart';
 import '../online/time_control.dart';
 import '../prototype/play_screen.dart';
 import 'auth_screen.dart';
+import 'daily_puzzle_screen.dart';
 import 'friend_room_screen.dart';
 import 'matchmaking_screen.dart';
 import 'online_game_screen.dart';
@@ -167,6 +168,10 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
                                   subtitle: 'Çevrimdışı antrenman',
                                   onTap: () => PlayScreen.launch(context),
                                 ),
+                                const _MenuDivider(),
+                                DailyPuzzleMenuEntry(
+                                    key: ValueKey('daily-${user?.id}'),
+                                    signedIn: user != null),
                                 const _MenuDivider(),
                                 _SecondaryAction(
                                   icon: Icons.extension_outlined,
