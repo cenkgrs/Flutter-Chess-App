@@ -7,6 +7,7 @@ import '../backend/app_backend.dart';
 import 'auth_screen.dart';
 import 'puzzle_leaderboard_screen.dart';
 import '../audio/game_sounds.dart';
+import '../widgets/move_animation.dart';
 
 class PuzzleScreen extends StatefulWidget {
   const PuzzleScreen({super.key});
@@ -71,7 +72,11 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
     }
   }
 
-  Future<void> action(String kind, [String? move]) async {
+  /// Lets the player's own slide finish before the reply starts moving.
+  static const _replyDelay = Duration(milliseconds: 420);
+
+  Future<void> action(String kind,
+      [String? move, c.Chess? rollback, DateTime? movedAt]) async {
     if (busy || attempt == null) return;
     setState(() => busy = true);
     try {
@@ -85,12 +90,20 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
       if (!mounted) return;
       final acceptedMove = kind == 'move' && response['correct'] != false;
       final solved = response['status'] == 'solved';
+      if (movedAt != null) {
+        final wait = _replyDelay - DateTime.now().difference(movedAt);
+        if (wait > Duration.zero) await Future<void>.delayed(wait);
+        if (!mounted) return;
+      }
+      final previous = game;
       setState(() {
         attempt = {...attempt!, ...response};
         selected = null;
         targets = [];
         if (response['fen'] is String) {
           game = c.Chess.fromFEN(response['fen'] as String);
+        } else if (rollback != null && response['correct'] == false) {
+          game = rollback;
         }
         if (response['resynced'] == true) {
           message = 'Konum güncellendi. Buradan devam et.';
@@ -119,11 +132,20 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
           message = 'Doğru! Rakip yanıtladı, devamını bul.';
         }
       });
-      if (acceptedMove) GameSounds.instance.playMove();
+      // The player's move already sounded when it was shown; this is the
+      // opponent's reply.
+      final replied =
+          previous.fen.split(' ').first != game.fen.split(' ').first;
+      if (acceptedMove && replied) {
+        GameSounds.instance.playMove(capture: capturedBetween(previous, game));
+      }
       if (solved) GameSounds.instance.playVictory();
     } catch (_) {
       if (mounted) {
-        setState(() => message = 'İşlem doğrulanamadı. Tekrar dene.');
+        setState(() {
+          if (rollback != null) game = rollback;
+          message = 'İşlem doğrulanamadı. Tekrar dene.';
+        });
       }
     } finally {
       if (mounted) setState(() => busy = false);
@@ -154,8 +176,21 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
         if (!mounted || promotion == null) return;
         move = moves.firstWhere((m) => m.promotion?.name == promotion);
       }
-      await action('move',
-          '${move.fromAlgebraic}${move.toAlgebraic}${move.promotion?.name ?? ''}');
+      if (busy) return;
+      // Show the player's move right away; the server answers with the
+      // position after the opponent's reply, or the move is rolled back.
+      final rollback = c.Chess.fromFEN(game.fen);
+      setState(() {
+        game.move(move);
+        selected = null;
+        targets = [];
+      });
+      GameSounds.instance.playMove(capture: move.captured != null);
+      await action(
+          'move',
+          '${move.fromAlgebraic}${move.toAlgebraic}${move.promotion?.name ?? ''}',
+          rollback,
+          DateTime.now());
     } else {
       setState(() {
         selected = game.get(square)?.color == game.turn ? square : null;
@@ -164,6 +199,22 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
       });
     }
   }
+
+  Widget _piece(c.Piece piece) => Padding(
+      padding: const EdgeInsets.all(3),
+      child: Image.asset(
+          'lib/images/wood/${{
+            'p': 'pawn',
+            'r': 'rook',
+            'n': 'knight',
+            'b': 'bishop',
+            'q': 'queen',
+            'k': 'king'
+          }[piece.type.name]}.png',
+          color: piece.color == c.Color.WHITE
+              ? const Color(0xfffff5df)
+              : const Color(0xff48291c),
+          colorBlendMode: BlendMode.modulate));
 
   @override
   void dispose() {
@@ -221,58 +272,49 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
                       padding: const EdgeInsets.all(12),
                       child: AspectRatio(
                           aspectRatio: 1,
-                          child: GridView.builder(
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: 64,
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 8),
-                            itemBuilder: (_, display) {
-                              final index = flipped ? 63 - display : display;
-                              final square =
-                                  '${'abcdefgh'[index % 8]}${8 - index ~/ 8}';
-                              final piece = game.get(square);
-                              return GestureDetector(
-                                  onTap: () => tap(square),
-                                  child: ColoredBox(
-                                    color: selected == square || hint == square
-                                        ? const Color(0xffb89454)
-                                        : (index ~/ 8 + index % 8).isEven
-                                            ? const Color(0xffd9b77e)
-                                            : const Color(0xff85552f),
-                                    child: Stack(
-                                        alignment: Alignment.center,
-                                        children: [
-                                          if (piece != null)
-                                            Padding(
-                                                padding:
-                                                    const EdgeInsets.all(3),
-                                                child: Image.asset(
-                                                    'lib/images/wood/${{
-                                                      'p': 'pawn',
-                                                      'r': 'rook',
-                                                      'n': 'knight',
-                                                      'b': 'bishop',
-                                                      'q': 'queen',
-                                                      'k': 'king'
-                                                    }[piece.type.name]}.png',
-                                                    color: piece.color ==
-                                                            c.Color.WHITE
-                                                        ? const Color(
-                                                            0xfffff5df)
-                                                        : const Color(
-                                                            0xff48291c),
-                                                    colorBlendMode:
-                                                        BlendMode.modulate)),
-                                          if (targets.any(
-                                              (m) => m.toAlgebraic == square))
-                                            const Icon(Icons.circle,
-                                                size: 10,
-                                                color: Colors.black38),
-                                        ]),
-                                  ));
-                            },
-                          ))),
+                          child: AnimatedBoardPieces(
+                              position: boardPosition(game),
+                              flipped: flipped,
+                              pieceBuilder: (square) =>
+                                  _piece(game.get(square)!),
+                              builder: (context, hidden) => GridView.builder(
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount: 64,
+                                    gridDelegate:
+                                        const SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 8),
+                                    itemBuilder: (_, display) {
+                                      final index =
+                                          flipped ? 63 - display : display;
+                                      final square =
+                                          '${'abcdefgh'[index % 8]}${8 - index ~/ 8}';
+                                      final piece = game.get(square);
+                                      return GestureDetector(
+                                          onTap: () => tap(square),
+                                          child: ColoredBox(
+                                            color: selected == square ||
+                                                    hint == square
+                                                ? const Color(0xffb89454)
+                                                : (index ~/ 8 + index % 8)
+                                                        .isEven
+                                                    ? const Color(0xffd9b77e)
+                                                    : const Color(0xff85552f),
+                                            child: Stack(
+                                                alignment: Alignment.center,
+                                                children: [
+                                                  if (piece != null &&
+                                                      !hidden.contains(square))
+                                                    _piece(piece),
+                                                  if (targets.any((m) =>
+                                                      m.toAlgebraic == square))
+                                                    const Icon(Icons.circle,
+                                                        size: 10,
+                                                        color: Colors.black38),
+                                                ]),
+                                          ));
+                                    },
+                                  )))),
                 ],
                 if (busy) const LinearProgressIndicator(),
                 Padding(

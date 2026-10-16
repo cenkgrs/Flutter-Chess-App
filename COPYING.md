@@ -17,6 +17,7 @@ location are documented in `STOCKFISH_NOTICES.md`.
 Public source repository:
 https://github.com/cenkgrs/Flutter-Chess-App
 
-The piece move sounds (`assets/audio/piece_move_1.wav` to `piece_move_5.wav`)
-are trimmed from Kenney's Impact Sounds pack (https://kenney.nl), released
-under Creative Commons Zero (CC0).
+The piece move and capture sounds (`assets/audio/piece_move_1.wav` to
+`piece_move_5.wav`, `piece_capture.wav`) are trimmed and mixed from Kenney's
+Impact Sounds pack (https://kenney.nl), released under Creative Commons Zero
+(CC0).
