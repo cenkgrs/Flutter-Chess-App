@@ -13,8 +13,10 @@
   `Play online, sharpen your skills with puzzles, and learn with a built-in chess assistant.`
 - Product page header görseli hazır:
   `assets/store/rok-chess-header-3840x1646.png` (3840 × 1646 PNG).
-- Projeye özel, dış lisans gerektirmeyen üç ses efekti eklendi:
-  `assets/audio/piece_move.wav`, `game_start.wav`, `victory.wav`.
+- Projeye özel, dış lisans gerektirmeyen ses efektleri eklendi:
+  `game_start.wav`, `victory.wav` ve taş hareketi için
+  `assets/audio/piece_move_1…5.wav` (Kenney Impact Sounds `impactWood_light`,
+  CC0; her hamlede bir öncekinden farklı bir varyasyon çalınır).
   Offline/online maç, bulmaca ve bulmaca düellosu olaylarına bağlandı. Profilde
   dört dilde kalıcı bir `Ses efektleri` anahtarı bulunuyor. iOS sessiz anahtarı
   dikkate alınıyor; ses hataları oynanışı durdurmuyor.

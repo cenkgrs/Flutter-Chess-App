@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,6 +9,10 @@ class GameSounds extends ChangeNotifier {
 
   static final instance = GameSounds._();
   static const _preferenceKey = 'game_sound_effects_enabled';
+  static const _moveVariantCount = 5;
+
+  final Random _random = Random();
+  int _lastMoveVariant = 0;
 
   final AudioPlayer _movePlayer = AudioPlayer(playerId: 'rok-piece-move');
   final AudioPlayer _startPlayer = AudioPlayer(playerId: 'rok-game-start');
@@ -40,12 +46,19 @@ class GameSounds extends ChangeNotifier {
     await preferences.setBool(_preferenceKey, value);
   }
 
-  void playMove() => _play(
-        _movePlayer,
-        'audio/piece_move.wav',
-        volume: 0.72,
-        mode: PlayerMode.lowLatency,
-      );
+  void playMove() {
+    // Rotate through recorded variants, never repeating the previous one,
+    // so consecutive moves do not sound mechanical.
+    var variant = _random.nextInt(_moveVariantCount - 1) + 1;
+    if (variant >= _lastMoveVariant) variant++;
+    _lastMoveVariant = variant;
+    _play(
+      _movePlayer,
+      'audio/piece_move_$variant.wav',
+      volume: 0.72,
+      mode: PlayerMode.lowLatency,
+    );
+  }
 
   void playStart() => _play(
         _startPlayer,
