@@ -149,13 +149,12 @@ TestFlight build'inde bir kez kontrol edin.
 Yeni Supabase migration'ları canlıya uygulandı; tekrar uygulamak gerekmiyor.
 Fiziksel iPhone Stockfish testi kullanıcı tarafından tamamlandı.
 
-## Günlük bulmaca kurulumu (henüz canlıda değil)
+## Günlük bulmaca kurulumu
 
 Bu branch `supabase/migrations/20261017120000_daily_puzzle.sql` migration'ını
-ekler. Canlı Supabase'e **uygulanmadı**. Mevcut canlı veritabanında daha önceki
-migration'lar (`20261009143000` … `20261015140000`) ve bulmaca seed'leri
-(`supabase/seeds/puzzles.sql`, `supabase/seeds/puzzles_20261013.sql`) zaten
-uygulanmış durumda; yalnızca şunu yapın:
+ekler. Migration 17 Ekim 2026'da canlı Supabase'e uygulandı; tekrar
+çalıştırmayın (tablolar zaten var, ikinci çalıştırma hata verir). Yeni bir
+ortam kurarken:
 
 1. Supabase → SQL Editor'da `20261017120000_daily_puzzle.sql` dosyasının
    tamamını tek seferde çalıştırın.
