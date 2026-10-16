@@ -147,6 +147,52 @@ TestFlight build'inde bir kez kontrol edin.
 Yeni Supabase migration'ları canlıya uygulandı; tekrar uygulamak gerekmiyor.
 Fiziksel iPhone Stockfish testi kullanıcı tarafından tamamlandı.
 
+## Günlük bulmaca kurulumu
+
+Bu branch `supabase/migrations/20261017120000_daily_puzzle.sql` migration'ını
+ekler. Migration 17 Ekim 2026'da canlı Supabase'e uygulandı; tekrar
+çalıştırmayın (tablolar zaten var, ikinci çalıştırma hata verir). Yeni bir
+ortam kurarken:
+
+1. Supabase → SQL Editor'da `20261017120000_daily_puzzle.sql` dosyasının
+   tamamını tek seferde çalıştırın.
+2. Kontrol: `select public.daily_puzzle_today();` İstanbul tarihini vermeli.
+   (Fonksiyon `authenticated` rolüne kapalıdır; SQL Editor'da çalışır.)
+3. Uygulamanın bu branch'ten alınmış build'inde ana menüde **Günlük bulmaca**
+   satırı görünür. Giriş yapmış kullanıcıda "Bugün çözülmedi · Seri: 0 gün"
+   yazmalı; bulmacayı çözünce "Bugün çözüldü · Seri: 1 gün" olmalı.
+
+Sıfırdan kurulumda sıra: `supabase/migrations` altındaki tüm dosyalar dosya
+adı sırasıyla (`20261012120000_puzzles.sql` sonrası iki seed dosyası), en son
+`20261017120000_daily_puzzle.sql`. Seed'ler daily migration'dan sonra da
+yüklenebilir; günün bulmacası ilk istekte seçilir.
+
+Kurallar:
+
+- Gün `Europe/Istanbul` takvimine göre değişir (gece 00:00). Kullanıcı kitlesi
+  Türkiye öncelikli olduğu için UTC (03:00'te değişim) yerine bu seçildi.
+- Günün bulmacası ilk istekte `puzzles` havuzundan deterministik seçilir ve
+  `daily_puzzles` tablosuna sabitlenir: önce hiç günlük olmamış bulmacalar,
+  sonra en uzun süredir kullanılmayan; eşitlikte `md5(gün || fingerprint)`.
+  Sonradan eklenen seed geçmiş/bugünkü seçimi değiştirmez. Havuz şu an 56
+  bulmaca; 56 gün sonra en eski seçimler sırayla tekrar eder. Günün zorluğu da
+  seçimde dondurulur, herkes aynı puan eğrisini görür.
+- Kullanıcı başına gün başına tek deneme (`daily_puzzle_attempts`), süre
+  `started_at` ile sunucuda tutulur. Çözüm istemciye gönderilmez; yalnızca
+  kabul edilen hamle, rakip cevabı ve konum döner. Çözümü gösterince deneme
+  biter ve çözüm o kullanıcıya açılır.
+- Puan normal bulmacadaki formülle `puzzle_ratings.points` hanesine eklenir
+  (sıralamaya yansır). Bulmaca Elo'su ve `played` değişmez. İpucu seriyi korur
+  ama puanı sıfırlar; yanlış deneme puanı azaltır.
+- Seri (`daily_puzzle_streaks`): art arda çözülen gün sayısı ve en uzun seri.
+  Bir gün kaçarsa görünen seri 0 olur; çözümü göstermek o günün serisini
+  sıfırlar. Gece yarısını geçen aktif deneme `expired` olur, puan/seri vermez.
+- Hesap silmede yeni tablolar `auth.users` üzerinden cascade ile silinir.
+
+Yerel SQL testi (yalnızca geçici PostgreSQL; canlıda çalıştırmayın):
+`tools/test_bootstrap.sql`, ardından tüm migration'lar sırasıyla, ardından
+`tools/daily_puzzle_test.sql`. Test rollback ile biter.
+
 ## Hâlâ açık yayın işleri
 
 - **Dağıtım engeli:** Uygulama Stockfish nedeniyle GPL-3.0-or-later olarak

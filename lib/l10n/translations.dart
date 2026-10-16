@@ -935,8 +935,84 @@ const translations = <String, List<String>>{
     'Passwort benötigt 8 Zeichen.',
     'Пароль должен содержать 8 символов.'
   ],
+  // Daily puzzle.
+  'Günlük bulmaca': ['Daily puzzle', 'Tagesaufgabe', 'Задача дня'],
+  'Bugün çözüldü': ['Solved today', 'Heute gelöst', 'Решено сегодня'],
+  'Bugün çözülmedi': [
+    'Not solved yet today',
+    'Heute noch nicht gelöst',
+    'Сегодня ещё не решено'
+  ],
+  'Bugün kaçırıldı': ['Missed today', 'Heute verpasst', 'Сегодня пропущено'],
+  'Her gün yeni bulmaca · Seri kur': [
+    'A new puzzle every day · Build a streak',
+    'Jeden Tag eine neue Aufgabe · Baue eine Serie auf',
+    'Новая задача каждый день · Соберите серию'
+  ],
+  'Günlük bulmaca için giriş yap': [
+    'Sign in for the daily puzzle',
+    'Für die Tagesaufgabe anmelden',
+    'Войдите, чтобы решать задачу дня'
+  ],
+  'Günlük bulmaca yüklenemedi. Bağlantını kontrol edip tekrar dene.': [
+    'Could not load the daily puzzle. Check your connection and try again.',
+    'Die Tagesaufgabe konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.',
+    'Не удалось загрузить задачу дня. Проверьте подключение и повторите попытку.'
+  ],
+  'Bugün için bulmaca hazırlanıyor. Daha sonra tekrar gel.': [
+    'Today’s puzzle is being prepared. Check back later.',
+    'Die heutige Aufgabe wird vorbereitet. Schau später wieder vorbei.',
+    'Задача на сегодня готовится. Загляните позже.'
+  ],
+  'Bugünün bulmacası çözüldü!': [
+    'Today’s puzzle solved!',
+    'Tagesaufgabe gelöst!',
+    'Задача дня решена!'
+  ],
+  'Yarın yeni bulmaca seni bekliyor.': [
+    'A new puzzle awaits you tomorrow.',
+    'Morgen wartet eine neue Aufgabe auf dich.',
+    'Завтра вас ждёт новая задача.'
+  ],
+  'Gün değişti. Yeni bulmaca yükleniyor.': [
+    'A new day has started. Loading the new puzzle.',
+    'Ein neuer Tag hat begonnen. Die neue Aufgabe wird geladen.',
+    'Наступил новый день. Загружаем новую задачу.'
+  ],
+  'Çözüm gösterilsin mi?': [
+    'Show the solution?',
+    'Lösung anzeigen?',
+    'Показать решение?'
+  ],
+  'Çözümü görürsen bugünün bulmacası puansız biter ve serin sıfırlanır.': [
+    'If you view the solution, today’s puzzle ends without points and your streak resets.',
+    'Wenn du die Lösung ansiehst, endet die heutige Aufgabe ohne Punkte und deine Serie wird zurückgesetzt.',
+    'Если открыть решение, задача дня завершится без очков, а серия обнулится.'
+  ],
+  'Göster': ['Show', 'Anzeigen', 'Показать'],
+  'Tekrar dene': ['Try again', 'Erneut versuchen', 'Повторить'],
+  'Herkese aynı bulmaca · Günde bir puanlı deneme': [
+    'Same puzzle for everyone · One scored attempt per day',
+    'Dieselbe Aufgabe für alle · Ein gewerteter Versuch pro Tag',
+    'Одна задача для всех · Одна попытка на очки в день'
+  ],
+  'İpucu seriyi korur ama puan kazandırmaz.': [
+    'Hints keep your streak but earn no points.',
+    'Hinweise erhalten deine Serie, bringen aber keine Punkte.',
+    'Подсказка сохраняет серию, но не приносит очков.'
+  ],
 };
 const templates = <String, List<String>>{
+  r'^Seri: (\d+) gün$': [
+    'Streak: {1} days',
+    'Serie: {1} Tage',
+    'Серия: {1} дн.'
+  ],
+  r'^En uzun seri: (\d+) gün$': [
+    'Best streak: {1} days',
+    'Längste Serie: {1} Tage',
+    'Лучшая серия: {1} дн.'
+  ],
   r'^Kişi başı (\d+) bulmaca$': [
     '{1} puzzles per player',
     '{1} Aufgaben pro Spieler',
