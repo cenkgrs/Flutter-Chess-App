@@ -16,7 +16,12 @@
 - Projeye özel, dış lisans gerektirmeyen ses efektleri eklendi:
   `game_start.wav`, `victory.wav` ve taş hareketi için
   `assets/audio/piece_move_1…5.wav` (Kenney Impact Sounds `impactWood_light`,
-  CC0; her hamlede bir öncekinden farklı bir varyasyon çalınır).
+  CC0; her hamlede bir öncekinden farklı bir varyasyon çalınır). Taş yemede
+  iki hafif vuruşun karışımı `piece_capture.wav` çalınır.
+- Taşlar eski karesinden yeni karesine kayarak gider
+  (`lib/widgets/move_animation.dart`); sürüklenip bırakılan hamle kaymaz.
+  Bulmaca ve düelloda oyuncunun hamlesi sunucu yanıtı beklenmeden gösterilir,
+  rakip cevabı kısa bir aradan sonra ayrıca kayar.
   Offline/online maç, bulmaca ve bulmaca düellosu olaylarına bağlandı. Profilde
   dört dilde kalıcı bir `Ses efektleri` anahtarı bulunuyor. iOS sessiz anahtarı
   dikkate alınıyor; ses hataları oynanışı durdurmuyor.

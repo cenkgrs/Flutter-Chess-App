@@ -46,7 +46,16 @@ class GameSounds extends ChangeNotifier {
     await preferences.setBool(_preferenceKey, value);
   }
 
-  void playMove() {
+  void playMove({bool capture = false}) {
+    if (capture) {
+      _play(
+        _movePlayer,
+        'audio/piece_capture.wav',
+        volume: 0.72,
+        mode: PlayerMode.lowLatency,
+      );
+      return;
+    }
     // Rotate through recorded variants, never repeating the previous one,
     // so consecutive moves do not sound mechanical.
     var variant = _random.nextInt(_moveVariantCount - 1) + 1;

@@ -12,6 +12,7 @@ import '../backend/game_repository.dart';
 import '../online/game_result.dart';
 import '../online/game_sync.dart';
 import '../widgets/board_annotations.dart';
+import '../widgets/move_animation.dart';
 import '../prototype/premove.dart';
 import '../ads/match_ads.dart';
 import '../audio/game_sounds.dart';
@@ -36,6 +37,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
   String? _selected;
   String? _dragFrom;
   final ValueNotifier<Offset?> _dragPosition = ValueNotifier(null);
+  final _moveAnimation = MoveAnimationController();
   List<c.Move> _targets = [];
   bool _sending = false;
   Premove? _premove;
@@ -171,10 +173,12 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
     final previousRow = _row;
     final previousPly = (previousRow?['ply'] as num?)?.toInt();
     try {
+      final nextGame = c.Chess.fromFEN(row['fen'] as String);
+      final captured = capturedBetween(_game, nextGame);
       _dragPosition.value = null;
       setState(() {
         _row = row;
-        _game = c.Chess.fromFEN(row['fen'] as String);
+        _game = nextGame;
         _selected = null;
         _dragFrom = null;
         _targets = [];
@@ -187,7 +191,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
           GameSounds.instance.playStart();
         }
       } else if (previousPly != null && nextPly > previousPly) {
-        GameSounds.instance.playMove();
+        GameSounds.instance.playMove(capture: captured);
       }
       if (row['status'] != 'active' && !_resultShown && !_leaving) {
         _premove = null;
@@ -556,6 +560,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
                   if (event.buttons != 1) return;
                   final square = squareAt(event.localPosition);
                   final mine = _isWhite ? c.Color.WHITE : c.Color.BLACK;
+                  _moveAnimation.clearSkip();
                   if (_row?['status'] == 'active' &&
                       !_sending &&
                       _game.get(square)?.color == mine) {
@@ -602,65 +607,74 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
                     _selected = from;
                     _targets = _game.generate_moves({'square': from});
                   });
+                  _moveAnimation.skipNextTo(to);
                   _tap(to);
                 },
                 child: Stack(children: [
-                  GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: 64,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 8),
-                    itemBuilder: (context, displayIndex) {
-                      final index = _flipped ? 63 - displayIndex : displayIndex;
-                      final file = index % 8;
-                      final rank = 8 - index ~/ 8;
-                      final square = '${'abcdefgh'[file]}$rank';
-                      final piece = _game.get(square);
-                      final light = (index ~/ 8 + file).isEven;
-                      final legal =
-                          _targets.any((move) => move.toAlgebraic == square);
-                      return GestureDetector(
-                        key: ValueKey('online-square-$square'),
-                        onTap: () => _tap(square),
-                        child: ColoredBox(
-                          color: _selected == square
-                              ? const Color(0xffb5823b)
-                              : _premove?.from == square ||
-                                      _premove?.to == square
-                                  ? const Color(0xff7985a2)
-                                  : light
-                                      ? const Color(0xffd9b77e)
-                                      : const Color(0xff85552f),
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              if (piece != null &&
-                                  !(_dragFrom == square &&
-                                      _dragPosition.value != null))
-                                _piece(piece),
-                              if (legal)
-                                Container(
-                                  width: piece == null ? 12 : null,
-                                  height: piece == null ? 12 : null,
-                                  margin: const EdgeInsets.all(2),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: piece == null
-                                        ? const Color(0x88412a18)
-                                        : null,
-                                    border: piece == null
-                                        ? null
-                                        : Border.all(
-                                            color: const Color(0xaae2b75f),
-                                            width: 3),
+                  AnimatedBoardPieces(
+                    position: boardPosition(_game),
+                    flipped: _flipped,
+                    controller: _moveAnimation,
+                    pieceBuilder: (square) => _piece(_game.get(square)!),
+                    builder: (context, hidden) => GridView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: 64,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 8),
+                      itemBuilder: (context, displayIndex) {
+                        final index =
+                            _flipped ? 63 - displayIndex : displayIndex;
+                        final file = index % 8;
+                        final rank = 8 - index ~/ 8;
+                        final square = '${'abcdefgh'[file]}$rank';
+                        final piece = _game.get(square);
+                        final light = (index ~/ 8 + file).isEven;
+                        final legal =
+                            _targets.any((move) => move.toAlgebraic == square);
+                        return GestureDetector(
+                          key: ValueKey('online-square-$square'),
+                          onTap: () => _tap(square),
+                          child: ColoredBox(
+                            color: _selected == square
+                                ? const Color(0xffb5823b)
+                                : _premove?.from == square ||
+                                        _premove?.to == square
+                                    ? const Color(0xff7985a2)
+                                    : light
+                                        ? const Color(0xffd9b77e)
+                                        : const Color(0xff85552f),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                if (piece != null &&
+                                    !hidden.contains(square) &&
+                                    !(_dragFrom == square &&
+                                        _dragPosition.value != null))
+                                  _piece(piece),
+                                if (legal)
+                                  Container(
+                                    width: piece == null ? 12 : null,
+                                    height: piece == null ? 12 : null,
+                                    margin: const EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: piece == null
+                                          ? const Color(0x88412a18)
+                                          : null,
+                                      border: piece == null
+                                          ? null
+                                          : Border.all(
+                                              color: const Color(0xaae2b75f),
+                                              width: 3),
+                                    ),
                                   ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                   ValueListenableBuilder<Offset?>(
                     valueListenable: _dragPosition,

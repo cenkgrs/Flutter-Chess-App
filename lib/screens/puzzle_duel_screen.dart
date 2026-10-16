@@ -5,6 +5,7 @@ import 'package:chess/chess.dart' as c;
 import 'package:flutter/material.dart';
 import '../backend/app_backend.dart';
 import '../audio/game_sounds.dart';
+import '../widgets/move_animation.dart';
 import 'auth_screen.dart';
 
 class PuzzleDuelScreen extends StatefulWidget {
@@ -20,6 +21,12 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
   Timer? _timer;
   Map<String, dynamic>? _state;
   String? _id, _selected, _error;
+
+  /// The player's move, shown while the server validates it.
+  String? _pendingFen;
+
+  /// Lets the player's own slide finish before the reply starts moving.
+  static const _replyDelay = Duration(milliseconds: 420);
   bool _busy = false, _searching = false;
   int? _rating;
   Map<String, dynamic>? _rematch;
@@ -234,7 +241,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
     }
   }
 
-  Future<void> _move(String action, [String? move]) async {
+  Future<void> _move(String action, [String? move, DateTime? movedAt]) async {
     if (_busy || _state == null) return;
     setState(() => _busy = true);
     try {
@@ -245,20 +252,41 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
         'p_action': action,
         'p_move': move,
       });
+      if (mounted && movedAt != null) {
+        final wait = _replyDelay - DateTime.now().difference(movedAt);
+        if (wait > Duration.zero) await Future<void>.delayed(wait);
+      }
       if (mounted) {
         final acceptedMove = action == 'move' && result['wrong'] != true;
+        final shown = _pendingFen;
         setState(() {
           _state = result;
+          _pendingFen = null;
           _selected = null;
           _error = result['wrong'] == true
               ? 'Yanlış hamle · Puan katsayısı azaldı.'
               : null;
         });
-        if (acceptedMove) GameSounds.instance.playMove();
+        // The player's move already sounded when it was shown; this is the
+        // opponent's reply.
+        final next = result['fen'];
+        if (acceptedMove &&
+            shown != null &&
+            next is String &&
+            next.split(' ').first != shown.split(' ').first) {
+          GameSounds.instance.playMove(
+              capture: capturedBetween(
+                  c.Chess.fromFEN(shown), c.Chess.fromFEN(next)));
+        } else if (acceptedMove && shown == null) {
+          GameSounds.instance.playMove();
+        }
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _error = 'Hamle doğrulanamadı. Yeniden dene.');
+        setState(() {
+          _pendingFen = null;
+          _error = 'Hamle doğrulanamadı. Yeniden dene.';
+        });
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -297,9 +325,34 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
       if (!mounted || piece == null) return;
       move = moves.firstWhere((m) => m.promotion?.name == piece);
     }
-    await _move('move',
-        '${move.fromAlgebraic}${move.toAlgebraic}${move.promotion?.name ?? ''}');
+    if (_busy) return;
+    final shown = c.Chess.fromFEN(board.fen)..move(move);
+    setState(() {
+      _pendingFen = shown.fen;
+      _selected = null;
+    });
+    GameSounds.instance.playMove(capture: move.captured != null);
+    await _move(
+        'move',
+        '${move.fromAlgebraic}${move.toAlgebraic}${move.promotion?.name ?? ''}',
+        DateTime.now());
   }
+
+  Widget _piece(c.Piece piece) => Padding(
+      padding: const EdgeInsets.all(3),
+      child: Image.asset(
+          'lib/images/wood/${{
+            'p': 'pawn',
+            'r': 'rook',
+            'n': 'knight',
+            'b': 'bishop',
+            'q': 'queen',
+            'k': 'king'
+          }[piece.type.name]}.png',
+          color: piece.color == c.Color.WHITE
+              ? const Color(0xfffff5df)
+              : const Color(0xff48291c),
+          colorBlendMode: BlendMode.modulate));
 
   Future<void> _leave() async {
     if (_busy) return;
@@ -453,8 +506,13 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
   Widget build(BuildContext context) {
     final s = _state;
     final finished = s?['status'] == 'finished';
-    final board =
+    final stateBoard =
         s?['fen'] is String ? c.Chess.fromFEN(s!['fen'] as String) : null;
+    // Keep the orientation of the solver even while their move is pending.
+    final flipped = stateBoard?.turn == c.Color.BLACK;
+    final board = stateBoard != null && _pendingFen != null
+        ? c.Chess.fromFEN(_pendingFen!)
+        : stateBoard;
     return PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, _) {
@@ -497,51 +555,38 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                       if (board != null)
                         AspectRatio(
                             aspectRatio: 1,
-                            child: GridView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: 64,
-                                gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 8),
-                                itemBuilder: (_, display) {
-                                  final i = board.turn == c.Color.BLACK
-                                      ? 63 - display
-                                      : display;
-                                  final square =
-                                      '${'abcdefgh'[i % 8]}${8 - i ~/ 8}';
-                                  final piece = board.get(square);
-                                  return GestureDetector(
-                                      onTap: () => _tap(square, board),
-                                      child: ColoredBox(
-                                          color: _selected == square
-                                              ? const Color(0xffb89454)
-                                              : (i ~/ 8 + i % 8).isEven
-                                                  ? const Color(0xffd9b77e)
-                                                  : const Color(0xff85552f),
-                                          child: piece == null
-                                              ? const SizedBox()
-                                              : Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(3),
-                                                  child: Image.asset(
-                                                      'lib/images/wood/${{
-                                                        'p': 'pawn',
-                                                        'r': 'rook',
-                                                        'n': 'knight',
-                                                        'b': 'bishop',
-                                                        'q': 'queen',
-                                                        'k': 'king'
-                                                      }[piece.type.name]}.png',
-                                                      color: piece.color ==
-                                                              c.Color.WHITE
-                                                          ? const Color(
-                                                              0xfffff5df)
-                                                          : const Color(
-                                                              0xff48291c),
-                                                      colorBlendMode: BlendMode
-                                                          .modulate))));
-                                })),
+                            child: AnimatedBoardPieces(
+                                position: boardPosition(board),
+                                flipped: flipped,
+                                pieceBuilder: (square) =>
+                                    _piece(board.get(square)!),
+                                builder: (context, hidden) => GridView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount: 64,
+                                    gridDelegate:
+                                        const SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 8),
+                                    itemBuilder: (_, display) {
+                                      final i =
+                                          flipped ? 63 - display : display;
+                                      final square =
+                                          '${'abcdefgh'[i % 8]}${8 - i ~/ 8}';
+                                      final piece = board.get(square);
+                                      return GestureDetector(
+                                          onTap: () => _tap(square, board),
+                                          child: ColoredBox(
+                                              color: _selected == square
+                                                  ? const Color(0xffb89454)
+                                                  : (i ~/ 8 + i % 8).isEven
+                                                      ? const Color(0xffd9b77e)
+                                                      : const Color(0xff85552f),
+                                              child: piece == null ||
+                                                      hidden.contains(square)
+                                                  ? const SizedBox()
+                                                  : _piece(piece)));
+                                    }))),
                       if (s['my_turn'] == true)
                         TextButton(
                             onPressed: _busy ? null : () => _move('skip'),
