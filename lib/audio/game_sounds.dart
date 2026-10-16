@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GameSounds extends ChangeNotifier {
@@ -46,27 +47,33 @@ class GameSounds extends ChangeNotifier {
     await preferences.setBool(_preferenceKey, value);
   }
 
-  void playMove({bool capture = false}) {
-    if (capture) {
-      _play(
-        _movePlayer,
-        'audio/piece_capture.wav',
-        volume: 0.72,
-        mode: PlayerMode.lowLatency,
-      );
-      return;
+  /// Plays the sound for a move and gives a light tap on the phone; a
+  /// check outranks a capture, and both are felt a little stronger.
+  void playMove({bool capture = false, bool check = false}) {
+    if (check || capture) {
+      HapticFeedback.mediumImpact();
+    } else {
+      HapticFeedback.lightImpact();
     }
+    _play(
+      _movePlayer,
+      check
+          ? 'audio/piece_check.wav'
+          : capture
+              ? 'audio/piece_capture.wav'
+              : _nextMoveVariant(),
+      volume: 0.72,
+      mode: PlayerMode.lowLatency,
+    );
+  }
+
+  String _nextMoveVariant() {
     // Rotate through recorded variants, never repeating the previous one,
     // so consecutive moves do not sound mechanical.
     var variant = _random.nextInt(_moveVariantCount - 1) + 1;
     if (variant >= _lastMoveVariant) variant++;
     _lastMoveVariant = variant;
-    _play(
-      _movePlayer,
-      'audio/piece_move_$variant.wav',
-      volume: 0.72,
-      mode: PlayerMode.lowLatency,
-    );
+    return 'audio/piece_move_$variant.wav';
   }
 
   void playStart() => _play(

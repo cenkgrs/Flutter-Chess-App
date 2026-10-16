@@ -12,6 +12,8 @@ import '../backend/game_repository.dart';
 import '../online/game_result.dart';
 import '../online/game_sync.dart';
 import '../widgets/board_annotations.dart';
+import '../widgets/first_use_tip.dart';
+import '../widgets/board_drag.dart';
 import '../widgets/move_animation.dart';
 import '../prototype/premove.dart';
 import '../ads/match_ads.dart';
@@ -191,7 +193,8 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
           GameSounds.instance.playStart();
         }
       } else if (previousPly != null && nextPly > previousPly) {
-        GameSounds.instance.playMove(capture: captured);
+        GameSounds.instance
+            .playMove(capture: captured, check: nextGame.in_check);
       }
       if (row['status'] != 'active' && !_resultShown && !_leaving) {
         _premove = null;
@@ -503,7 +506,18 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
                             running: active && _game.turn == bottomColor,
                             highlighted: _myTurn,
                           ),
-                          const Spacer(),
+                          const Expanded(
+                            child: SingleChildScrollView(
+                              reverse: true,
+                              padding: EdgeInsets.fromLTRB(12, 8, 12, 6),
+                              child: FirstUseTip(
+                                id: 'board_tools',
+                                icon: Icons.draw_outlined,
+                                message:
+                                    'Kalem simgesiyle tahtaya ok ve işaret çizebilirsin. Sıra rakipteyken hamleni seçersen ön hamle olarak sıraya girer.',
+                              ),
+                            ),
+                          ),
                           if (_error != null)
                             LText(_error!,
                                 style:
@@ -616,6 +630,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
                     flipped: _flipped,
                     controller: _moveAnimation,
                     pieceBuilder: (square) => _piece(_game.get(square)!),
+                    capturedPieceBuilder: _piece,
                     builder: (context, hidden) => GridView.builder(
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: 64,
@@ -641,9 +656,15 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
                                 : _premove?.from == square ||
                                         _premove?.to == square
                                     ? const Color(0xff7985a2)
-                                    : light
-                                        ? const Color(0xffd9b77e)
-                                        : const Color(0xff85552f),
+                                    : _moveAnimation.lastMove.contains(square)
+                                        ? Color.alphaBlend(
+                                            lastMoveTint,
+                                            light
+                                                ? const Color(0xffd9b77e)
+                                                : const Color(0xff85552f))
+                                        : light
+                                            ? const Color(0xffd9b77e)
+                                            : const Color(0xff85552f),
                             child: Stack(
                               alignment: Alignment.center,
                               children: [

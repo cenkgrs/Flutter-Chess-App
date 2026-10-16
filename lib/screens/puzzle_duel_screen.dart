@@ -5,6 +5,7 @@ import 'package:chess/chess.dart' as c;
 import 'package:flutter/material.dart';
 import '../backend/app_backend.dart';
 import '../audio/game_sounds.dart';
+import '../widgets/board_drag.dart';
 import '../widgets/move_animation.dart';
 import 'auth_screen.dart';
 
@@ -27,6 +28,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
 
   /// Lets the player's own slide finish before the reply starts moving.
   static const _replyDelay = Duration(milliseconds: 420);
+  final _moveAnimation = MoveAnimationController();
   bool _busy = false, _searching = false;
   int? _rating;
   Map<String, dynamic>? _rematch;
@@ -274,9 +276,10 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
             shown != null &&
             next is String &&
             next.split(' ').first != shown.split(' ').first) {
+          final after = c.Chess.fromFEN(next);
           GameSounds.instance.playMove(
-              capture: capturedBetween(
-                  c.Chess.fromFEN(shown), c.Chess.fromFEN(next)));
+              capture: capturedBetween(c.Chess.fromFEN(shown), after),
+              check: after.in_check);
         } else if (acceptedMove && shown == null) {
           GameSounds.instance.playMove();
         }
@@ -331,11 +334,68 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
       _pendingFen = shown.fen;
       _selected = null;
     });
-    GameSounds.instance.playMove(capture: move.captured != null);
+    GameSounds.instance
+        .playMove(capture: move.captured != null, check: shown.in_check);
     await _move(
         'move',
         '${move.fromAlgebraic}${move.toAlgebraic}${move.promotion?.name ?? ''}',
         DateTime.now());
+  }
+
+  Widget _board(c.Chess board, bool flipped) {
+    final myTurn = !_busy && _state?['my_turn'] == true;
+    final targets = _selected == null
+        ? const <c.Move>[]
+        : board.generate_moves({'square': _selected});
+    return BoardDragInput(
+      flipped: flipped,
+      canDrag: (square) => myTurn && board.get(square)?.color == board.turn,
+      onPress: _moveAnimation.clearSkip,
+      onDrop: (from, to) {
+        setState(() => _selected = from);
+        _moveAnimation.skipNextTo(to);
+        _tap(to, board);
+      },
+      pieceBuilder: (square) => _piece(board.get(square)!),
+      builder: (context, dragging) => AnimatedBoardPieces(
+        position: boardPosition(board),
+        flipped: flipped,
+        controller: _moveAnimation,
+        pieceBuilder: (square) => _piece(board.get(square)!),
+        capturedPieceBuilder: _piece,
+        builder: (context, hidden) => GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: 64,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 8),
+          itemBuilder: (_, display) {
+            final i = flipped ? 63 - display : display;
+            final square = '${'abcdefgh'[i % 8]}${8 - i ~/ 8}';
+            final piece = board.get(square);
+            final base = (i ~/ 8 + i % 8).isEven
+                ? const Color(0xffd9b77e)
+                : const Color(0xff85552f);
+            return GestureDetector(
+                onTap: () => _tap(square, board),
+                child: ColoredBox(
+                    color: _selected == square
+                        ? const Color(0xffb89454)
+                        : _moveAnimation.lastMove.contains(square)
+                            ? Color.alphaBlend(lastMoveTint, base)
+                            : base,
+                    child: Stack(alignment: Alignment.center, children: [
+                      if (piece != null &&
+                          !hidden.contains(square) &&
+                          dragging != square)
+                        _piece(piece),
+                      if (targets.any((m) => m.toAlgebraic == square))
+                        LegalMoveMarker(capture: piece != null),
+                    ])));
+          },
+        ),
+      ),
+    );
   }
 
   Widget _piece(c.Piece piece) => Padding(
@@ -554,39 +614,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                           style: const TextStyle(color: Colors.white70)),
                       if (board != null)
                         AspectRatio(
-                            aspectRatio: 1,
-                            child: AnimatedBoardPieces(
-                                position: boardPosition(board),
-                                flipped: flipped,
-                                pieceBuilder: (square) =>
-                                    _piece(board.get(square)!),
-                                builder: (context, hidden) => GridView.builder(
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    itemCount: 64,
-                                    gridDelegate:
-                                        const SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: 8),
-                                    itemBuilder: (_, display) {
-                                      final i =
-                                          flipped ? 63 - display : display;
-                                      final square =
-                                          '${'abcdefgh'[i % 8]}${8 - i ~/ 8}';
-                                      final piece = board.get(square);
-                                      return GestureDetector(
-                                          onTap: () => _tap(square, board),
-                                          child: ColoredBox(
-                                              color: _selected == square
-                                                  ? const Color(0xffb89454)
-                                                  : (i ~/ 8 + i % 8).isEven
-                                                      ? const Color(0xffd9b77e)
-                                                      : const Color(0xff85552f),
-                                              child: piece == null ||
-                                                      hidden.contains(square)
-                                                  ? const SizedBox()
-                                                  : _piece(piece)));
-                                    }))),
+                            aspectRatio: 1, child: _board(board, flipped)),
                       if (s['my_turn'] == true)
                         TextButton(
                             onPressed: _busy ? null : () => _move('skip'),

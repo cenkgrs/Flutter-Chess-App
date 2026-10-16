@@ -1037,4 +1037,17 @@ const templates = <String, List<String>>{
     'Aufgabenschwierigkeit: {1}',
     'Сложность задачи: {1}'
   ],
+  'Anladım': ['Got it', 'Verstanden', 'Понятно'],
+  'Kalem simgesiyle tahtaya ok ve işaret çizebilirsin. Sıra rakipteyken hamleni seçersen ön hamle olarak sıraya girer.':
+      [
+    'Use the pencil to draw arrows and marks on the board. Pick your move while it is your opponent\'s turn and it is queued as a premove.',
+    'Mit dem Stift kannst du Pfeile und Markierungen auf das Brett zeichnen. Wählst du deinen Zug, während der Gegner am Zug ist, wird er als Vorauszug vorgemerkt.',
+    'Карандашом можно рисовать на доске стрелки и пометки. Если выбрать ход, пока ходит соперник, он встанет в очередь как предварительный ход.'
+  ],
+  'Sağ üstteki asistana dokun: önerdiği hamleyi tahtada okla gösterir ve nedenini açıklar.':
+      [
+    'Tap the assistant at the top right: it shows its suggested move with an arrow on the board and explains why.',
+    'Tippe oben rechts auf den Assistenten: Er zeigt seinen Zugvorschlag als Pfeil auf dem Brett und erklärt ihn.',
+    'Нажмите на помощника справа вверху: он покажет предлагаемый ход стрелкой на доске и объяснит его.'
+  ],
 };

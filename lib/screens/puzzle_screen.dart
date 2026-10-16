@@ -7,6 +7,7 @@ import '../backend/app_backend.dart';
 import 'auth_screen.dart';
 import 'puzzle_leaderboard_screen.dart';
 import '../audio/game_sounds.dart';
+import '../widgets/board_drag.dart';
 import '../widgets/move_animation.dart';
 
 class PuzzleScreen extends StatefulWidget {
@@ -23,6 +24,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
   String message = '';
   List<c.Move> targets = [];
   final elapsed = ValueNotifier<int>(0);
+  final moveAnimation = MoveAnimationController();
   Timer? timer;
 
   @override
@@ -137,7 +139,8 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
       final replied =
           previous.fen.split(' ').first != game.fen.split(' ').first;
       if (acceptedMove && replied) {
-        GameSounds.instance.playMove(capture: capturedBetween(previous, game));
+        GameSounds.instance.playMove(
+            capture: capturedBetween(previous, game), check: game.in_check);
       }
       if (solved) GameSounds.instance.playVictory();
     } catch (_) {
@@ -185,7 +188,8 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
         selected = null;
         targets = [];
       });
-      GameSounds.instance.playMove(capture: move.captured != null);
+      GameSounds.instance
+          .playMove(capture: move.captured != null, check: game.in_check);
       await action(
           'move',
           '${move.fromAlgebraic}${move.toAlgebraic}${move.promotion?.name ?? ''}',
@@ -199,6 +203,61 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
       });
     }
   }
+
+  bool get canMove => !busy && attempt?['status'] == 'active';
+
+  Widget _board() => BoardDragInput(
+        flipped: flipped,
+        canDrag: (square) => canMove && game.get(square)?.color == game.turn,
+        onPress: moveAnimation.clearSkip,
+        onDrop: (from, to) {
+          setState(() {
+            selected = from;
+            targets = game.generate_moves({'square': from});
+          });
+          moveAnimation.skipNextTo(to);
+          tap(to);
+        },
+        pieceBuilder: (square) => _piece(game.get(square)!),
+        builder: (context, dragging) => AnimatedBoardPieces(
+          position: boardPosition(game),
+          flipped: flipped,
+          controller: moveAnimation,
+          pieceBuilder: (square) => _piece(game.get(square)!),
+          capturedPieceBuilder: _piece,
+          builder: (context, hidden) => GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 64,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 8),
+            itemBuilder: (_, display) {
+              final index = flipped ? 63 - display : display;
+              final square = '${'abcdefgh'[index % 8]}${8 - index ~/ 8}';
+              final piece = game.get(square);
+              final base = (index ~/ 8 + index % 8).isEven
+                  ? const Color(0xffd9b77e)
+                  : const Color(0xff85552f);
+              return GestureDetector(
+                  onTap: () => tap(square),
+                  child: ColoredBox(
+                    color: selected == square || hint == square
+                        ? const Color(0xffb89454)
+                        : moveAnimation.lastMove.contains(square)
+                            ? Color.alphaBlend(lastMoveTint, base)
+                            : base,
+                    child: Stack(alignment: Alignment.center, children: [
+                      if (piece != null &&
+                          !hidden.contains(square) &&
+                          dragging != square)
+                        _piece(piece),
+                      if (targets.any((m) => m.toAlgebraic == square))
+                        LegalMoveMarker(capture: piece != null),
+                    ]),
+                  ));
+            },
+          ),
+        ),
+      );
 
   Widget _piece(c.Piece piece) => Padding(
       padding: const EdgeInsets.all(3),
@@ -270,51 +329,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
                           style: const TextStyle(color: Colors.white70))),
                   Padding(
                       padding: const EdgeInsets.all(12),
-                      child: AspectRatio(
-                          aspectRatio: 1,
-                          child: AnimatedBoardPieces(
-                              position: boardPosition(game),
-                              flipped: flipped,
-                              pieceBuilder: (square) =>
-                                  _piece(game.get(square)!),
-                              builder: (context, hidden) => GridView.builder(
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    itemCount: 64,
-                                    gridDelegate:
-                                        const SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: 8),
-                                    itemBuilder: (_, display) {
-                                      final index =
-                                          flipped ? 63 - display : display;
-                                      final square =
-                                          '${'abcdefgh'[index % 8]}${8 - index ~/ 8}';
-                                      final piece = game.get(square);
-                                      return GestureDetector(
-                                          onTap: () => tap(square),
-                                          child: ColoredBox(
-                                            color: selected == square ||
-                                                    hint == square
-                                                ? const Color(0xffb89454)
-                                                : (index ~/ 8 + index % 8)
-                                                        .isEven
-                                                    ? const Color(0xffd9b77e)
-                                                    : const Color(0xff85552f),
-                                            child: Stack(
-                                                alignment: Alignment.center,
-                                                children: [
-                                                  if (piece != null &&
-                                                      !hidden.contains(square))
-                                                    _piece(piece),
-                                                  if (targets.any((m) =>
-                                                      m.toAlgebraic == square))
-                                                    const Icon(Icons.circle,
-                                                        size: 10,
-                                                        color: Colors.black38),
-                                                ]),
-                                          ));
-                                    },
-                                  )))),
+                      child: AspectRatio(aspectRatio: 1, child: _board())),
                 ],
                 if (busy) const LinearProgressIndicator(),
                 Padding(

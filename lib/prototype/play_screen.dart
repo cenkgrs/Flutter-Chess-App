@@ -9,6 +9,7 @@ import 'engine.dart';
 import 'stockfish_engine.dart';
 import '../screens/profile_screen.dart';
 import '../widgets/board_annotations.dart';
+import '../widgets/first_use_tip.dart';
 import '../widgets/move_animation.dart';
 import 'premove.dart';
 import '../ads/match_ads.dart';
@@ -233,7 +234,10 @@ class _PlayScreenState extends State<PlayScreen>
         thinking = false;
         refresh();
       });
-      if (moved) GameSounds.instance.playMove(capture: lastMoveCaptured);
+      if (moved) {
+        GameSounds.instance
+            .playMove(capture: lastMoveCaptured, check: game.in_check);
+      }
       announceResult();
       final queued = premove;
       premove = null;
@@ -244,7 +248,8 @@ class _PlayScreenState extends State<PlayScreen>
             game.move(next);
             refresh();
           });
-          GameSounds.instance.playMove(capture: lastMoveCaptured);
+          GameSounds.instance
+              .playMove(capture: lastMoveCaptured, check: game.in_check);
           await ai();
           announceResult();
         }
@@ -296,7 +301,8 @@ class _PlayScreenState extends State<PlayScreen>
         assistantAdvice = null;
         refresh();
       });
-      GameSounds.instance.playMove(capture: lastMoveCaptured);
+      GameSounds.instance
+          .playMove(capture: lastMoveCaptured, check: game.in_check);
       await ai();
       announceResult();
       return;
@@ -507,7 +513,25 @@ class _PlayScreenState extends State<PlayScreen>
                   if (widget.assistantMode && assistantAdvice != null)
                     Expanded(child: _assistantPanel())
                   else
-                    const Spacer(),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        reverse: true,
+                        padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+                        child: widget.assistantMode
+                            ? const FirstUseTip(
+                                id: 'assistant',
+                                icon: Icons.lightbulb_outline,
+                                message:
+                                    'Sağ üstteki asistana dokun: önerdiği hamleyi tahtada okla gösterir ve nedenini açıklar.',
+                              )
+                            : const FirstUseTip(
+                                id: 'board_tools',
+                                icon: Icons.draw_outlined,
+                                message:
+                                    'Kalem simgesiyle tahtaya ok ve işaret çizebilirsin. Sıra rakipteyken hamleni seçersen ön hamle olarak sıraya girer.',
+                              ),
+                      ),
+                    ),
                   if (ended)
                     TextButton.icon(
                       onPressed: leaveCompletedGame,
@@ -687,6 +711,7 @@ class _PlayScreenState extends State<PlayScreen>
                     flipped: flipped,
                     controller: moveAnimation,
                     pieceBuilder: (square) => _piece(game.get(square)!),
+                    capturedPieceBuilder: _piece,
                     builder: (context, hidden) => GridView.builder(
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: 64,

@@ -98,10 +98,8 @@ flutter run --release \
 
 Canlı reklam bayrağını bu çalıştırmaya eklemeyin.
 
-Proje şu anda `TARGETED_DEVICE_FAMILY = "1,2"` ile iPhone ve iPad destekliyor.
-Bu şekilde kalırsa iPad 13\" ekran görüntüleri de gerekecek. Yalnızca fiziksel
-iPhone test edildiği için ilk sürümü iPhone-only yapmak daha düşük riskli;
-bunun için hedef ailesini değiştirmeden önce karar verilmeli.
+İlk sürüm iPhone-only: `TARGETED_DEVICE_FAMILY = "1"`. iPad ekran görüntüsü
+gerekmez. Android sonraki aşamada yayınlanacak.
 
 ## Bu push'ta tamamlananlar
 
@@ -160,9 +158,6 @@ Fiziksel iPhone Stockfish testi kullanıcı tarafından tamamlandı.
   privacy beyanı ve app-ads.txt son kontrolü. `ROK_LIVE_ADS=true` ancak bundan
   sonra verilmeli.
 - App Store Connect EU trader status doğrulaması.
-- İlk build öncesi iPhone-only (`TARGETED_DEVICE_FAMILY = "1"`) veya universal
-  iPhone+iPad (`"1,2"`) yayın kararı. Universal kalırsa iPad 13\" ekran
-  görüntülerini Simulator'dan alın ve iPad düzenini smoke test edin.
 - Dört dil için kalan çevrilmemiş metin taraması ve Almanca/Rusça tüm ekran
   smoke turu.
 - Asistan, tahta çizimi ve premove için bir kez gösterilen ilk kullanım ipuçları.
