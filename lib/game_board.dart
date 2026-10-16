@@ -3,6 +3,7 @@ import "package:chess_puzzle_app/components/square.dart";
 import "package:chess_puzzle_app/helper/helper_methods.dart";
 import "package:chess_puzzle_app/values/colors.dart";
 import "package:flutter/material.dart";
+import "audio/game_sounds.dart";
 
 import "components/dead_piece.dart";
 
@@ -390,6 +391,7 @@ class _GameBoardState extends State<GameBoard> {
     // move piece
     board[newRow][newCol] = selectedPiece;
     board[selectedRow][selectedCol] = null;
+    GameSounds.instance.playMove();
 
     unselectPiece(newRow, newCol);
   }

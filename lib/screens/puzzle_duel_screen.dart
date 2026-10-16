@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:chess/chess.dart' as c;
 import 'package:flutter/material.dart';
 import '../backend/app_backend.dart';
+import '../audio/game_sounds.dart';
 import 'auth_screen.dart';
 
 class PuzzleDuelScreen extends StatefulWidget {
@@ -22,6 +23,8 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
   bool _busy = false, _searching = false;
   int? _rating;
   Map<String, dynamic>? _rematch;
+  String? _startSoundGameId;
+  String? _victorySoundGameId;
   Future<Map<String, dynamic>> _rpc(String name,
           [Map<String, dynamic> params = const {}]) async =>
       widget.request != null
@@ -204,6 +207,21 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
         }
         _state = result;
         _searching = false;
+        final firstTurn = (result['turn'] as num?)?.toInt() == 1;
+        final firstStep = (result['step'] as num?)?.toInt() == 0;
+        if (result['status'] == 'active' &&
+            firstTurn &&
+            firstStep &&
+            _startSoundGameId != _id) {
+          _startSoundGameId = _id;
+          GameSounds.instance.playStart();
+        }
+        if (result['status'] == 'finished' &&
+            _victorySoundGameId != _id &&
+            (result['score'] as num) > (result['opponent_score'] as num)) {
+          _victorySoundGameId = _id;
+          GameSounds.instance.playVictory();
+        }
       }
       if (mounted) setState(() => _error = null);
     } catch (_) {
@@ -228,6 +246,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
         'p_move': move,
       });
       if (mounted) {
+        final acceptedMove = action == 'move' && result['wrong'] != true;
         setState(() {
           _state = result;
           _selected = null;
@@ -235,6 +254,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
               ? 'Yanlış hamle · Puan katsayısı azaldı.'
               : null;
         });
+        if (acceptedMove) GameSounds.instance.playMove();
       }
     } catch (_) {
       if (mounted) {

@@ -13,6 +13,11 @@
   `Play online, sharpen your skills with puzzles, and learn with a built-in chess assistant.`
 - Product page header görseli hazır:
   `assets/store/rok-chess-header-3840x1646.png` (3840 × 1646 PNG).
+- Projeye özel, dış lisans gerektirmeyen üç ses efekti eklendi:
+  `assets/audio/piece_move.wav`, `game_start.wav`, `victory.wav`.
+  Offline/online maç, bulmaca ve bulmaca düellosu olaylarına bağlandı. Profilde
+  dört dilde kalıcı bir `Ses efektleri` anahtarı bulunuyor. iOS sessiz anahtarı
+  dikkate alınıyor; ses hataları oynanışı durdurmuyor.
 - Search Results görseli zorunlu değil; boş bırakılabilir. Apple bu durumda
   gerçek uygulama ekran görüntülerini kullanır.
 - Üstte görünen EU Digital Services Act `trader status` uyarısı yayından önce
@@ -70,6 +75,10 @@ Whether you want a quick match, focused puzzle practice, or a deeper look at you
    etiketi görünmesin.
 4. Görselleri boyutlandırmadan App Store Connect → App Previews and Screenshots
    → iPhone with Dynamic Island bölümüne yükleyin.
+5. Fiziksel iPhone'da başlangıç, hamle ve galibiyet seslerini; Profil → Ses
+   efektleri kapalıyken sessizliği; ayrıca iPhone'un sessiz anahtarını test edin.
+   Online maçta yeniden bağlanma/arka plandan dönüş sırasında eski hamle veya
+   sonuç sesinin tekrar çalmadığını doğrulayın.
 
 Ekran görüntüsü almak için telefonu bağladıktan sonra:
 
@@ -99,6 +108,8 @@ bunun için hedef ailesini değiştirmeden önce karar verilmeli.
 - iPhone SE boyutunda Almanca/Rusça ve klavye taşma testleri.
 - ROK + bağlı Stockfish için GPL-3.0-or-later bildirimi, doğru podspec lisansı,
   NNUE SHA-256 doğrulaması ve uygulama içi tam kaynak bağlantısı.
+- Hamle, yeni oyun ve galibiyet sesleri; kalıcı ses aç/kapat tercihi ve dört dil
+  metinleri. `audioplayers 6.8.1` kullanılıyor.
 
 ## Evde release almadan önce
 

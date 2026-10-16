@@ -14,6 +14,7 @@ import '../online/game_sync.dart';
 import '../widgets/board_annotations.dart';
 import '../prototype/premove.dart';
 import '../ads/match_ads.dart';
+import '../audio/game_sounds.dart';
 
 class OnlineGameScreen extends StatefulWidget {
   const OnlineGameScreen({super.key, required this.gameId});
@@ -167,6 +168,8 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
   void _applySnapshot(Map<String, dynamic> row) {
     if (!mounted) return;
     if (!shouldApplyGameSnapshot(_row, row)) return;
+    final previousRow = _row;
+    final previousPly = (previousRow?['ply'] as num?)?.toInt();
     try {
       _dragPosition.value = null;
       setState(() {
@@ -178,6 +181,14 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
         _sending = false;
         _error = null;
       });
+      final nextPly = (row['ply'] as num?)?.toInt() ?? 0;
+      if (previousRow == null) {
+        if (row['status'] == 'active' && nextPly == 0) {
+          GameSounds.instance.playStart();
+        }
+      } else if (previousPly != null && nextPly > previousPly) {
+        GameSounds.instance.playMove();
+      }
       if (row['status'] != 'active' && !_resultShown && !_leaving) {
         _premove = null;
         _resultShown = true;
@@ -198,6 +209,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
 
   Future<void> _showResult(Map<String, dynamic> row) async {
     final outcome = gameOutcomeFor(row, _myId);
+    if (outcome == PlayerGameOutcome.win) GameSounds.instance.playVictory();
     final reason = resultReasonLabel(row['result_reason']);
     final icon = switch (outcome) {
       PlayerGameOutcome.win => Icons.emoji_events_rounded,
@@ -463,9 +475,8 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
                           ),
                           _PlayerBar(
                             label: _flipped ? 'Beyaz' : 'Siyah',
-                            milliseconds: _flipped
-                                ? clocks.white
-                                : clocks.black,
+                            milliseconds:
+                                _flipped ? clocks.white : clocks.black,
                             updatedAt: clockAnchor,
                             running: active && _game.turn == topColor,
                             highlighted: active && _game.turn == topColor,
@@ -482,9 +493,8 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
                           const SizedBox(height: 10),
                           _PlayerBar(
                             label: _flipped ? 'Siyah · Sen' : 'Beyaz · Sen',
-                            milliseconds: _flipped
-                                ? clocks.black
-                                : clocks.white,
+                            milliseconds:
+                                _flipped ? clocks.black : clocks.white,
                             updatedAt: clockAnchor,
                             running: active && _game.turn == bottomColor,
                             highlighted: _myTurn,

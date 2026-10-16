@@ -9,6 +9,7 @@ import 'widgets/rok_style.dart';
 import 'ads/match_ads.dart';
 import 'l10n/app_language.dart';
 import 'legal/open_source_compliance.dart';
+import 'audio/game_sounds.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
@@ -22,6 +23,7 @@ Future<void> main() async {
   });
   await AppBackend.initialize();
   await AppLanguage.instance.load();
+  await GameSounds.instance.load();
   runApp(const MyApp());
   WidgetsBinding.instance
       .addPostFrameCallback((_) => MatchAds.instance.initialize());

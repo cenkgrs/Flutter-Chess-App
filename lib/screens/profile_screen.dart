@@ -13,6 +13,7 @@ import '../prototype/play_screen.dart';
 import '../prototype/stockfish_engine.dart';
 import '../widgets/analysis_markers.dart';
 import '../ads/match_ads.dart';
+import '../audio/game_sounds.dart';
 import '../l10n/app_language.dart';
 import 'delete_account_screen.dart';
 import 'open_source_screen.dart';
@@ -202,6 +203,19 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
+                ListenableBuilder(
+                    listenable: GameSounds.instance,
+                    builder: (context, _) => _ProfileSwitch(
+                          key: const ValueKey('sound-effects-toggle'),
+                          icon: GameSounds.instance.enabled
+                              ? Icons.volume_up_rounded
+                              : Icons.volume_off_rounded,
+                          title: 'Ses efektleri',
+                          subtitle: 'Hamle, oyun başlangıcı ve zafer sesleri',
+                          value: GameSounds.instance.enabled,
+                          onChanged: GameSounds.instance.setEnabled,
+                        )),
+                const SizedBox(height: 12),
                 _ProfileLink(
                   icon: Icons.description_outlined,
                   title: 'Açık kaynak lisansları',
@@ -291,6 +305,51 @@ class _ProfileLink extends StatelessWidget {
           ),
           trailing: const Icon(Icons.chevron_right_rounded,
               color: ProfileScreen.mutedBone),
+        ),
+      );
+}
+
+class _ProfileSwitch extends StatelessWidget {
+  const _ProfileSwitch({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: const Color(0xe6202120),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Color(0xff686966), width: .8),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: SwitchListTile.adaptive(
+          value: value,
+          onChanged: onChanged,
+          secondary: Icon(icon, color: ProfileScreen.bone, size: 28),
+          title: LText(title,
+              style: const TextStyle(
+                  color: ProfileScreen.bone,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 17)),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: LText(subtitle,
+                style: const TextStyle(
+                    color: ProfileScreen.mutedBone, height: 1.35)),
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         ),
       );
 }
