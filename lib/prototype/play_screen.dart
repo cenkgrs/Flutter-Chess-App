@@ -11,6 +11,7 @@ import '../screens/profile_screen.dart';
 import '../widgets/board_annotations.dart';
 import 'premove.dart';
 import '../ads/match_ads.dart';
+import '../audio/game_sounds.dart';
 
 class PlayScreen extends StatefulWidget {
   const PlayScreen(
@@ -106,6 +107,8 @@ class _PlayScreenState extends State<PlayScreen>
       duration: const Duration(milliseconds: 1100),
     );
     if (widget.assistantMode) assistantPulse.repeat(reverse: true);
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => GameSounds.instance.playStart());
   }
 
   bool get ended => resigned || game.game_over;
@@ -113,6 +116,7 @@ class _PlayScreenState extends State<PlayScreen>
     if (!mounted || !ended || resultShown) return;
     resultShown = true;
     final won = !resigned && game.in_checkmate && game.turn != human;
+    if (won) GameSounds.instance.playVictory();
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -210,6 +214,7 @@ class _PlayScreenState extends State<PlayScreen>
           : await DeviceEngine.instance.evaluate(game.fen, elo: engineElo);
       final move = evaluation.move;
       if (!mounted || ticket != generation) return;
+      var moved = false;
       setState(() {
         if (move != null) {
           game.move({
@@ -217,11 +222,13 @@ class _PlayScreenState extends State<PlayScreen>
             'to': move.substring(2, 4),
             if (move.length > 4) 'promotion': move[4]
           });
+          moved = true;
         }
         assistantAdvice = null;
         thinking = false;
         refresh();
       });
+      if (moved) GameSounds.instance.playMove();
       announceResult();
       final queued = premove;
       premove = null;
@@ -232,6 +239,7 @@ class _PlayScreenState extends State<PlayScreen>
             game.move(next);
             refresh();
           });
+          GameSounds.instance.playMove();
           await ai();
           announceResult();
         }
@@ -283,6 +291,7 @@ class _PlayScreenState extends State<PlayScreen>
         assistantAdvice = null;
         refresh();
       });
+      GameSounds.instance.playMove();
       await ai();
       announceResult();
       return;
@@ -371,6 +380,7 @@ class _PlayScreenState extends State<PlayScreen>
       assistantAdvice = null;
       refresh();
     });
+    GameSounds.instance.playStart();
     await ai();
   }
 

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../backend/app_backend.dart';
 import 'auth_screen.dart';
 import 'puzzle_leaderboard_screen.dart';
+import '../audio/game_sounds.dart';
 
 class PuzzleScreen extends StatefulWidget {
   const PuzzleScreen({super.key});
@@ -59,6 +60,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
           message = '${flipped ? 'Siyah' : 'Beyaz'} oynar · Matı bul';
         }
       });
+      if (row['empty'] != true) GameSounds.instance.playStart();
     } catch (_) {
       if (mounted) {
         setState(() => message =
@@ -81,6 +83,8 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
         'p_step': attempt!['step'],
       }) as Map);
       if (!mounted) return;
+      final acceptedMove = kind == 'move' && response['correct'] != false;
+      final solved = response['status'] == 'solved';
       setState(() {
         attempt = {...attempt!, ...response};
         selected = null;
@@ -115,6 +119,8 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
           message = 'Doğru! Rakip yanıtladı, devamını bul.';
         }
       });
+      if (acceptedMove) GameSounds.instance.playMove();
+      if (solved) GameSounds.instance.playVictory();
     } catch (_) {
       if (mounted) {
         setState(() => message = 'İşlem doğrulanamadı. Tekrar dene.');

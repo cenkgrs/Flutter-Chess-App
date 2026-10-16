@@ -48,6 +48,12 @@ const translations = <String, List<String>>{
     'Hilfe und Kontaktmöglichkeiten',
     'Помощь и способы связи'
   ],
+  'Ses efektleri': ['Sound effects', 'Soundeffekte', 'Звуковые эффекты'],
+  'Hamle, oyun başlangıcı ve zafer sesleri': [
+    'Move, game start, and victory sounds',
+    'Züge, Partiebeginn und Sieg',
+    'Звуки хода, начала игры и победы'
+  ],
   'Bağlantı açılamadı. Tekrar dene.': [
     'Could not open the link. Try again.',
     'Link konnte nicht geöffnet werden. Erneut versuchen.',
