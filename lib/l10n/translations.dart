@@ -1001,6 +1001,62 @@ const translations = <String, List<String>>{
     'Hinweise erhalten deine Serie, bringen aber keine Punkte.',
     'Подсказка сохраняет серию, но не приносит очков.'
   ],
+  'Tahta görünümü': ['Board appearance', 'Brettdesign', 'Вид доски'],
+  'Tahta ve taş stilini seç': [
+    'Pick your board and piece style',
+    'Brett- und Figurenstil wählen',
+    'Выберите стиль доски и фигур'
+  ],
+  'TAHTA': ['BOARD', 'BRETT', 'ДОСКА'],
+  'TAŞLAR': ['PIECES', 'FIGUREN', 'ФИГУРЫ'],
+  'Ahşap': ['Wood', 'Holz', 'Дерево'],
+  'Mermer': ['Marble', 'Marmor', 'Мрамор'],
+  'Arduvaz': ['Slate', 'Schiefer', 'Сланец'],
+  'Buz': ['Ice', 'Eis', 'Лёд'],
+  'Cam': ['Glass', 'Glas', 'Стекло'],
+  'Yeni taş setleri sonraki güncellemelerde gelir.': [
+    'More piece sets arrive in future updates.',
+    'Weitere Figurensätze kommen in künftigen Updates.',
+    'Новые наборы фигур появятся в следующих обновлениях.'
+  ],
+  'CANLI': ['LIVE', 'LIVE', 'В ЭФИРЕ'],
+  'Rakibin tahtası': [
+    "Opponent's board",
+    'Brett des Gegners',
+    'Доска соперника'
+  ],
+  'Rakibin çözüyor': [
+    'Opponent is solving',
+    'Gegner löst',
+    'Соперник решает'
+  ],
+  'Senin turun': ['Your round', 'Deine Runde', 'Твой раунд'],
+  'Rakibin turu': ['Opponent\'s round', 'Runde des Gegners', 'Раунд соперника'],
+  'Oyun bitti': ['Game over', 'Spiel vorbei', 'Игра окончена'],
+  'Teslim oldun': ['You resigned', 'Du hast aufgegeben', 'Вы сдались'],
+  'Devam ediyor': ['In progress', 'Läuft', 'Идёт'],
+  'Teslim': ['Resignation', 'Aufgabe', 'Сдача'],
+  'Yetersiz materyal': [
+    'Insufficient material',
+    'Ungenügendes Material',
+    'Недостаточно материала'
+  ],
+  'Uzun oyun': ['Classical', 'Klassisch', 'Классика'],
+  'Motor başlatılamadı': [
+    'The engine could not start',
+    'Die Engine konnte nicht starten',
+    'Не удалось запустить движок'
+  ],
+  'Motor kapandı': [
+    'The engine stopped',
+    'Die Engine wurde beendet',
+    'Движок остановлен'
+  ],
+  'Motor yanıt vermedi': [
+    'The engine did not respond',
+    'Die Engine hat nicht geantwortet',
+    'Движок не ответил'
+  ],
 };
 const templates = <String, List<String>>{
   r'^Seri: (\d+) gün$': [
@@ -1125,23 +1181,5 @@ const templates = <String, List<String>>{
     'Tap the assistant at the top right: it shows its suggested move with an arrow on the board and explains why.',
     'Tippe oben rechts auf den Assistenten: Er zeigt seinen Zugvorschlag als Pfeil auf dem Brett und erklärt ihn.',
     'Нажмите на помощника справа вверху: он покажет предлагаемый ход стрелкой на доске и объяснит его.'
-  ],
-  'Tahta görünümü': ['Board appearance', 'Brettdesign', 'Вид доски'],
-  'Tahta ve taş stilini seç': [
-    'Pick your board and piece style',
-    'Brett- und Figurenstil wählen',
-    'Выберите стиль доски и фигур'
-  ],
-  'TAHTA': ['BOARD', 'BRETT', 'ДОСКА'],
-  'TAŞLAR': ['PIECES', 'FIGUREN', 'ФИГУРЫ'],
-  'Ahşap': ['Wood', 'Holz', 'Дерево'],
-  'Mermer': ['Marble', 'Marmor', 'Мрамор'],
-  'Arduvaz': ['Slate', 'Schiefer', 'Сланец'],
-  'Buz': ['Ice', 'Eis', 'Лёд'],
-  'Cam': ['Glass', 'Glas', 'Стекло'],
-  'Yeni taş setleri sonraki güncellemelerde gelir.': [
-    'More piece sets arrive in future updates.',
-    'Weitere Figurensätze kommen in künftigen Updates.',
-    'Новые наборы фигур появятся в следующих обновлениях.'
   ],
 };
