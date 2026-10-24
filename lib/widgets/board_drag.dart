@@ -1,3 +1,4 @@
+import '../theme/board_theme.dart';
 import 'package:flutter/material.dart';
 
 /// Drag-and-drop input for an 8×8 board drawn by [builder]. While a piece
@@ -109,7 +110,7 @@ class _BoardDragInputState extends State<BoardDragInput> {
 }
 
 /// Tint laid over the two squares of the most recent move.
-const lastMoveTint = Color(0x667a743e);
+Color get lastMoveTint => boardSkin.lastMove;
 
 /// Marks a square the selected piece can move to: a dot on an empty square,
 /// a ring around a piece that can be captured.
@@ -125,9 +126,9 @@ class LegalMoveMarker extends StatelessWidget {
         margin: const EdgeInsets.all(2),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: capture ? null : const Color(0x88412a18),
+          color: capture ? null : boardSkin.legalDot,
           border: capture
-              ? Border.all(color: const Color(0xaae2b75f), width: 3)
+              ? Border.all(color: boardSkin.legalRing, width: 3)
               : null,
         ),
       );

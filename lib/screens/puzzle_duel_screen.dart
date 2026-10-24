@@ -1,3 +1,4 @@
+import '../theme/board_theme.dart';
 import '../l10n/app_language.dart';
 import '../widgets/rok_style.dart';
 import 'dart:async';
@@ -6,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../backend/app_backend.dart';
 import '../audio/game_sounds.dart';
 import '../widgets/board_drag.dart';
+import '../widgets/duel_spectator.dart';
 import '../widgets/move_animation.dart';
 import 'auth_screen.dart';
 
@@ -29,6 +31,19 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
   /// Lets the player's own slide finish before the reply starts moving.
   static const _replyDelay = Duration(milliseconds: 420);
   final _moveAnimation = MoveAnimationController();
+
+  /// Separate from [_moveAnimation] so the opponent's board keeps its own
+  /// last-move marks while the player's board is idle.
+  final _spectateAnimation = MoveAnimationController();
+
+  /// The round that just ended, shown as a burst over the board.
+  Map<String, dynamic>? _burst;
+  bool _burstMine = false;
+  Timer? _burstTimer;
+  /// Rounds already in `history`; -1 until the first state arrives, so
+  /// resuming a match in progress does not replay every past round.
+  int _roundsSeen = -1;
+  String? _spectatedFen;
   bool _busy = false, _searching = false;
   int? _rating;
   Map<String, dynamic>? _rematch;
@@ -216,6 +231,8 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
         }
         _state = result;
         _searching = false;
+        _noteRound(result);
+        _noteOpponentMove(result);
         final firstTurn = (result['turn'] as num?)?.toInt() == 1;
         final firstStep = (result['step'] as num?)?.toInt() == 0;
         if (result['status'] == 'active' &&
@@ -241,6 +258,44 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
     } finally {
       _busy = false;
     }
+  }
+
+  /// Shows what the turn scored the moment the server closes it, for both
+  /// players, so the spectator sees the result of what they just watched.
+  void _noteRound(Map<String, dynamic> state) {
+    final history = state['history'];
+    final count = history is List ? history.length : 0;
+    final previous = _roundsSeen;
+    _roundsSeen = count;
+    if (previous < 0 || count <= previous) return;
+    final round = (history as List).last;
+    if (round is! Map) return;
+    final turn = (round['turn'] as num?)?.toInt() ?? 0;
+    _burstTimer?.cancel();
+    _burst = Map<String, dynamic>.from(round);
+    _burstMine = (turn.isOdd) == (state['is_a'] == true);
+    _burstTimer = Timer(const Duration(milliseconds: 1600), () {
+      if (mounted) setState(() => _burst = null);
+    });
+  }
+
+  /// Sounds the opponent's move while watching, so a turn can be followed
+  /// without staring at the board.
+  void _noteOpponentMove(Map<String, dynamic> state) {
+    final fen = state['opponent_fen'];
+    if (fen is! String) {
+      _spectatedFen = null;
+      return;
+    }
+    final previous = _spectatedFen;
+    _spectatedFen = fen;
+    if (previous == null || previous.split(' ').first == fen.split(' ').first) {
+      return;
+    }
+    final after = c.Chess.fromFEN(fen);
+    GameSounds.instance.playMove(
+        capture: capturedBetween(c.Chess.fromFEN(previous), after),
+        check: after.in_check);
   }
 
   Future<void> _move(String action, [String? move, DateTime? movedAt]) async {
@@ -342,6 +397,62 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
         DateTime.now());
   }
 
+  /// Turn number, clock, progress and mistakes — the same row whether the
+  /// player is solving or watching, so the two halves of a duel read alike.
+  Widget _turnHeader(Map<String, dynamic> s) {
+    final mine = s['my_turn'] == true;
+    final steps =
+        ((mine ? s['steps'] : s['opponent_steps']) as num?)?.toInt() ?? 0;
+    return Row(children: [
+      DuelClockRing(
+          secondsLeft: (s['seconds_left'] as num?)?.toInt() ?? 0),
+      const SizedBox(width: 14),
+      Expanded(
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              LText(
+                  mine ? 'Sıra sende' : 'Rakibin çözüyor',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w700)),
+              const SizedBox(height: 2),
+              LText('Tur ${s['turn']}/20',
+                  style: const TextStyle(color: Colors.white54, fontSize: 13)),
+              const SizedBox(height: 8),
+              Row(children: [
+                if (steps > 0) ...[
+                  DuelProgressDots(
+                      step: (s['step'] as num?)?.toInt() ?? 0,
+                      steps: steps,
+                      active: mine),
+                  const SizedBox(width: 12),
+                ],
+                DuelMistakeCounter(
+                    mistakes: (s['mistakes'] as num?)?.toInt() ?? 0),
+              ]),
+            ]),
+      ),
+    ]);
+  }
+
+  /// Shown when the server does not send the opponent's board, so a client
+  /// running against an older database still has a sensible waiting state.
+  Widget _waitingPlaceholder() => AspectRatio(
+        aspectRatio: 1,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+              color: const Color(0x14ffffff),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0x22ffffff))),
+          child: const Center(
+              child: LText('Rakibin bulmacayı çözüyor…',
+                  style: TextStyle(color: Colors.white54))),
+        ),
+      );
+
   Widget _board(c.Chess board, bool flipped) {
     final myTurn = !_busy && _state?['my_turn'] == true;
     final targets = _selected == null
@@ -373,14 +484,12 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
             final i = flipped ? 63 - display : display;
             final square = '${'abcdefgh'[i % 8]}${8 - i ~/ 8}';
             final piece = board.get(square);
-            final base = (i ~/ 8 + i % 8).isEven
-                ? const Color(0xffd9b77e)
-                : const Color(0xff85552f);
+            final base = boardSkin.base((i ~/ 8 + i % 8).isEven);
             return GestureDetector(
                 onTap: () => _tap(square, board),
                 child: ColoredBox(
                     color: _selected == square
-                        ? const Color(0xffb89454)
+                        ? boardSkin.selected
                         : _moveAnimation.lastMove.contains(square)
                             ? Color.alphaBlend(lastMoveTint, base)
                             : base,
@@ -398,21 +507,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
     );
   }
 
-  Widget _piece(c.Piece piece) => Padding(
-      padding: const EdgeInsets.all(3),
-      child: Image.asset(
-          'lib/images/wood/${{
-            'p': 'pawn',
-            'r': 'rook',
-            'n': 'knight',
-            'b': 'bishop',
-            'q': 'queen',
-            'k': 'king'
-          }[piece.type.name]}.png',
-          color: piece.color == c.Color.WHITE
-              ? const Color(0xfffff5df)
-              : const Color(0xff48291c),
-          colorBlendMode: BlendMode.modulate));
+  Widget _piece(c.Piece piece) => BoardPiece(piece);
 
   Future<void> _leave() async {
     if (_busy) return;
@@ -464,6 +559,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
 
   @override
   void dispose() {
+    _burstTimer?.cancel();
     _timer?.cancel();
     super.dispose();
   }
@@ -573,6 +669,10 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
     final board = stateBoard != null && _pendingFen != null
         ? c.Chess.fromFEN(_pendingFen!)
         : stateBoard;
+    // Only sent while the opponent is solving; absent on an older server.
+    final watched = s?['opponent_fen'] is String
+        ? c.Chess.fromFEN(s!['opponent_fen'] as String)
+        : null;
     return PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, _) {
@@ -591,8 +691,15 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                     actions: [
                       Padding(
                           padding: const EdgeInsets.all(12),
-                          child: LText('${s['score']} : ${s['opponent_score']}',
-                              style: const TextStyle(fontSize: 20)))
+                          child: DuelScoreboard(
+                              mine: (s['score'] as num?)?.toInt() ?? 0,
+                              theirs:
+                                  (s['opponent_score'] as num?)?.toInt() ?? 0,
+                              leading: (s['score'] as num? ?? 0) ==
+                                      (s['opponent_score'] as num? ?? 0)
+                                  ? null
+                                  : (s['score'] as num? ?? 0) >
+                                      (s['opponent_score'] as num? ?? 0)))
                     ]),
                 body: SafeArea(
                     child:
@@ -604,17 +711,24 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                     if (finished) ...[
                       _resultDetails(s),
                     ] else ...[
-                      LText('Tur ${s['turn']}/20 · ${s['seconds_left']} sn',
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 20)),
-                      LText(
-                          s['my_turn'] == true
-                              ? 'Sıra sende · Hata: ${s['mistakes']}'
-                              : 'Rakibin bulmacayı çözüyor…',
-                          style: const TextStyle(color: Colors.white70)),
-                      if (board != null)
-                        AspectRatio(
-                            aspectRatio: 1, child: _board(board, flipped)),
+                      _turnHeader(s),
+                      const SizedBox(height: 12),
+                      Stack(alignment: Alignment.center, children: [
+                        if (board != null)
+                          AspectRatio(
+                              aspectRatio: 1, child: _board(board, flipped))
+                        else if (watched != null)
+                          SpectatorBoard(
+                              board: watched,
+                              controller: _spectateAnimation)
+                        else
+                          _waitingPlaceholder(),
+                        if (_burst != null)
+                          TurnScoreBurst(
+                              key: ValueKey(_burst!['turn']),
+                              round: _burst!,
+                              mine: _burstMine),
+                      ]),
                       if (s['my_turn'] == true)
                         TextButton(
                             onPressed: _busy ? null : () => _move('skip'),

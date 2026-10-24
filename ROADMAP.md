@@ -7,6 +7,36 @@
 
 # Bu sürümün kurulumu
 
+## Tahta teması ve düello izleme (24 Ekim)
+
+Önceki migration'ların ardından ROK projesine:
+
+1. `supabase/migrations/20261024120000_duel_spectate.sql`
+
+- `duel_state` artık sırası gelmeyen oyuncuya `opponent_fen`, `opponent_steps`
+  ve `opponent_difficulty` döner. Bu güvenli: bir maçta 20 ayrı bulmaca vardır
+  ve her tur tek bir oyuncuya aittir; izleyiciye gösterilen konum o maçta ona
+  hiç verilmez. Kendi turları da rakibe aynı kuralla kapalı kalır.
+- `steps` (çözümdeki toplam hamle) iki tarafa da döner; ilerleme noktaları
+  bununla çizilir.
+- Migration uygulanmadan da uygulama çalışır: `opponent_fen` gelmezse düello
+  ekranı eski boş bekleme kutusunu gösterir.
+- Düello ekranı: rakibin tahtası canlı akar, 30 saniyelik tur saati halka
+  olarak döner, ilerleme noktaları dolar, hata sayacı titrer, tur bitince
+  kazanılan puan tahtanın üstünde yükselerek kaybolur ve skor sayaçları
+  yeni değerine doğru sayar. Rakibin hamlesinde hamle sesi çalar.
+
+- Tahta görünümü: Ana menü → Tahta görünümü (misafirler dahil) ve Profil →
+  Tahta görünümü. Tahta teması (Ahşap, Mermer, Arduvaz, Buz) ile taş seti
+  ayrı ayrı seçilir, cihazda `shared_preferences` ile saklanır. Veritabanı
+  değişikliği gerekmez; hesaba bağlı değildir.
+- Tüm tahta ekranları artık kare ve taş görünümünü `lib/theme/board_theme.dart`
+  üzerinden alır. Yeni bir tahta ekranı sabit kare rengi veya `lib/images/wood`
+  yolu yazmamalı; `boardSkin` ve `BoardPiece` kullanılmalı.
+- Cam taş seti kodda hazır ama görselleri yok: `assets/pieces/glass/README.md`
+  beklenen 12 dosyayı ve ölçüleri anlatır. Dosyalar eklenene kadar set
+  listede görünmez.
+
 ## Arkadaş düellosu, rövanş ve ortak tasarım (14 Ekim)
 
 Önceki migration'ların ardından ROK projesine sırayla:

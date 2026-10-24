@@ -1,3 +1,4 @@
+import '../theme/board_theme.dart';
 import '../l10n/app_language.dart';
 import '../widgets/rok_style.dart';
 import 'profile_screen.dart';
@@ -652,19 +653,14 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
                           onTap: () => _tap(square),
                           child: ColoredBox(
                             color: _selected == square
-                                ? const Color(0xffb5823b)
+                                ? boardSkin.selected
                                 : _premove?.from == square ||
                                         _premove?.to == square
-                                    ? const Color(0xff7985a2)
+                                    ? boardSkin.premove
                                     : _moveAnimation.lastMove.contains(square)
-                                        ? Color.alphaBlend(
-                                            lastMoveTint,
-                                            light
-                                                ? const Color(0xffd9b77e)
-                                                : const Color(0xff85552f))
-                                        : light
-                                            ? const Color(0xffd9b77e)
-                                            : const Color(0xff85552f),
+                                        ? Color.alphaBlend(lastMoveTint,
+                                            boardSkin.base(light))
+                                        : boardSkin.base(light),
                             child: Stack(
                               alignment: Alignment.center,
                               children: [
@@ -674,22 +670,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
                                         _dragPosition.value != null))
                                   _piece(piece),
                                 if (legal)
-                                  Container(
-                                    width: piece == null ? 12 : null,
-                                    height: piece == null ? 12 : null,
-                                    margin: const EdgeInsets.all(2),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: piece == null
-                                          ? const Color(0x88412a18)
-                                          : null,
-                                      border: piece == null
-                                          ? null
-                                          : Border.all(
-                                              color: const Color(0xaae2b75f),
-                                              width: 3),
-                                    ),
-                                  ),
+                                  LegalMoveMarker(capture: piece != null),
                               ],
                             ),
                           ),
@@ -723,27 +704,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
         ),
       );
 
-  Widget _piece(c.Piece piece) {
-    final asset = 'lib/images/wood/${const {
-      'p': 'pawn',
-      'r': 'rook',
-      'n': 'knight',
-      'b': 'bishop',
-      'q': 'queen',
-      'k': 'king',
-    }[piece.type.name]}.png';
-    return Padding(
-      padding: const EdgeInsets.all(1),
-      child: Image.asset(
-        asset,
-        color: piece.color == c.Color.WHITE
-            ? const Color(0xfffff5df)
-            : const Color(0xff48291c),
-        colorBlendMode: BlendMode.modulate,
-        fit: BoxFit.contain,
-      ),
-    );
-  }
+  Widget _piece(c.Piece piece) => BoardPiece(piece, padding: 1);
 }
 
 class _PlayerBar extends StatefulWidget {

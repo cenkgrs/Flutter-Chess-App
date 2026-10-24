@@ -1,3 +1,5 @@
+import 'board_theme_screen.dart';
+import '../theme/board_theme.dart';
 import '../widgets/rok_style.dart';
 import 'dart:math' as math;
 import 'package:chess/chess.dart' as c;
@@ -202,6 +204,20 @@ class ProfileScreen extends StatelessWidget {
                     MaterialPageRoute(builder: (_) => const FriendsScreen()),
                   ),
                 ),
+                const SizedBox(height: 12),
+                ListenableBuilder(
+                    listenable: BoardTheme.instance,
+                    builder: (context, _) => _ProfileLink(
+                          key: const ValueKey('board-theme-link'),
+                          icon: Icons.grid_view_rounded,
+                          title: 'Tahta görünümü',
+                          subtitle:
+                              '${tr(context, boardSkin.label)} · ${tr(context, boardPieces.label)}',
+                          onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const BoardThemeScreen())),
+                        )),
                 const SizedBox(height: 12),
                 ListenableBuilder(
                     listenable: GameSounds.instance,
@@ -684,35 +700,19 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                                                               _index - 1]
                                                           : null;
                                                       return ColoredBox(
-                                                          color: (i ~/ 8 + file)
-                                                                  .isEven
-                                                              ? const Color(
-                                                                  0xffd9b77e)
-                                                              : const Color(
-                                                                  0xff85552f),
+                                                          color: boardSkin.base(
+                                                              (i ~/ 8 + file)
+                                                                  .isEven),
                                                           child: Stack(
                                                               fit: StackFit
                                                                   .expand,
                                                               children: [
                                                                 piece == null
                                                                     ? const SizedBox()
-                                                                    : Image.asset(
-                                                                        'lib/images/wood/${const {
-                                                                          'p':
-                                                                              'pawn',
-                                                                          'r':
-                                                                              'rook',
-                                                                          'n':
-                                                                              'knight',
-                                                                          'b':
-                                                                              'bishop',
-                                                                          'q':
-                                                                              'queen',
-                                                                          'k':
-                                                                              'king'
-                                                                        }[piece.type.name]}.png',
-                                                                        color: piece.color == c.Color.WHITE ? const Color(0xfffff5df) : const Color(0xff48291c),
-                                                                        colorBlendMode: BlendMode.modulate),
+                                                                    : BoardPiece(
+                                                                        piece,
+                                                                        padding:
+                                                                            0),
                                                                 if (badge !=
                                                                     null)
                                                                   Positioned(

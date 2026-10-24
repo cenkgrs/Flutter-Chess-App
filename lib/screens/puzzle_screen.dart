@@ -1,3 +1,4 @@
+import '../theme/board_theme.dart';
 import '../l10n/app_language.dart';
 import '../widgets/rok_style.dart';
 import 'dart:async';
@@ -234,14 +235,12 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
               final index = flipped ? 63 - display : display;
               final square = '${'abcdefgh'[index % 8]}${8 - index ~/ 8}';
               final piece = game.get(square);
-              final base = (index ~/ 8 + index % 8).isEven
-                  ? const Color(0xffd9b77e)
-                  : const Color(0xff85552f);
+              final base = boardSkin.base((index ~/ 8 + index % 8).isEven);
               return GestureDetector(
                   onTap: () => tap(square),
                   child: ColoredBox(
                     color: selected == square || hint == square
-                        ? const Color(0xffb89454)
+                        ? boardSkin.selected
                         : moveAnimation.lastMove.contains(square)
                             ? Color.alphaBlend(lastMoveTint, base)
                             : base,
@@ -259,21 +258,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
         ),
       );
 
-  Widget _piece(c.Piece piece) => Padding(
-      padding: const EdgeInsets.all(3),
-      child: Image.asset(
-          'lib/images/wood/${{
-            'p': 'pawn',
-            'r': 'rook',
-            'n': 'knight',
-            'b': 'bishop',
-            'q': 'queen',
-            'k': 'king'
-          }[piece.type.name]}.png',
-          color: piece.color == c.Color.WHITE
-              ? const Color(0xfffff5df)
-              : const Color(0xff48291c),
-          colorBlendMode: BlendMode.modulate));
+  Widget _piece(c.Piece piece) => BoardPiece(piece);
 
   @override
   void dispose() {

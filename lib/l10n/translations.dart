@@ -1126,4 +1126,22 @@ const templates = <String, List<String>>{
     'Tippe oben rechts auf den Assistenten: Er zeigt seinen Zugvorschlag als Pfeil auf dem Brett und erklärt ihn.',
     'Нажмите на помощника справа вверху: он покажет предлагаемый ход стрелкой на доске и объяснит его.'
   ],
+  'Tahta görünümü': ['Board appearance', 'Brettdesign', 'Вид доски'],
+  'Tahta ve taş stilini seç': [
+    'Pick your board and piece style',
+    'Brett- und Figurenstil wählen',
+    'Выберите стиль доски и фигур'
+  ],
+  'TAHTA': ['BOARD', 'BRETT', 'ДОСКА'],
+  'TAŞLAR': ['PIECES', 'FIGUREN', 'ФИГУРЫ'],
+  'Ahşap': ['Wood', 'Holz', 'Дерево'],
+  'Mermer': ['Marble', 'Marmor', 'Мрамор'],
+  'Arduvaz': ['Slate', 'Schiefer', 'Сланец'],
+  'Buz': ['Ice', 'Eis', 'Лёд'],
+  'Cam': ['Glass', 'Glas', 'Стекло'],
+  'Yeni taş setleri sonraki güncellemelerde gelir.': [
+    'More piece sets arrive in future updates.',
+    'Weitere Figurensätze kommen in künftigen Updates.',
+    'Новые наборы фигур появятся в следующих обновлениях.'
+  ],
 };

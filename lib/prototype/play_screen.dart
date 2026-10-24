@@ -1,3 +1,4 @@
+import '../theme/board_theme.dart';
 import '../l10n/app_language.dart';
 import '../widgets/rok_style.dart';
 import 'dart:math' as math;
@@ -732,18 +733,17 @@ class _PlayScreenState extends State<PlayScreen>
                             piece?.color == game.turn &&
                             game.in_check;
                         final isLight = (index ~/ 8 + file).isEven;
-                        final base = isLight
-                            ? const Color(0xffd9b77e)
-                            : const Color(0xff85552f);
+                        final skin = boardSkin;
+                        final base = skin.base(isLight);
                         final overlay = check
-                            ? const Color(0x99a73e32)
+                            ? skin.checkOverlay
                             : selected == square
-                                ? const Color(0x99d39a35)
+                                ? skin.selectedOverlay
                                 : premove?.from == square ||
                                         premove?.to == square
-                                    ? const Color(0x996b83ba)
+                                    ? skin.premoveOverlay
                                     : recent
-                                        ? const Color(0x667a743e)
+                                        ? skin.lastMove
                                         : Colors.transparent;
                         return Semantics(
                             label:
@@ -756,6 +756,7 @@ class _PlayScreenState extends State<PlayScreen>
                                   seed: index + (isLight ? 100 : 200),
                                   base: base,
                                   overlay: overlay,
+                                  grain: skin.grain,
                                   child: Stack(
                                       alignment: Alignment.center,
                                       children: [
@@ -772,12 +773,11 @@ class _PlayScreenState extends State<PlayScreen>
                                               decoration: BoxDecoration(
                                                   shape: BoxShape.circle,
                                                   color: piece == null
-                                                      ? const Color(0x88412a18)
+                                                      ? skin.legalDot
                                                       : null,
                                                   border: piece != null
                                                       ? Border.all(
-                                                          color: const Color(
-                                                              0xaae2b75f),
+                                                          color: skin.legalRing,
                                                           width: 3)
                                                       : null)),
                                         if (i % 8 == 0)
@@ -789,11 +789,8 @@ class _PlayScreenState extends State<PlayScreen>
                                                       fontSize: 10,
                                                       fontWeight:
                                                           FontWeight.w600,
-                                                      color: isLight
-                                                          ? const Color(
-                                                              0xff684426)
-                                                          : const Color(
-                                                              0xffe3c691)))),
+                                                      color: skin
+                                                          .coordOn(isLight)))),
                                         if (i >= 56)
                                           Positioned(
                                               bottom: 1,
@@ -803,11 +800,8 @@ class _PlayScreenState extends State<PlayScreen>
                                                       fontSize: 10,
                                                       fontWeight:
                                                           FontWeight.w600,
-                                                      color: isLight
-                                                          ? const Color(
-                                                              0xff684426)
-                                                          : const Color(
-                                                              0xffe3c691)))),
+                                                      color: skin
+                                                          .coordOn(isLight)))),
                                       ])),
                             ));
                       },
@@ -831,31 +825,8 @@ class _PlayScreenState extends State<PlayScreen>
         ),
       );
 
-  Widget _piece(c.Piece piece) {
-    final asset = 'lib/images/wood/${{
-      'p': 'pawn',
-      'r': 'rook',
-      'n': 'knight',
-      'b': 'bishop',
-      'q': 'queen',
-      'k': 'king'
-    }[piece.type.name]}.png';
-    final pieceColor = piece.color == c.Color.WHITE
-        ? const Color(0xfffff5df)
-        : const Color(0xff48291c);
-    return Padding(
-      padding: const EdgeInsets.all(1),
-      child: ClipRect(
-        child: Transform.scale(
-          scale: 1.14,
-          child: Image.asset(asset,
-              color: pieceColor,
-              colorBlendMode: BlendMode.modulate,
-              fit: BoxFit.contain),
-        ),
-      ),
-    );
-  }
+  Widget _piece(c.Piece piece) =>
+      BoardPiece(piece, padding: 1, scale: 1.14);
 
   Widget reviewSheet(BuildContext sheetContext) {
     final screenHeight = MediaQuery.sizeOf(sheetContext).height;
@@ -1115,27 +1086,36 @@ class _WoodSurface extends StatelessWidget {
     required this.base,
     required this.child,
     this.overlay = Colors.transparent,
+    this.grain = true,
   });
 
   final int seed;
   final Color base;
   final Color overlay;
+
+  /// Only the wooden skin carries a grain; the others are flat surfaces.
+  final bool grain;
   final Widget child;
 
   @override
   Widget build(BuildContext context) => CustomPaint(
-        painter: _WoodPainter(seed: seed, base: base, overlay: overlay),
+        painter: _WoodPainter(
+            seed: seed, base: base, overlay: overlay, grain: grain),
         child: child,
       );
 }
 
 class _WoodPainter extends CustomPainter {
   const _WoodPainter(
-      {required this.seed, required this.base, required this.overlay});
+      {required this.seed,
+      required this.base,
+      required this.overlay,
+      required this.grain});
 
   final int seed;
   final Color base;
   final Color overlay;
+  final bool grain;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1157,20 +1137,22 @@ class _WoodPainter extends CustomPainter {
         ).createShader(rect),
     );
 
-    final random = math.Random(seed);
-    final grain = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = .55
-      ..color = Colors.black.withValues(alpha: .09);
-    final lineCount = math.max(5, (size.height / 9).round());
-    for (var i = 0; i < lineCount; i++) {
-      final y = random.nextDouble() * size.height;
-      final wave = 1.2 + random.nextDouble() * 2.4;
-      final path = Path()..moveTo(0, y);
-      for (double x = 0; x <= size.width; x += 12) {
-        path.lineTo(x, y + math.sin(x / 22 + i) * wave);
+    if (grain) {
+      final random = math.Random(seed);
+      final stroke = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = .55
+        ..color = Colors.black.withValues(alpha: .09);
+      final lineCount = math.max(5, (size.height / 9).round());
+      for (var i = 0; i < lineCount; i++) {
+        final y = random.nextDouble() * size.height;
+        final wave = 1.2 + random.nextDouble() * 2.4;
+        final path = Path()..moveTo(0, y);
+        for (double x = 0; x <= size.width; x += 12) {
+          path.lineTo(x, y + math.sin(x / 22 + i) * wave);
+        }
+        canvas.drawPath(path, stroke);
       }
-      canvas.drawPath(path, grain);
     }
     if (overlay.a > 0) canvas.drawRect(rect, Paint()..color = overlay);
   }
@@ -1179,7 +1161,8 @@ class _WoodPainter extends CustomPainter {
   bool shouldRepaint(covariant _WoodPainter oldDelegate) =>
       seed != oldDelegate.seed ||
       base != oldDelegate.base ||
-      overlay != oldDelegate.overlay;
+      overlay != oldDelegate.overlay ||
+      grain != oldDelegate.grain;
 }
 
 class _MoveArrowPainter extends CustomPainter {

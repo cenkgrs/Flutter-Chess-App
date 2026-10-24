@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:chess_puzzle_app/screens/puzzle_duel_screen.dart';
+import 'package:chess_puzzle_app/widgets/duel_spectator.dart';
 
 void main() {
   testWidgets('result has round details and rematch request waits for consent',
@@ -85,9 +86,46 @@ void main() {
       };
     })));
     await tester.pumpAndSettle();
-    expect(find.text('125 : 0'), findsOneWidget);
+    expect(find.text('125'), findsOneWidget);
+    expect(find.text('0'), findsOneWidget);
+    // Without `opponent_fen` the waiting state stays boardless, so a client
+    // on an older database never guesses at a position.
     expect(find.text('Rakibin bulmacayı çözüyor…'), findsOneWidget);
     expect(find.byType(GridView), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+  testWidgets('watching shows the opponent board, clock and progress',
+      (tester) async {
+    await tester.pumpWidget(
+        MaterialApp(home: PuzzleDuelScreen(request: (name, params) async {
+      if (name == 'duel_profile') return {'rating': 1300, 'game_id': 'match'};
+      return {
+        'status': 'active',
+        'turn': 2,
+        'step': 2,
+        'mistakes': 1,
+        'my_turn': false,
+        'fen': null,
+        'opponent_fen': '6k1/5ppp/8/8/8/8/5PPP/R5K1 w - - 0 1',
+        'opponent_steps': 3,
+        'opponent_difficulty': 1400,
+        'score': 125,
+        'opponent_score': 40,
+        'opponent': 'Bobby',
+        'rating': 1300,
+        'seconds_left': 7
+      };
+    })));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 900));
+
+    expect(find.byType(SpectatorBoard), findsOneWidget);
+    expect(find.text('CANLI · Rakibin tahtası'), findsOneWidget);
+    expect(find.text('Rakibin çözüyor'), findsOneWidget);
+    expect(find.text('7'), findsOneWidget);
+    expect(find.text('Hata: 1'), findsOneWidget);
+    // The watched board must not accept input.
+    expect(find.byType(IgnorePointer), findsWidgets);
     await tester.pumpWidget(const SizedBox());
   });
   testWidgets('finished match exposes result rating and exit', (tester) async {
