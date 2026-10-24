@@ -1,29 +1,19 @@
 import 'package:flutter/material.dart';
 
-import '../backend/app_backend.dart';
 import '../backend/feature_limits.dart';
 import '../l10n/app_language.dart';
-import '../screens/auth_screen.dart';
 import 'rok_style.dart';
 
-/// Spends one of today's free uses of [feature], asking the player to sign
-/// in first if they have not. Returns whether the caller may go ahead.
+/// Spends one of today's free uses of [feature] and returns whether the
+/// caller may go ahead, explaining the refusal to the player if not.
 ///
-/// Signing in is required because the count is kept per account on the
-/// server; there is nothing to count for a guest.
+/// Guests are let through without being counted; [DailyFeatureLimits.claim]
+/// decides that, so this function has no session logic of its own.
 Future<bool> claimDailyFeature(
   BuildContext context,
   DailyFeature feature, {
   DailyFeatureLimits? limits,
 }) async {
-  // Tests inject `limits` and have no session; the sign-in step is the one
-  // part of this flow they cannot exercise.
-  if (limits == null && AppBackend.currentUser == null) {
-    await Navigator.push<void>(
-        context, MaterialPageRoute(builder: (_) => const AuthScreen()));
-    if (!context.mounted || AppBackend.currentUser == null) return false;
-  }
-
   final allowance =
       await (limits ?? DailyFeatureLimits.instance).claim(feature);
   if (allowance.allowed) return true;

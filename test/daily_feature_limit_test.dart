@@ -149,8 +149,38 @@ void main() {
 
   test('a backend failure grants the use rather than blocking play', () async {
     final limits = DailyFeatureLimits(
+        signedIn: () => true,
         request: (name, params) async => throw StateError('offline'));
     final allowance = await limits.claim(DailyFeature.assistantGame);
     expect(allowance.allowed, isTrue);
+  });
+
+  test('a guest is let through and never counted', () async {
+    final calls = <String>[];
+    final limits = DailyFeatureLimits(
+        signedIn: () => false,
+        request: (name, params) async {
+          calls.add(name);
+          return {'allowed': false, 'used': 1, 'limit': 1, 'remaining': 0};
+        });
+
+    for (final feature in DailyFeature.values) {
+      expect((await limits.claim(feature)).allowed, isTrue);
+    }
+    expect(calls, isEmpty, reason: 'a guest reached the server counter');
+    expect(await limits.status(), isEmpty);
+  });
+
+  test('a signed-in player is counted and can be refused', () async {
+    final calls = <String>[];
+    final limits = DailyFeatureLimits(
+        signedIn: () => true,
+        request: (name, params) async {
+          calls.add('$name:${params['p_feature']}');
+          return {'allowed': false, 'used': 1, 'limit': 1, 'remaining': 0};
+        });
+
+    expect((await limits.claim(DailyFeature.gameAnalysis)).allowed, isFalse);
+    expect(calls, ['claim_daily_feature:game_analysis']);
   });
 }

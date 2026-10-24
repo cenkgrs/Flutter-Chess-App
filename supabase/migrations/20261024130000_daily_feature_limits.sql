@@ -6,9 +6,14 @@
 -- may rebuild the app without a client-side check; a counter in Supabase is
 -- what makes the allowance real for everyone using the published build.
 --
--- 1.1 moves the engine behind an API and adds subscriptions. The limit is
--- read from `daily_feature_limit`, so lifting it for a subscriber is a
--- server change and needs no new app release.
+-- Only signed-in players are counted: a guest has no account to charge, and
+-- the client lets them through rather than forcing an account for an
+-- offline game. Signing out therefore lifts the limit in 1.0.
+--
+-- 1.1 moves the engine behind an API and adds subscriptions. That closes
+-- the guest route, since a request without an account cannot be served.
+-- The limit is read from `daily_feature_limit`, so lifting it for a
+-- subscriber is a server change and needs no new app release.
 --
 -- The day turns over at midnight Europe/Istanbul, the same boundary the
 -- daily puzzle uses.

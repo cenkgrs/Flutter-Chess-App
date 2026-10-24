@@ -31,8 +31,11 @@ ROK projesine uygulanmalı:
   yükseltmek **sunucu değişikliği**; yeni uygulama sürümü gerekmez.
 - `claim_daily_feature` tek deyimde artırır; koşullu `on conflict do update`
   sayesinde iki cihaz son hakkı aynı anda alamaz.
-- **Asistan ve analiz artık giriş istiyor.** Misafirin sayılacağı bir hesabı
-  yok. Asistan hakkı ilk soruda harcanır (ekranı açmak bedava), analiz hakkı
+- **Misafir sayılmaz ve engellenmez.** Limit yalnızca giriş yapmış hesaba
+  uygulanır; misafirin sayılacağı bir hesabı yok. Bu, 1.0'da limitin çıkış
+  yapılarak atlanabileceği anlamına gelir ve bilerek kabul edildi: 1.1'de
+  motor API'nin arkasına geçince hesapsız istek zaten karşılanamayacak.
+- Asistan hakkı ilk soruda harcanır (ekranı açmak bedava), analiz hakkı
   "Motor analizi"ne basınca; ikisi de o maç/ekran boyunca tek sefer sayılır.
 - Sunucuya ulaşılamazsa hak **verilir**, oyun engellenmez.
 

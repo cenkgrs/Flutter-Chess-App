@@ -30,10 +30,12 @@ class FeatureAllowance {
     this.resetsAt,
   });
 
-  /// Treats a server or network failure as a grant. A player who cannot
-  /// reach Supabase should still get their game; the count is a free-tier
-  /// courtesy, not a paywall, and 1.1 moves the engine behind the API
-  /// where the question cannot be dodged.
+  /// Treats a server or network failure, or a signed-out player, as a
+  /// grant. A player who cannot reach Supabase should still get their
+  /// game, and a guest has no account to count against. The allowance is
+  /// a free-tier courtesy, not a paywall; 1.1 moves the engine behind the
+  /// API, where a request without an account cannot be served at all and
+  /// the allowance stops depending on the client.
   const FeatureAllowance.unavailable()
       : allowed = true,
         used = 0,
@@ -57,11 +59,15 @@ class FeatureAllowance {
 }
 
 class DailyFeatureLimits {
-  DailyFeatureLimits({this.request});
+  DailyFeatureLimits({this.request, bool Function()? signedIn})
+      : _signedIn = signedIn ?? (() => AppBackend.currentUser != null);
 
   /// Injected by tests in place of the Supabase call.
   final Future<Map<String, dynamic>> Function(
       String name, Map<String, dynamic> params)? request;
+
+  /// Injected by tests in place of the Supabase session check.
+  final bool Function() _signedIn;
 
   static DailyFeatureLimits instance = DailyFeatureLimits();
 
@@ -73,7 +79,12 @@ class DailyFeatureLimits {
               await AppBackend.client.rpc(name, params: params) as Map);
 
   /// Spends one use, or reports that today's allowance is gone.
+  ///
+  /// Guests are not counted and are never refused: the count is kept per
+  /// account, so there is nothing to charge. Signing out therefore lifts
+  /// the limit in 1.0, which is accepted for this release.
   Future<FeatureAllowance> claim(DailyFeature feature) async {
+    if (!_signedIn()) return const FeatureAllowance.unavailable();
     try {
       return FeatureAllowance.fromRow(
           await _rpc('claim_daily_feature', {'p_feature': feature.key}));
@@ -84,6 +95,7 @@ class DailyFeatureLimits {
 
   /// What is left today, without spending anything.
   Future<Map<DailyFeature, FeatureAllowance>> status() async {
+    if (!_signedIn()) return const {};
     try {
       final row = await _rpc('daily_feature_status', const {});
       return {
