@@ -1002,6 +1002,36 @@ const translations = <String, List<String>>{
     'Подсказка сохраняет серию, но не приносит очков.'
   ],
   'Tahta görünümü': ['Board appearance', 'Brettdesign', 'Вид доски'],
+  'Bugünlük asistan hakkın doldu': [
+    'No assistant games left today',
+    'Heute keine Assistenz-Partien mehr',
+    'На сегодня игры с помощником закончились'
+  ],
+  'Bugünlük analiz hakkın doldu': [
+    'No analyses left today',
+    'Heute keine Analysen mehr',
+    'На сегодня анализы закончились'
+  ],
+  'Ücretsiz hesapta günde bir maç asistanla oynanır.': [
+    'A free account plays one game a day with the assistant.',
+    'Mit einem kostenlosen Konto spielst du eine Partie pro Tag mit dem Assistenten.',
+    'На бесплатном аккаунте доступна одна игра с помощником в день.'
+  ],
+  'Ücretsiz hesapta günde bir maç analiz edilir.': [
+    'A free account analyses one game a day.',
+    'Mit einem kostenlosen Konto wird eine Partie pro Tag analysiert.',
+    'На бесплатном аккаунте анализируется одна партия в день.'
+  ],
+  'Hakkın gece yarısı yenilenir.': [
+    'Your allowance renews at midnight.',
+    'Dein Kontingent wird um Mitternacht erneuert.',
+    'Лимит обновится в полночь.'
+  ],
+  'Hakkın birazdan yenilenir.': [
+    'Your allowance renews shortly.',
+    'Dein Kontingent wird in Kürze erneuert.',
+    'Лимит скоро обновится.'
+  ],
   'Tahta ve taş stilini seç': [
     'Pick your board and piece style',
     'Brett- und Figurenstil wählen',
@@ -1115,6 +1145,11 @@ const templates = <String, List<String>>{
   r'^(.+) sn$': ['{1} sec', '{1} Sek.', '{1} сек.'],
   r'^(.+) hata$': ['{1} mistakes', '{1} Fehler', 'Ошибок: {1}'],
   r'^Tur (.+)$': ['Round {1}', 'Runde {1}', 'Раунд {1}'],
+  r'^Hakkın (\d+) saat sonra yenilenir\.$': [
+    'Your allowance renews in {1} hours.',
+    'Dein Kontingent wird in {1} Stunden erneuert.',
+    'Лимит обновится через {1} ч.'
+  ],
   r'^Hata: (.+)$': ['Mistakes: {1}', 'Fehler: {1}', 'Ошибки: {1}'],
   r'^Rating değişimi: (.+)$': [
     'Rating change: {1}',

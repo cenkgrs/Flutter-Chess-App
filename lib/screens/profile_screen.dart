@@ -1,3 +1,5 @@
+import '../backend/feature_limits.dart';
+import '../widgets/daily_limit.dart';
 import 'board_theme_screen.dart';
 import '../theme/board_theme.dart';
 import '../widgets/rok_style.dart';
@@ -507,8 +509,12 @@ class GameReviewScreen extends StatefulWidget {
       this.localMoves,
       this.initialFen,
       this.playerColor,
-      this.evaluate});
+      this.evaluate,
+      this.limits});
   final Future<EngineEvaluation> Function(String fen)? evaluate;
+
+  /// Injected by tests in place of the Supabase allowance calls.
+  final DailyFeatureLimits? limits;
   final Map<String, dynamic> game;
   final List<Map<String, dynamic>>? localMoves;
   final String? initialFen;
@@ -518,6 +524,8 @@ class GameReviewScreen extends StatefulWidget {
 }
 
 class _GameReviewScreenState extends State<GameReviewScreen> {
+  /// Whether this screen has already spent a daily analysis use.
+  bool _analysisClaimed = false;
   List<Map<String, dynamic>>? _moves;
   int _index = 0;
   final ScrollController _moveScroll = ScrollController();
@@ -580,6 +588,16 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
       widget.evaluate?.call(fen) ?? DeviceEngine.instance.evaluate(fen);
 
   Future<void> _analyze() async {
+    // One free use covers this screen's game; re-running the pass on the
+    // same game does not charge again.
+    if (!_analysisClaimed) {
+      if (!await claimDailyFeature(context, DailyFeature.gameAnalysis,
+          limits: widget.limits)) {
+        return;
+      }
+      if (!mounted) return;
+      _analysisClaimed = true;
+    }
     final ticket = ++_analysisGeneration;
     setState(() {
       _analyzing = true;

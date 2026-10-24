@@ -1,3 +1,5 @@
+import '../backend/feature_limits.dart';
+import '../widgets/daily_limit.dart';
 import '../theme/board_theme.dart';
 import '../l10n/app_language.dart';
 import '../widgets/rok_style.dart';
@@ -19,11 +21,15 @@ class PlayScreen extends StatefulWidget {
   const PlayScreen(
       {super.key,
       this.assistantMode = false,
+      this.limits,
       this.initialFen,
       this.initialElo = 1500,
       this.evaluate});
   final Future<EngineEvaluation> Function(String fen, int elo)? evaluate;
   final bool assistantMode;
+
+  /// Injected by tests in place of the Supabase allowance calls.
+  final DailyFeatureLimits? limits;
   final String? initialFen;
   static Future<void> launch(BuildContext context, {String? fen}) async {
     final elo = await showDialog<int>(
@@ -70,6 +76,9 @@ class _PlayScreenState extends State<PlayScreen>
   List<String> notation = [];
   c.Move? last;
   ChessAdvice? assistantAdvice;
+
+  /// Whether this game has already spent a daily assistant use.
+  bool assistantClaimed = false;
   bool resultShown = false;
   Premove? premove;
   final drawing = BoardDrawingController();
@@ -570,7 +579,18 @@ class _PlayScreenState extends State<PlayScreen>
     );
   }
 
+  /// One free use covers a whole game, so the claim happens on the first
+  /// question rather than when the screen opens: a player who never asks
+  /// does not spend their day's allowance.
   Future<void> _showAssistant() async {
+    if (!assistantClaimed) {
+      if (!await claimDailyFeature(context, DailyFeature.assistantGame,
+          limits: widget.limits)) {
+        return;
+      }
+      if (!mounted) return;
+      assistantClaimed = true;
+    }
     final fen = game.fen;
     final advice = await ChessEngine().explain(game);
     if (!mounted || game.fen != fen) return;

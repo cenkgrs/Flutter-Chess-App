@@ -1,9 +1,19 @@
+import 'package:chess_puzzle_app/backend/feature_limits.dart';
 import 'package:chess_puzzle_app/prototype/stockfish_engine.dart';
 import 'package:chess_puzzle_app/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:chess/chess.dart' as c;
 import 'package:chess_puzzle_app/widgets/analysis_markers.dart';
+
+/// Grants every claim without touching Supabase.
+final _alwaysAllowed = DailyFeatureLimits(
+    request: (name, params) async => {
+          'allowed': true,
+          'used': 1,
+          'limit': 1,
+          'remaining': 0,
+        });
 
 void main() {
   testWidgets('Navigation scrolls the move list to last and first positions',
@@ -62,6 +72,9 @@ void main() {
             game: const {},
             localMoves: moves,
             playerColor: c.Color.BLACK,
+            // Analysis now spends a daily allowance, which needs an account;
+            // this stands in for a signed-in player who still has one.
+            limits: _alwaysAllowed,
             evaluate: (_) async => const EngineEvaluation('a2a3', 0, null))));
     await tester.pumpAndSettle();
     final boardSize =

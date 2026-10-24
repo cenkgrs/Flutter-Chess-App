@@ -16,6 +16,30 @@ bir SDK'yı aynı binary içinde dağıtmak bu lisansla bağdaşmıyor. Reklamı
 Reklam, Stockfish sunucuya taşındıktan sonra geri gelebilir: motor binary'de
 olmayınca uygulamada GPL kod kalmaz.
 
+## Ücretsiz günlük limitler (24 Ekim)
+
+ROK projesine uygulanmalı:
+
+1. `supabase/migrations/20261024130000_daily_feature_limits.sql`
+
+- Ücretsiz hesap günde **bir asistanlı maç** ve **bir maç analizi** alır.
+  Gün `Europe/Istanbul` gece yarısında döner (günlük bulmacayla aynı sınır).
+- Sayaç sunucuda (`daily_feature_usage`). İstemcideki kontrol tavsiye
+  niteliğinde: uygulama GPL-3 ve kaynağı açık, isteyen kontrolü çıkarıp
+  derleyebilir. Yayınlanan build için hakkı gerçek kılan sunucudur.
+- Limit `daily_feature_limit(text)` fonksiyonunda. 1.1'de aboneliğe göre
+  yükseltmek **sunucu değişikliği**; yeni uygulama sürümü gerekmez.
+- `claim_daily_feature` tek deyimde artırır; koşullu `on conflict do update`
+  sayesinde iki cihaz son hakkı aynı anda alamaz.
+- **Asistan ve analiz artık giriş istiyor.** Misafirin sayılacağı bir hesabı
+  yok. Asistan hakkı ilk soruda harcanır (ekranı açmak bedava), analiz hakkı
+  "Motor analizi"ne basınca; ikisi de o maç/ekran boyunca tek sefer sayılır.
+- Sunucuya ulaşılamazsa hak **verilir**, oyun engellenmez.
+
+Yerel SQL testi (yalnızca geçici PostgreSQL; canlıda çalıştırmayın):
+`tools/test_bootstrap.sql`, ardından migration, ardından
+`tools/daily_feature_limits_test.sql`. Test rollback ile biter.
+
 # Bu sürümün kurulumu
 
 ## Tahta teması ve düello izleme (24 Ekim)
