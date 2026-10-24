@@ -37,7 +37,6 @@ class PieceSet {
     this.blackTint,
     this.scale = 1,
     this.padding = 3,
-    this.contactShadow = false,
   });
 
   final String id;
@@ -51,9 +50,6 @@ class PieceSet {
   /// Drawn larger than its square, for artwork with built-in margins.
   final double scale;
   final double padding;
-
-  /// Adds a soft shadow under the piece, for artwork that has none baked in.
-  final bool contactShadow;
 
   String assetFor(c.Piece piece) {
     final name = _pieceFileNames[piece.type.name];
@@ -84,10 +80,76 @@ const glassPieces = PieceSet(
   directory: 'assets/pieces/glass',
   art: PieceArt.painted,
   padding: 2,
-  contactShadow: true,
+  // This set was drawn smaller than the seven that followed it: its king
+  // fills 81% of the frame against their 88%, and it sits on a baseline at
+  // y=467 against their 479. Scaling about the centre by 1.08 matches both —
+  // 87% tall, baseline at 484 — and still clears the top of the frame.
+  scale: 1.08,
 );
 
-const pieceSets = [woodPieces, glassPieces];
+/// Painted sets share one geometry: a 512px frame, the piece centred on a
+/// baseline near y=479, the king filling about 88% of the height. They need
+/// no scale correction, unlike the glass set.
+const artDecoPieces = PieceSet(
+    id: 'art_deco',
+    label: 'Art Deco',
+    directory: 'assets/pieces/art_deco',
+    art: PieceArt.painted,
+    padding: 2);
+
+const iceLavaPieces = PieceSet(
+    id: 'ice_lava',
+    label: 'Buz ve Lav',
+    directory: 'assets/pieces/ice_lava',
+    art: PieceArt.painted,
+    padding: 2);
+
+const ivoryEbonyPieces = PieceSet(
+    id: 'ivory_ebony',
+    label: 'Fildişi ve Abanoz',
+    directory: 'assets/pieces/ivory_ebony',
+    art: PieceArt.painted,
+    padding: 2);
+
+const marbleBasaltPieces = PieceSet(
+    id: 'marble_basalt',
+    label: 'Mermer ve Bazalt',
+    directory: 'assets/pieces/marble_basalt',
+    art: PieceArt.painted,
+    padding: 2);
+
+const minimalMattePieces = PieceSet(
+    id: 'minimal_matte',
+    label: 'Sade Mat',
+    directory: 'assets/pieces/minimal_matte',
+    art: PieceArt.painted,
+    padding: 2);
+
+const porcelainObsidianPieces = PieceSet(
+    id: 'porcelain_obsidian',
+    label: 'Porselen ve Obsidyen',
+    directory: 'assets/pieces/porcelain_obsidian',
+    art: PieceArt.painted,
+    padding: 2);
+
+const silverBronzePieces = PieceSet(
+    id: 'silver_bronze',
+    label: 'Gümüş ve Bronz',
+    directory: 'assets/pieces/silver_bronze',
+    art: PieceArt.painted,
+    padding: 2);
+
+const pieceSets = [
+  woodPieces,
+  glassPieces,
+  ivoryEbonyPieces,
+  marbleBasaltPieces,
+  porcelainObsidianPieces,
+  silverBronzePieces,
+  artDecoPieces,
+  minimalMattePieces,
+  iceLavaPieces,
+];
 
 class BoardSkin {
   const BoardSkin({
@@ -318,15 +380,6 @@ class BoardPieceArt extends StatelessWidget {
             colorBlendMode: BlendMode.modulate,
             fit: BoxFit.contain)
         : Image.asset(set.assetFor(piece), fit: BoxFit.contain);
-    if (set.contactShadow) {
-      image = DecoratedBox(
-        decoration: const BoxDecoration(boxShadow: [
-          BoxShadow(
-              color: Color(0x33000000), blurRadius: 6, offset: Offset(0, 3))
-        ]),
-        child: image,
-      );
-    }
     final zoom = scale ?? set.scale;
     if (zoom != 1) {
       image = ClipRect(child: Transform.scale(scale: zoom, child: image));

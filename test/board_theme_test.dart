@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:chess/chess.dart' as c;
 import 'package:chess_puzzle_app/screens/board_theme_screen.dart';
 import 'package:chess_puzzle_app/theme/board_theme.dart';
@@ -43,7 +45,7 @@ void main() {
     expect(boardSkin.base(false), marbleSkin.dark);
   });
 
-  testWidgets('every skin is offered and only bundled piece sets are',
+  testWidgets('every skin and every bundled piece set is offered',
       (tester) async {
     await _open(tester);
 
@@ -52,16 +54,41 @@ void main() {
     for (final skin in boardSkins) {
       expect(find.text(skin.label), findsWidgets);
     }
-    expect(find.text(woodPieces.label), findsWidgets);
-    // The glass set is what proves unbundled artwork stays hidden.
-    expect(BoardTheme.isPieceSetAvailable(glassPieces), isFalse);
-    expect(find.text(glassPieces.label), findsNothing);
+    for (final set in pieceSets) {
+      expect(BoardTheme.isPieceSetAvailable(set), isTrue,
+          reason: '${set.id} artwork is missing from the bundle');
+      expect(find.text(set.label), findsWidgets);
+    }
   });
 
-  test('a piece set that is not bundled is never restored', () async {
-    SharedPreferences.setMockInitialValues({'board_piece_set': glassPieces.id});
+  test('a set whose artwork is not bundled stays unavailable', () {
+    // Nothing outside `pieceSets` can have been found in the bundle, so this
+    // stands in for a set whose files were never added.
+    const absent = PieceSet(
+        id: 'absent', label: 'Absent', directory: 'assets/pieces/absent');
+    expect(BoardTheme.isPieceSetAvailable(absent), isFalse);
+  });
+
+  test('an unknown stored piece set falls back to wood', () async {
+    SharedPreferences.setMockInitialValues({'board_piece_set': 'absent'});
     await BoardTheme.instance.load();
     expect(boardPieces.id, woodPieces.id);
+  });
+
+  test('the glass set names twelve files that are all in the bundle', () async {
+    for (final type in [
+      c.PieceType.PAWN,
+      c.PieceType.KNIGHT,
+      c.PieceType.BISHOP,
+      c.PieceType.ROOK,
+      c.PieceType.QUEEN,
+      c.PieceType.KING,
+    ]) {
+      for (final colour in [c.Color.WHITE, c.Color.BLACK]) {
+        final asset = glassPieces.assetFor(c.Piece(type, colour));
+        expect(File(asset).existsSync(), isTrue, reason: '$asset is missing');
+      }
+    }
   });
 
   test('painted sets name one file per side, silhouettes one per type', () {

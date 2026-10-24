@@ -40,6 +40,13 @@ flutter:
     - lib/images/wood/
     - assets/audio/
     - assets/pieces/glass/
+    - assets/pieces/ivory_ebony/
+    - assets/pieces/marble_basalt/
+    - assets/pieces/porcelain_obsidian/
+    - assets/pieces/silver_bronze/
+    - assets/pieces/art_deco/
+    - assets/pieces/minimal_matte/
+    - assets/pieces/ice_lava/
 
 flutter_launcher_icons:
   android: "ic_launcher_rok"

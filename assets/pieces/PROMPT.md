@@ -1,7 +1,10 @@
-# Cam taş görsellerini üretme
+# Taş görsellerini üretme
 
 Beklenen dosyalar ve teknik koşullar [README.md](README.md) içinde. Bu dosya
-o görselleri bir görsel üretim modeliyle nasıl çıkaracağını anlatır.
+bir setin görsellerini bir görsel üretim modeliyle nasıl çıkaracağını anlatır.
+Aşağıdaki iki prompt cam seti içindir; başka bir set için yalnızca
+**Material** paragrafını değiştir, geri kalan her şeyi aynı bırak — ölçek,
+kamera ve taban çizgisi setler arasında tutarlı kalsın diye.
 
 ## Yöntem: tek tek değil, iki sayfa hâlinde üret
 
@@ -75,19 +78,12 @@ The glass reads as dark and dense, clearly the darker side of the set.
    uzaklıkta olmalı. Şah kareyi doldurur, piyon küçük kalır — doğrusu budur.
 3. **Gölgeyi temizle.** Görsele gölge sızdıysa sil; uygulama gölgeyi kendi
    ekliyor, iki gölge üst üste binerse kirli görünür.
-4. **Adlandır.**
+4. **Adlandır** ve `assets/pieces/<id>/` altına koy.
    `w_pawn.png w_knight.png w_bishop.png w_rook.png w_queen.png w_king.png`
    `b_pawn.png b_knight.png b_bishop.png b_rook.png b_queen.png b_king.png`
 5. **Sıkıştır.** `pngquant --quality 70-90 --ext .png --force *.png`
    Her dosya 150 KB altında, toplam ~2 MB'ı geçmesin.
-6. Dosyaları bu klasöre koy, `flutter pub get` çalıştır. Set kendiliğinden
-   Tahta görünümü ekranında belirir.
+6. `pubspec.yaml`'a klasörü, `board_theme.dart`'a `PieceSet` tanımını ekle
+   (README'deki "Yeni set eklemek"), `flutter pub get` çalıştır.
 
-## Kontrol listesi
-
-Set listede göründükten sonra dört tahta temasının hepsinde bak:
-
-- **Ahşap** ve **Mermer**: siyah taş açık karede kayboluyor mu?
-- **Arduvaz** ve **Buz**: beyaz taş açık karede kayboluyor mu?
-- Şah ile vezir ilk bakışta ayırt ediliyor mu? (Cam sette en sık karışan çift.)
-- At hangi yöne bakıyor? İki renkte de aynı yöne bakmalı.
+Kontrol listesi README'de.

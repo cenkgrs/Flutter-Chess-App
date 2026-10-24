@@ -44,9 +44,17 @@ olmayınca uygulamada GPL kod kalmaz.
 - Tüm tahta ekranları artık kare ve taş görünümünü `lib/theme/board_theme.dart`
   üzerinden alır. Yeni bir tahta ekranı sabit kare rengi veya `lib/images/wood`
   yolu yazmamalı; `boardSkin` ve `BoardPiece` kullanılmalı.
-- Cam taş seti kodda hazır ama görselleri yok: `assets/pieces/glass/README.md`
-  beklenen 12 dosyayı ve ölçüleri anlatır. Dosyalar eklenene kadar set
-  listede görünmez.
+- 24 Ekim'de sekiz hazır taş seti eklendi: Cam, Fildişi ve Abanoz, Mermer ve
+  Bazalt, Porselen ve Obsidyen, Gümüş ve Bronz, Art Deco, Sade Mat, Buz ve
+  Lav. Ahşapla birlikte dokuz set. Hepsi 512 px kare, alfalı PNG, set başına
+  170–400 KB, toplam 2.1 MB.
+- Yedi yeni set ortak geometriyi paylaşır: taban ≈ 479, merkez ≈ 255, şah
+  çerçevenin ~%88'i. Bu yüzden ölçek düzeltmesi almazlar. Cam set daha küçük
+  çizildiği için (şah %81, taban 467) `scale: 1.12` taşır.
+- Taş görsellerine gölge gömülmez ve kodda da eklenmez. Bir `BoxDecoration`
+  gölgesi taşın siluetini değil widget'ın dikdörtgenini çizdiği için her
+  karede görünür bir kutu bırakıyordu; denemeyin.
+- Seti yeniden üretmek gerekirse `assets/pieces/glass/PROMPT.md`.
 
 ## Arkadaş düellosu, rövanş ve ortak tasarım (14 Ekim)
 

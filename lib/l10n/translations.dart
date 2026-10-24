@@ -1014,6 +1014,24 @@ const translations = <String, List<String>>{
   'Arduvaz': ['Slate', 'Schiefer', 'Сланец'],
   'Buz': ['Ice', 'Eis', 'Лёд'],
   'Cam': ['Glass', 'Glas', 'Стекло'],
+  'Fildişi ve Abanoz': [
+    'Ivory & Ebony',
+    'Elfenbein & Ebenholz',
+    'Слоновая кость и чёрное дерево'
+  ],
+  'Mermer ve Bazalt': [
+    'Marble & Basalt',
+    'Marmor & Basalt',
+    'Мрамор и базальт'
+  ],
+  'Porselen ve Obsidyen': [
+    'Porcelain & Obsidian',
+    'Porzellan & Obsidian',
+    'Фарфор и обсидиан'
+  ],
+  'Gümüş ve Bronz': ['Silver & Bronze', 'Silber & Bronze', 'Серебро и бронза'],
+  'Sade Mat': ['Minimal Matte', 'Schlicht Matt', 'Минимал матовый'],
+  'Buz ve Lav': ['Ice & Lava', 'Eis & Lava', 'Лёд и лава'],
   'Yeni taş setleri sonraki güncellemelerde gelir.': [
     'More piece sets arrive in future updates.',
     'Weitere Figurensätze kommen in künftigen Updates.',

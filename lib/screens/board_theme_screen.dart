@@ -169,8 +169,9 @@ class _PreviewBoard extends StatelessWidget {
               color: skin.base((i ~/ squares + file).isEven),
               child: piece == null
                   ? null
-                  : BoardPieceArt(piece,
-                      set: pieces, padding: full ? 2 : 1, scale: 1),
+                  // No scale override: a preview that ignored the set's own
+                  // scale would show a different size than the real board.
+                  : BoardPieceArt(piece, set: pieces, padding: full ? 2 : 1),
             );
           },
         ),
