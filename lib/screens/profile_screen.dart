@@ -14,7 +14,6 @@ import 'friends_screen.dart';
 import '../prototype/play_screen.dart';
 import '../prototype/stockfish_engine.dart';
 import '../widgets/analysis_markers.dart';
-import '../ads/match_ads.dart';
 import '../audio/game_sounds.dart';
 import '../l10n/app_language.dart';
 import 'delete_account_screen.dart';
@@ -175,15 +174,6 @@ class ProfileScreen extends StatelessWidget {
                                         }),
                                 ])))),
                 const SizedBox(height: 12),
-                ValueListenableBuilder<bool>(
-                    valueListenable: MatchAds.instance.privacyRequired,
-                    builder: (_, required, __) => required
-                        ? _ProfileLink(
-                            icon: Icons.privacy_tip_outlined,
-                            title: 'Reklam gizlilik tercihleri',
-                            subtitle: 'İzinlerini yönet',
-                            onTap: MatchAds.instance.privacyOptions)
-                        : const SizedBox.shrink()),
                 _ProfileLink(
                   icon: Icons.history_rounded,
                   title: 'Son Maçlar',

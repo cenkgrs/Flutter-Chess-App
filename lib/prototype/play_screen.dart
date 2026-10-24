@@ -13,7 +13,6 @@ import '../widgets/board_annotations.dart';
 import '../widgets/first_use_tip.dart';
 import '../widgets/move_animation.dart';
 import 'premove.dart';
-import '../ads/match_ads.dart';
 import '../audio/game_sounds.dart';
 
 class PlayScreen extends StatefulWidget {
@@ -98,7 +97,6 @@ class _PlayScreenState extends State<PlayScreen>
   @override
   void initState() {
     super.initState();
-    MatchAds.instance.preload();
     engineElo = widget.initialElo;
     startingFen = widget.initialFen;
     if (widget.initialFen != null) {
@@ -143,9 +141,9 @@ class _PlayScreenState extends State<PlayScreen>
               },
               child: const LText('Motor analizi')),
           FilledButton(
-              onPressed: () async {
+              onPressed: () {
                 Navigator.pop(dialogContext);
-                await leaveCompletedGame();
+                leaveCompletedGame();
               },
               child: const LText('Menüye dön')),
         ],
@@ -172,11 +170,7 @@ class _PlayScreenState extends State<PlayScreen>
                 )));
   }
 
-  Future<void> leaveCompletedGame() async {
-    await MatchAds.instance
-        .showIfReady('offline-${identityHashCode(this)}-$generation');
-    if (mounted) Navigator.maybePop(context);
-  }
+  void leaveCompletedGame() => Navigator.maybePop(context);
 
   String get status {
     if (error != null) return error!;
@@ -379,7 +373,6 @@ class _PlayScreenState extends State<PlayScreen>
     setState(() {
       generation++;
       game = c.Chess();
-      MatchAds.instance.preload();
       premove = null;
       startingFen = null;
       human = nextColor;

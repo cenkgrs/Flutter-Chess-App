@@ -6,7 +6,6 @@ import 'backend/app_backend.dart';
 import 'screens/home_menu_screen.dart';
 import 'route_observer.dart';
 import 'widgets/rok_style.dart';
-import 'ads/match_ads.dart';
 import 'l10n/app_language.dart';
 import 'legal/open_source_compliance.dart';
 import 'audio/game_sounds.dart';
@@ -27,8 +26,6 @@ Future<void> main() async {
   await GameSounds.instance.load();
   await BoardTheme.instance.load();
   runApp(const MyApp());
-  WidgetsBinding.instance
-      .addPostFrameCallback((_) => MatchAds.instance.initialize());
 }
 
 class MyApp extends StatelessWidget {

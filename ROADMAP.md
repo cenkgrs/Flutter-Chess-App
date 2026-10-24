@@ -5,6 +5,17 @@
   saklanması ve çıkışta temizlenmesi ayrı aşamada ele alınacak.
   Bu sürüm telefon bildirimi göndermez.
 
+## Reklam SDK'sı kaldırıldı (24 Ekim)
+
+`google_mobile_ads` bağımlılığı, `lib/ads/`, altı çağrı noktası, profildeki
+reklam gizlilik satırı ve iOS/Android uygulama kimlikleri kaldırıldı. Sebep:
+ROK Stockfish'e bağlı olduğu için GPL-3.0-or-later dağıtılıyor; kapalı kaynak
+bir SDK'yı aynı binary içinde dağıtmak bu lisansla bağdaşmıyor. Reklamı
+çalışma anında kapatmak yetmiyordu, ihlal dağıtımda oluşuyordu.
+
+Reklam, Stockfish sunucuya taşındıktan sonra geri gelebilir: motor binary'de
+olmayınca uygulamada GPL kod kalmaz.
+
 # Bu sürümün kurulumu
 
 ## Tahta teması ve düello izleme (24 Ekim)

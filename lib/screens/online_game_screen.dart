@@ -17,7 +17,6 @@ import '../widgets/first_use_tip.dart';
 import '../widgets/board_drag.dart';
 import '../widgets/move_animation.dart';
 import '../prototype/premove.dart';
-import '../ads/match_ads.dart';
 import '../audio/game_sounds.dart';
 
 class OnlineGameScreen extends StatefulWidget {
@@ -80,7 +79,6 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    MatchAds.instance.preload();
     _connectAndRefresh();
     _clockTimer = Timer.periodic(const Duration(milliseconds: 250), (_) {
       if (mounted && _row?['status'] == 'active') _checkTimeout();
@@ -248,10 +246,9 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
               },
               child: const LText('Motor analizi')),
           FilledButton(
-            onPressed: () async {
+            onPressed: () {
               Navigator.pop(dialogContext);
-              await MatchAds.instance.showIfReady(widget.gameId);
-              if (mounted) Navigator.maybePop(context);
+              Navigator.maybePop(context);
             },
             child: const LText('Menüye dön'),
           ),
@@ -401,12 +398,11 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
     }
   }
 
-  void _exit() async {
+  void _exit() {
     if (_row?['status'] == 'active') {
       _resign(exitAfter: true);
     } else {
-      if (_row != null) await MatchAds.instance.showIfReady(widget.gameId);
-      if (mounted) Navigator.maybePop(context);
+      Navigator.maybePop(context);
     }
   }
 

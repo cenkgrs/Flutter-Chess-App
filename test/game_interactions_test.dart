@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:chess/chess.dart' as c;
-import 'package:chess_puzzle_app/ads/match_ads.dart';
 import 'package:chess_puzzle_app/l10n/app_language.dart';
 import 'package:chess_puzzle_app/prototype/premove.dart';
 import 'package:chess_puzzle_app/widgets/board_annotations.dart';
@@ -23,14 +22,6 @@ void main() {
     expect(const Premove('a2', 'a3').resolve(captured), isNull);
     final promotion = c.Chess.fromFEN('4k3/P7/8/8/8/8/8/4K3 w - - 0 1');
     expect(const Premove('a7', 'a8').resolve(promotion)?.promotion?.name, 'q');
-  });
-  test('Ads have a strict five minute cap including clock rollback', () {
-    final last = DateTime(2026, 10, 14, 12);
-    expect(
-        adCooldownElapsed(last.add(const Duration(seconds: 299)), last), false);
-    expect(adCooldownElapsed(last.add(const Duration(minutes: 5)), last), true);
-    expect(adCooldownElapsed(last.subtract(const Duration(minutes: 1)), last),
-        false);
   });
   testWidgets('Touch drawing and right mouse drawing preserve move input',
       (tester) async {

@@ -1,19 +1,17 @@
-# Ads, languages and board interaction
+# Languages and board interaction
 
 ## Ads
 
-- `MatchAds` preloads when an offline or online chess match opens; late consent completion also triggers the pending preload.
-- Only a ready interstitial can show on an explicit completed-game return to menu. A missing/expired ad is skipped, never awaited at match end.
-- Five minutes minimum between actual impressions, persisted on device. First launch also has a five-minute grace period. Clock rollback suppresses ads.
-- Android uses Google's test app/unit IDs. iOS has the supplied app ID; its unit remains a test unit unless **both** release mode and `ROK_LIVE_ADS=true` are set.
-- UMP consent is requested on startup. Required privacy-options entry is in Profile. No ATT request or IDFA permission has been added.
+The first release ships without ads. The Google Mobile Ads SDK was removed
+because ROK links Stockfish and is therefore distributed under
+GPL-3.0-or-later: the proprietary SDK cannot be shipped inside a GPL work,
+since its source cannot be offered with the binary and its terms add
+restrictions GPL-3 forbids. Switching ads off at runtime does not help —
+the violation is in distributing the linked library, not in showing an ad.
 
-### Before any store release
-
-1. Resolve **Stockfish GPLv3 distribution and compatibility with the proprietary Google Mobile Ads SDK**. Adding a source notice alone does not establish compatibility; review the combined distribution or change the engine/ads architecture. Do not treat this build as legally cleared for distribution.
-2. Configure AdMob iOS consent/privacy messages, privacy policy, store disclosures and app-ads.txt. Decide the tracking/ATT strategy before enabling tracking.
-3. Run CocoaPods and a real iOS build on macOS; validate consent, denied permission, ready/missing ads and dismissal on a physical iPhone. Linux testing cannot establish iOS readiness. Review Google's current SKAdNetwork configuration for the release SDK.
-4. Only then enable the supplied live iOS unit. Never click live ads during testing.
+Ads can return once the engine no longer ships inside the binary. With
+Stockfish behind an API, the app itself carries no GPL code and the SDK
+becomes a normal dependency again.
 
 ## Languages
 
