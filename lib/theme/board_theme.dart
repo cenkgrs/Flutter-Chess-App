@@ -1,3 +1,4 @@
+import 'piece_geometry.dart';
 import 'package:chess/chess.dart' as c;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -80,16 +81,10 @@ const glassPieces = PieceSet(
   directory: 'assets/pieces/glass',
   art: PieceArt.painted,
   padding: 2,
-  // This set was drawn smaller than the seven that followed it: its king
-  // fills 81% of the frame against their 88%, and it sits on a baseline at
-  // y=467 against their 479. Scaling about the centre by 1.08 matches both —
-  // 87% tall, baseline at 484 — and still clears the top of the frame.
-  scale: 1.08,
 );
 
-/// Painted sets share one geometry: a 512px frame, the piece centred on a
-/// baseline near y=479, the king filling about 88% of the height. They need
-/// no scale correction, unlike the glass set.
+/// Painted artwork uses per-file bounds and a common frame for each piece
+/// type, so both colours and all materials have the same on-board weight.
 const artDecoPieces = PieceSet(
     id: 'art_deco',
     label: 'Art Deco',
@@ -301,10 +296,10 @@ class BoardTheme extends ChangeNotifier {
     final preferences = await SharedPreferences.getInstance();
     final skinId = preferences.getString(_skinKey);
     final pieceSetId = preferences.getString(_pieceSetKey);
-    _skin = boardSkins.firstWhere((s) => s.id == skinId,
-        orElse: () => woodSkin);
-    final saved =
-        pieceSets.firstWhere((p) => p.id == pieceSetId, orElse: () => woodPieces);
+    _skin =
+        boardSkins.firstWhere((s) => s.id == skinId, orElse: () => woodSkin);
+    final saved = pieceSets.firstWhere((p) => p.id == pieceSetId,
+        orElse: () => woodPieces);
     _pieces = isPieceSetAvailable(saved) ? saved : woodPieces;
   }
 
@@ -314,8 +309,8 @@ class BoardTheme extends ChangeNotifier {
     final available = <String>{};
     for (final set in pieceSets) {
       try {
-        await rootBundle.load(
-            set.assetFor(c.Piece(c.PieceType.KING, c.Color.WHITE)));
+        await rootBundle
+            .load(set.assetFor(c.Piece(c.PieceType.KING, c.Color.WHITE)));
         available.add(set.id);
       } catch (_) {
         // Artwork not bundled; the set stays hidden.
@@ -325,7 +320,8 @@ class BoardTheme extends ChangeNotifier {
   }
 
   Future<void> selectSkin(String id) async {
-    final next = boardSkins.firstWhere((s) => s.id == id, orElse: () => woodSkin);
+    final next =
+        boardSkins.firstWhere((s) => s.id == id, orElse: () => woodSkin);
     if (next.id == _skin.id) return;
     _skin = next;
     notifyListeners();
@@ -359,8 +355,8 @@ class BoardPiece extends StatelessWidget {
   final double? padding, scale;
 
   @override
-  Widget build(BuildContext context) => BoardPieceArt(piece,
-      set: boardPieces, padding: padding, scale: scale);
+  Widget build(BuildContext context) =>
+      BoardPieceArt(piece, set: boardPieces, padding: padding, scale: scale);
 }
 
 /// Draws one piece in a named set, for previews of a set that is not in use.
@@ -374,16 +370,64 @@ class BoardPieceArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget image = set.art == PieceArt.silhouette
-        ? Image.asset(set.assetFor(piece),
-            color: set.tintFor(piece),
-            colorBlendMode: BlendMode.modulate,
-            fit: BoxFit.contain)
-        : Image.asset(set.assetFor(piece), fit: BoxFit.contain);
-    final zoom = scale ?? set.scale;
-    if (zoom != 1) {
-      image = ClipRect(child: Transform.scale(scale: zoom, child: image));
+    final asset = set.assetFor(piece);
+    Widget image;
+    if (set.art == PieceArt.painted && paintedPieceBounds.containsKey(asset)) {
+      image = LayoutBuilder(builder: (context, constraints) {
+        final source = paintedPieceBounds[asset]!;
+        final destination = paintedPieceFrame(piece.type);
+        final sx = destination.width / source.width;
+        final sy = destination.height / source.height;
+        return ClipRect(
+            child: Transform.translate(
+                offset: Offset(
+                    (destination.left - source.left * sx) *
+                        constraints.maxWidth,
+                    (destination.top - source.top * sy) *
+                        constraints.maxHeight),
+                child: Transform.scale(
+                    alignment: Alignment.topLeft,
+                    scaleX: sx,
+                    scaleY: sy,
+                    child: SizedBox.expand(
+                        child: Image.asset(asset,
+                            fit: BoxFit.fill,
+                            filterQuality: FilterQuality.high)))));
+      });
+    } else {
+      image = Image.asset(asset,
+          color: set.tintFor(piece),
+          colorBlendMode:
+              set.art == PieceArt.silhouette ? BlendMode.modulate : null,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.high);
+      // The classic pawn was almost as tall as its bishop. Keep its feet
+      // anchored while reducing it by the requested ten percent.
+      if (set.id == woodPieces.id && piece.type == c.PieceType.PAWN) {
+        image = Transform.scale(
+            scale: .9, alignment: Alignment.bottomCenter, child: image);
+      }
+      final zoom = scale ?? set.scale;
+      if (zoom != 1) {
+        image = ClipRect(child: Transform.scale(scale: zoom, child: image));
+      }
     }
-    return Padding(padding: EdgeInsets.all(padding ?? set.padding), child: image);
+    return Padding(
+        padding: EdgeInsets.all(padding ?? set.padding), child: image);
   }
+}
+
+/// Board-friendly proportions. A common footprint makes the photographic
+/// sets legible at phone-sized squares instead of retaining product-shot air.
+Rect paintedPieceFrame(c.PieceType type) {
+  final (width, height) = switch (type) {
+    c.PieceType.PAWN => (.50, .68),
+    c.PieceType.KNIGHT => (.58, .82),
+    c.PieceType.BISHOP => (.50, .84),
+    c.PieceType.ROOK => (.56, .77),
+    c.PieceType.QUEEN => (.56, .90),
+    c.PieceType.KING => (.56, .94),
+    _ => (.56, .90),
+  };
+  return Rect.fromLTWH((1 - width) / 2, .97 - height, width, height);
 }

@@ -58,9 +58,13 @@ eşleşmeli; biri eksikse o kare boş çizilir.
 - **Yerleşim:** taş yatayda ortalanmış (merkez ≈ 255) ve **paylaşılan bir
   taban çizgisine** oturmuş olmalı — tabanın alt kenarı ≈ 479, yani altta
   ~%6 boşluk. Dikeyde ortalama; şah en uzun, piyon en kısa olmalı.
-- **Ölçek:** şah çerçevenin ~%88'ini doldursun. Mevcut yedi set bu ölçüde,
-  bu yüzden `scale` düzeltmesi almıyorlar. Cam set daha küçük çizildiği için
-  `scale: 1.12` ile diğerlerinin ağırlığına getirildi.
+- **Ölçek:** PNG çerçevesindeki boşluk ekrandaki boyutu belirlemez.
+  `lib/theme/piece_geometry.dart` her görselin saydam kenarlar dışındaki
+  sınırlarını tutar. `BoardPieceArt`, taş türüne göre ortak bir çizim alanına
+  yerleştirir: piyon %68, at %82, fil %84, kale %77, vezir %90, şah %94 yükseklik.
+  Taban hepsinde %97 hizasındadır. Genişlikler de küçük ekranlarda okunacak
+  biçimde taş türüne göre dengelenir. Yeni görselde bu sınırları güncelleyin.
+  Standart ahşap piyon, kendi özgün boyutundan %10 küçük çizilir.
 - **Gölge:** görsele gölge **gömmeyin** ve kodda da eklemeyin. Bir
   `BoxDecoration` gölgesi taşın siluetini değil widget'ın dikdörtgenini
   çizer; bu, her karede görünür bir kutu bırakır. Denendi, geri alındı.
