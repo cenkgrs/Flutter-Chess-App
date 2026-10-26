@@ -58,6 +58,19 @@ class PlayScreen extends StatefulWidget {
             builder: (_) => PlayScreen(initialFen: fen, initialElo: elo)));
   }
 
+  static Future<void> launchAssistant(BuildContext context,
+      {DailyFeatureLimits? limits}) async {
+    if (!await checkDailyFeature(context, DailyFeature.assistantGame,
+        limits: limits)) {
+      return;
+    }
+    if (!context.mounted) return;
+    await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) => PlayScreen(assistantMode: true, limits: limits)));
+  }
+
   final int initialElo;
   @override
   State<PlayScreen> createState() => _PlayScreenState();
@@ -80,6 +93,7 @@ class _PlayScreenState extends State<PlayScreen>
 
   /// Whether this game has already spent a daily assistant use.
   bool assistantClaimed = false;
+  bool _assistantBusy = false;
   bool resultShown = false;
   Premove? premove;
   final drawing = BoardDrawingController();
@@ -375,9 +389,17 @@ class _PlayScreenState extends State<PlayScreen>
                   ],
                 )));
     if (!mounted || accepted != true) return;
+    if (widget.assistantMode) {
+      if (!await checkDailyFeature(context, DailyFeature.assistantGame,
+          limits: widget.limits)) {
+        return;
+      }
+      if (!mounted) return;
+    }
     setState(() {
       generation++;
       game = c.Chess();
+      assistantClaimed = false;
       premove = null;
       startingFen = null;
       human = nextColor;
@@ -567,7 +589,10 @@ class _PlayScreenState extends State<PlayScreen>
                   child: IconButton.filledTonal(
                     key: const ValueKey('assistant-info'),
                     tooltip: tr(context, 'Asistana sor'),
-                    onPressed: !ended && !thinking && game.turn == human
+                    onPressed: !ended &&
+                            !thinking &&
+                            !_assistantBusy &&
+                            game.turn == human
                         ? _showAssistant
                         : null,
                     icon: const Icon(Icons.auto_awesome_rounded),
@@ -584,18 +609,27 @@ class _PlayScreenState extends State<PlayScreen>
   /// question rather than when the screen opens: a player who never asks
   /// does not spend their day's allowance.
   Future<void> _showAssistant() async {
-    if (!assistantClaimed) {
-      if (!await claimDailyFeature(context, DailyFeature.assistantGame,
-          limits: widget.limits)) {
+    if (_assistantBusy) return;
+    setState(() => _assistantBusy = true);
+    final requestedGame = game;
+    try {
+      if (!assistantClaimed) {
+        if (!await claimDailyFeature(context, DailyFeature.assistantGame,
+            limits: widget.limits)) {
+          return;
+        }
+        if (!mounted || !identical(game, requestedGame)) return;
+        assistantClaimed = true;
+      }
+      final fen = game.fen;
+      final advice = await ChessEngine().explain(game);
+      if (!mounted || !identical(game, requestedGame) || game.fen != fen) {
         return;
       }
-      if (!mounted) return;
-      assistantClaimed = true;
+      setState(() => assistantAdvice = advice);
+    } finally {
+      if (mounted) setState(() => _assistantBusy = false);
     }
-    final fen = game.fen;
-    final advice = await ChessEngine().explain(game);
-    if (!mounted || game.fen != fen) return;
-    setState(() => assistantAdvice = advice);
   }
 
   Widget _assistantPanel() => LayoutBuilder(
@@ -839,8 +873,7 @@ class _PlayScreenState extends State<PlayScreen>
         ),
       );
 
-  Widget _piece(c.Piece piece) =>
-      BoardPiece(piece, padding: 1, scale: 1.14);
+  Widget _piece(c.Piece piece) => BoardPiece(piece, padding: 1, scale: 1.14);
 
   Widget reviewSheet(BuildContext sheetContext) {
     final screenHeight = MediaQuery.sizeOf(sheetContext).height;

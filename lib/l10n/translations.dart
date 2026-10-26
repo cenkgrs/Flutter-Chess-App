@@ -1,5 +1,114 @@
 // English, German, Russian. Turkish source keys keep the existing copy auditable.
 const translations = <String, List<String>>{
+  "Tahta": ["Board", "Brett", "Доска"],
+  "Taşlar": ["Pieces", "Figuren", "Фигуры"],
+  "Giriş yap veya hesap oluştur": [
+    "Sign in or create an account",
+    "Anmelden oder Konto erstellen",
+    "Войти или создать аккаунт"
+  ],
+  "Abonelik seçenekleri": [
+    "Subscription options",
+    "Abonnementoptionen",
+    "Варианты подписки"
+  ],
+  "Bugünlük ücretsiz asistanlı maç hakkını kullandın. Abonelikle sınırsız asistanlı maç oynayabilirsin.":
+      [
+    "You have used today’s free assisted game. Subscribe for unlimited assisted games.",
+    "Du hast dein heutiges kostenloses Spiel mit Assistent genutzt. Mit einem Abonnement spielst du unbegrenzt mit Assistent.",
+    "Вы использовали сегодняшнюю бесплатную игру с помощником. Оформите подписку для неограниченных игр с помощником."
+  ],
+  "Bugünlük ücretsiz analiz hakkını kullandın. Abonelikle sınırsız maç analizi yapabilirsin.":
+      [
+    "You have used today’s free analysis. Subscribe for unlimited game analysis.",
+    "Du hast deine heutige kostenlose Analyse genutzt. Mit einem Abonnement kannst du unbegrenzt Partien analysieren.",
+    "Вы использовали сегодняшний бесплатный анализ. Оформите подписку для неограниченного анализа партий."
+  ],
+  "ROK Premium": ["ROK Premium", "ROK Premium", "ROK Premium"],
+  "Sınırsız asistanlı maç ve analiz": [
+    "Unlimited assisted games and analysis",
+    "Unbegrenzte Spiele mit Assistent und Analysen",
+    "Неограниченные игры с помощником и анализ"
+  ],
+  "Misafirler ve ücretsiz üyeler günde bir asistanlı maç ve bir analiz yapabilir.":
+      [
+    "Guests and free members get one assisted game and one analysis per day.",
+    "Gäste und kostenlose Mitglieder erhalten täglich ein Spiel mit Assistent und eine Analyse.",
+    "Гостям и бесплатным участникам доступны одна игра с помощником и один анализ в день."
+  ],
+  "Aboneliğin etkin. Sınırsız kullanımın hazır.": [
+    "Your subscription is active. Unlimited access is ready.",
+    "Dein Abonnement ist aktiv. Unbegrenzter Zugriff ist verfügbar.",
+    "Подписка активна. Неограниченный доступ открыт."
+  ],
+  "Aylık": ["Monthly", "Monatlich", "Ежемесячно"],
+  "Yıllık": ["Yearly", "Jährlich", "Ежегодно"],
+  "Abonelikler şu anda satışa açık değil.": [
+    "Subscriptions are not available for purchase yet.",
+    "Abonnements sind derzeit noch nicht erhältlich.",
+    "Подписки пока недоступны для покупки."
+  ],
+  "Mağazaya bağlanılamadı. Tekrar dene.": [
+    "Could not connect to the store. Try again.",
+    "Verbindung zum Store fehlgeschlagen. Versuche es erneut.",
+    "Не удалось подключиться к магазину. Попробуйте ещё раз."
+  ],
+  "Satın alma onayı bekleniyor.": [
+    "Purchase approval is pending.",
+    "Die Kaufgenehmigung steht noch aus.",
+    "Ожидается подтверждение покупки."
+  ],
+  "Satın alma tamamlanamadı. Tekrar dene.": [
+    "The purchase could not be completed. Try again.",
+    "Der Kauf konnte nicht abgeschlossen werden. Versuche es erneut.",
+    "Не удалось завершить покупку. Попробуйте ещё раз."
+  ],
+  "Etkin abonelik bulunamadı.": [
+    "No active subscription was found.",
+    "Kein aktives Abonnement gefunden.",
+    "Активная подписка не найдена."
+  ],
+  "Satın alımlar geri yüklenemedi. Tekrar dene.": [
+    "Purchases could not be restored. Try again.",
+    "Käufe konnten nicht wiederhergestellt werden. Versuche es erneut.",
+    "Не удалось восстановить покупки. Попробуйте ещё раз."
+  ],
+  "Satın alımları geri yükle": [
+    "Restore purchases",
+    "Käufe wiederherstellen",
+    "Восстановить покупки"
+  ],
+  "Aboneliği yönet": [
+    "Manage subscription",
+    "Abonnement verwalten",
+    "Управление подпиской"
+  ],
+  "Ödeme Apple hesabından alınır. Abonelik iptal edilmedikçe otomatik yenilenir. Aboneliğini Apple hesap ayarlarından yönetebilir veya iptal edebilirsin.":
+      [
+    "Payment is charged to your Apple Account. The subscription renews automatically unless cancelled. Manage or cancel it in your Apple account settings.",
+    "Die Zahlung erfolgt über deinen Apple Account. Das Abonnement verlängert sich automatisch, sofern es nicht gekündigt wird. Verwalte oder kündige es in deinen Apple-Accounteinstellungen.",
+    "Оплата списывается с аккаунта Apple. Подписка продлевается автоматически до отмены. Управлять подпиской или отменить её можно в настройках аккаунта Apple."
+  ],
+  "Kullanım koşulları": [
+    "Terms of use",
+    "Nutzungsbedingungen",
+    "Условия использования"
+  ],
+  "Sınırsız kullanım": [
+    "Unlimited access",
+    "Unbegrenzter Zugriff",
+    "Неограниченный доступ"
+  ],
+  "Günde bir maç ücretsiz asistanla oynanır.": [
+    "One assisted game is free each day.",
+    "Ein Spiel mit Assistent ist täglich kostenlos.",
+    "Одна игра с помощником в день доступна бесплатно."
+  ],
+  "Günde bir maç ücretsiz analiz edilir.": [
+    "One game analysis is free each day.",
+    "Eine Spielanalyse ist täglich kostenlos.",
+    "Один анализ партии в день доступен бесплатно."
+  ],
   'ROK ve uygulamaya bağlı Stockfish motoru GPL-3.0-or-later altında dağıtılır.':
       [
     'ROK and its linked Stockfish engine are distributed under GPL-3.0-or-later.',
@@ -1073,11 +1182,7 @@ const translations = <String, List<String>>{
     'Brett des Gegners',
     'Доска соперника'
   ],
-  'Rakibin çözüyor': [
-    'Opponent is solving',
-    'Gegner löst',
-    'Соперник решает'
-  ],
+  'Rakibin çözüyor': ['Opponent is solving', 'Gegner löst', 'Соперник решает'],
   'Senin turun': ['Your round', 'Deine Runde', 'Твой раунд'],
   'Rakibin turu': ['Opponent\'s round', 'Runde des Gegners', 'Раунд соперника'],
   'Oyun bitti': ['Game over', 'Spiel vorbei', 'Игра окончена'],

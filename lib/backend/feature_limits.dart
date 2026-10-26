@@ -1,12 +1,11 @@
+import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'subscriptions.dart';
 import 'app_backend.dart';
 
-/// Free-tier daily allowances for the two engine-backed features.
-///
-/// The count is kept by Supabase, not here. ROK ships under
-/// GPL-3.0-or-later with Stockfish inside the binary, so a check in this
-/// file is advisory: anyone may rebuild the app without it. Holding the
-/// count on the server is what makes the allowance real for the published
-/// build, and it is the seam the 1.1 subscription will lift.
+/// One daily free use per feature. Guests are counted on the device;
+/// members are also counted on the server. Verified Apple subscribers bypass
+/// both counters. Device usage survives sign-out and account switching.
 
 enum DailyFeature {
   /// One game played with the assistant available.
@@ -30,13 +29,8 @@ class FeatureAllowance {
     this.resetsAt,
   });
 
-  /// Treats a server or network failure, or a signed-out player, as a
-  /// grant. A player who cannot reach Supabase should still get their
-  /// game, and a guest has no account to count against. The allowance is
-  /// a free-tier courtesy, not a paywall; 1.1 moves the engine behind the
-  /// API, where a request without an account cannot be served at all and
-  /// the allowance stops depending on the client.
-  const FeatureAllowance.unavailable()
+  /// A verified paid entitlement has no daily limit.
+  const FeatureAllowance.unlimited()
       : allowed = true,
         used = 0,
         limit = 0,
@@ -47,20 +41,29 @@ class FeatureAllowance {
   final int used, limit, remaining;
   final DateTime? resetsAt;
 
-  static FeatureAllowance fromRow(Map<String, dynamic> row) =>
-      FeatureAllowance(
+  static FeatureAllowance fromRow(Map<String, dynamic> row) => FeatureAllowance(
         allowed: row['allowed'] == true,
         used: (row['used'] as num?)?.toInt() ?? 0,
         limit: (row['limit'] as num?)?.toInt() ?? 0,
         remaining: (row['remaining'] as num?)?.toInt() ?? 0,
-        resetsAt: DateTime.tryParse(row['resets_at']?.toString() ?? '')
-            ?.toLocal(),
+        resetsAt:
+            DateTime.tryParse(row['resets_at']?.toString() ?? '')?.toLocal(),
       );
 }
 
 class DailyFeatureLimits {
-  DailyFeatureLimits({this.request, bool Function()? signedIn})
-      : _signedIn = signedIn ?? (() => AppBackend.currentUser != null);
+  DailyFeatureLimits(
+      {this.request,
+      bool Function()? signedIn,
+      Future<bool> Function()? premium,
+      DateTime Function()? now})
+      : _signedIn = signedIn ?? (() => AppBackend.currentUser != null),
+        _premium = premium ?? SubscriptionStore.instance.refresh,
+        _now = now ?? DateTime.now;
+
+  final Future<bool> Function() _premium;
+  final DateTime Function() _now;
+  Future<void> _pending = Future.value();
 
   /// Injected by tests in place of the Supabase call.
   final Future<Map<String, dynamic>> Function(
@@ -78,38 +81,88 @@ class DailyFeatureLimits {
           : Map<String, dynamic>.from(
               await AppBackend.client.rpc(name, params: params) as Map);
 
-  /// Spends one use, or reports that today's allowance is gone.
-  ///
-  /// Guests are not counted and are never refused: the count is kept per
-  /// account, so there is nothing to charge. Signing out therefore lifts
-  /// the limit in 1.0, which is accepted for this release.
+  String _day() => _now()
+      .toUtc()
+      .add(const Duration(hours: 3))
+      .toIso8601String()
+      .substring(0, 10);
+
+  String _key(DailyFeature feature) => 'daily_feature_device_${feature.key}';
+
+  FeatureAllowance _local(bool used) {
+    final local = _now().toUtc().add(const Duration(hours: 3));
+    final reset = DateTime.utc(local.year, local.month, local.day + 1)
+        .subtract(const Duration(hours: 3));
+    return FeatureAllowance(
+        allowed: !used,
+        used: used ? 1 : 0,
+        limit: 1,
+        remaining: used ? 0 : 1,
+        resetsAt: reset.toLocal());
+  }
+
+  /// Serialize device writes so simultaneous requests cannot spend one use twice.
   Future<FeatureAllowance> claim(DailyFeature feature) async {
-    if (!_signedIn()) return const FeatureAllowance.unavailable();
+    final previous = _pending;
+    final finished = Completer<void>();
+    _pending = finished.future;
+    await previous;
     try {
-      return FeatureAllowance.fromRow(
-          await _rpc('claim_daily_feature', {'p_feature': feature.key}));
-    } catch (_) {
-      return const FeatureAllowance.unavailable();
+      if (await _premium()) return const FeatureAllowance.unlimited();
+      final prefs = await SharedPreferences.getInstance();
+      final day = _day();
+      if (prefs.getString(_key(feature)) == day) return _local(true);
+      FeatureAllowance? server;
+      if (_signedIn()) {
+        try {
+          server = FeatureAllowance.fromRow(
+              await _rpc('claim_daily_feature', {'p_feature': feature.key})
+                  .timeout(const Duration(seconds: 8)));
+        } catch (_) {
+          // Offline and guests still use the persistent device allowance.
+        }
+      }
+      // Also remember refusals: signing out cannot unlock an exhausted account.
+      final saved = await prefs.setString(_key(feature), day);
+      if (!saved) return _local(true);
+      return server ??
+          FeatureAllowance(
+              allowed: true,
+              used: 1,
+              limit: 1,
+              remaining: 0,
+              resetsAt: _local(true).resetsAt);
+    } finally {
+      finished.complete();
     }
   }
 
-  /// What is left today, without spending anything.
   Future<Map<DailyFeature, FeatureAllowance>> status() async {
-    if (!_signedIn()) return const {};
-    try {
-      final row = await _rpc('daily_feature_status', const {});
+    if (await _premium()) {
       return {
-        for (final feature in DailyFeature.values)
-          if (row[feature.key] is Map)
-            feature: FeatureAllowance.fromRow({
-              ...Map<String, dynamic>.from(row[feature.key] as Map),
-              'allowed': ((row[feature.key] as Map)['remaining'] as num? ?? 0) >
-                  0,
-              'resets_at': row['resets_at'],
-            }),
+        for (final f in DailyFeature.values)
+          f: const FeatureAllowance.unlimited()
       };
-    } catch (_) {
-      return const {};
     }
+    final prefs = await SharedPreferences.getInstance();
+    final local = {
+      for (final f in DailyFeature.values)
+        f: _local(prefs.getString(_key(f)) == _day())
+    };
+    if (!_signedIn()) return local;
+    try {
+      final row = await _rpc('daily_feature_status', const {})
+          .timeout(const Duration(seconds: 8));
+      for (final feature in DailyFeature.values) {
+        if (row[feature.key] is! Map) continue;
+        final server = FeatureAllowance.fromRow({
+          ...Map<String, dynamic>.from(row[feature.key] as Map),
+          'allowed': ((row[feature.key] as Map)['remaining'] as num? ?? 0) > 0,
+          'resets_at': row['resets_at'],
+        });
+        if (local[feature]!.allowed) local[feature] = server;
+      }
+    } catch (_) {}
+    return local;
   }
 }

@@ -1,3 +1,5 @@
+import 'auth_screen.dart';
+import 'subscription_screen.dart';
 import '../backend/feature_limits.dart';
 import '../widgets/daily_limit.dart';
 import 'board_theme_screen.dart';
@@ -135,6 +137,26 @@ class ProfileScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (user == null) ...[
+                  const SizedBox(height: 16),
+                  _ProfileLink(
+                      icon: Icons.login_rounded,
+                      title: 'Giriş yap',
+                      subtitle: 'Giriş yap veya hesap oluştur',
+                      onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const AuthScreen()))),
+                ],
+                const SizedBox(height: 16),
+                _ProfileLink(
+                    icon: Icons.workspace_premium_rounded,
+                    title: 'ROK Premium',
+                    subtitle: 'Sınırsız asistanlı maç ve analiz',
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const SubscriptionScreen()))),
                 const SizedBox(height: 28),
                 const LText('HESAP',
                     style: TextStyle(
@@ -526,6 +548,7 @@ class GameReviewScreen extends StatefulWidget {
 class _GameReviewScreenState extends State<GameReviewScreen> {
   /// Whether this screen has already spent a daily analysis use.
   bool _analysisClaimed = false;
+  bool _claimingAnalysis = false;
   List<Map<String, dynamic>>? _moves;
   int _index = 0;
   final ScrollController _moveScroll = ScrollController();
@@ -588,15 +611,21 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
       widget.evaluate?.call(fen) ?? DeviceEngine.instance.evaluate(fen);
 
   Future<void> _analyze() async {
+    if (_claimingAnalysis || _analyzing) return;
     // One free use covers this screen's game; re-running the pass on the
     // same game does not charge again.
     if (!_analysisClaimed) {
-      if (!await claimDailyFeature(context, DailyFeature.gameAnalysis,
-          limits: widget.limits)) {
-        return;
+      setState(() => _claimingAnalysis = true);
+      try {
+        if (!await claimDailyFeature(context, DailyFeature.gameAnalysis,
+            limits: widget.limits)) {
+          return;
+        }
+        if (!mounted) return;
+        _analysisClaimed = true;
+      } finally {
+        if (mounted) setState(() => _claimingAnalysis = false);
       }
-      if (!mounted) return;
-      _analysisClaimed = true;
     }
     final ticket = ++_analysisGeneration;
     setState(() {
@@ -781,7 +810,9 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                               spacing: 8,
                               children: [
                                 FilledButton.icon(
-                                    onPressed: _analyzing || _moves!.isEmpty
+                                    onPressed: _claimingAnalysis ||
+                                            _analyzing ||
+                                            _moves!.isEmpty
                                         ? null
                                         : _analyze,
                                     icon: const Icon(Icons.analytics_outlined),

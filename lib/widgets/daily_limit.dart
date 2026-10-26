@@ -1,3 +1,5 @@
+import '../screens/subscription_screen.dart';
+import '../backend/subscriptions.dart';
 import 'package:flutter/material.dart';
 
 import '../backend/feature_limits.dart';
@@ -7,8 +9,6 @@ import 'rok_style.dart';
 /// Spends one of today's free uses of [feature] and returns whether the
 /// caller may go ahead, explaining the refusal to the player if not.
 ///
-/// Guests are let through without being counted; [DailyFeatureLimits.claim]
-/// decides that, so this function has no session logic of its own.
 Future<bool> claimDailyFeature(
   BuildContext context,
   DailyFeature feature, {
@@ -19,7 +19,23 @@ Future<bool> claimDailyFeature(
   if (allowance.allowed) return true;
   if (!context.mounted) return false;
 
-  await showDialog<void>(
+  return _offerSubscription(context, feature, allowance);
+}
+
+/// Check entry without consuming the allowance. The first assistant question
+/// still spends it, so opening and leaving the board remains free.
+Future<bool> checkDailyFeature(BuildContext context, DailyFeature feature,
+    {DailyFeatureLimits? limits}) async {
+  final status = await (limits ?? DailyFeatureLimits.instance).status();
+  if (!context.mounted) return false;
+  final allowance = status[feature];
+  if (allowance == null || allowance.allowed) return true;
+  return _offerSubscription(context, feature, allowance);
+}
+
+Future<bool> _offerSubscription(BuildContext context, DailyFeature feature,
+    FeatureAllowance allowance) async {
+  final upgrade = await showDialog<bool>(
     context: context,
     builder: (dialog) => RokDialog(
       icon: const Icon(Icons.hourglass_bottom_rounded),
@@ -31,9 +47,9 @@ Future<bool> claimDailyFeature(
         LText(
             switch (feature) {
               DailyFeature.assistantGame =>
-                'Ücretsiz hesapta günde bir maç asistanla oynanır.',
+                'Bugünlük ücretsiz asistanlı maç hakkını kullandın. Abonelikle sınırsız asistanlı maç oynayabilirsin.',
               DailyFeature.gameAnalysis =>
-                'Ücretsiz hesapta günde bir maç analiz edilir.',
+                'Bugünlük ücretsiz analiz hakkını kullandın. Abonelikle sınırsız maç analizi yapabilirsin.',
             },
             textAlign: TextAlign.center),
         const SizedBox(height: 10),
@@ -42,12 +58,20 @@ Future<bool> claimDailyFeature(
             style: const TextStyle(color: Color(0xffb9aea5), fontSize: 14)),
       ]),
       actions: [
+        FilledButton(
+            onPressed: () => Navigator.pop(dialog, true),
+            child: const LText('Abonelik seçenekleri')),
         TextButton(
-            onPressed: () => Navigator.pop(dialog),
+            onPressed: () => Navigator.pop(dialog, false),
             child: const LText('Tamam')),
       ],
     ),
   );
+  if (upgrade == true && context.mounted) {
+    await Navigator.push(
+        context, MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
+    return SubscriptionStore.instance.refresh();
+  }
   return false;
 }
 

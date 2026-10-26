@@ -31,13 +31,19 @@ ROK projesine uygulanmalı:
   yükseltmek **sunucu değişikliği**; yeni uygulama sürümü gerekmez.
 - `claim_daily_feature` tek deyimde artırır; koşullu `on conflict do update`
   sayesinde iki cihaz son hakkı aynı anda alamaz.
-- **Misafir sayılmaz ve engellenmez.** Limit yalnızca giriş yapmış hesaba
-  uygulanır; misafirin sayılacağı bir hesabı yok. Bu, 1.0'da limitin çıkış
-  yapılarak atlanabileceği anlamına gelir ve bilerek kabul edildi: 1.1'de
-  motor API'nin arkasına geçince hesapsız istek zaten karşılanamayacak.
+- Misafir ve ücretsiz üyede cihaz başına günlük birer hak uygulanır. Üyede
+  sunucu ayrıca hesap sayacı tutar. Çıkış yapmak cihaz hakkını sıfırlamaz.
+- StoreKit 2 tarafından doğrulanan aylık/yıllık abone sınırsız kullanır.
+  Satın alma, geri yükleme ve yönetim ekranı profildedir. Hak dolduğunda
+  asistanlı oyuna giriş ve analiz isteği abonelik penceresi gösterir. Apple ürünleri ve
+  fiyatları henüz App Store Connect'te oluşturulmadı; gerçek ödeme testi
+  tamamlanmadı. Kurulum ve sınırlar: `SUBSCRIPTIONS.md`.
 - Asistan hakkı ilk soruda harcanır (ekranı açmak bedava), analiz hakkı
   "Motor analizi"ne basınca; ikisi de o maç/ekran boyunca tek sefer sayılır.
-- Sunucuya ulaşılamazsa hak **verilir**, oyun engellenmez.
+- Sunucuya ulaşılamazsa cihazın günlük hakkı uygulanır; sınırsız erişim verilmez.
+- Hak kontrolü sürerken tekrar dokunmak ikinci istek göndermez. Aynı ekrandan
+  yeni oyun başlatmak yeni asistan hakkı gerektirir; önceki oyunun bekleyen
+  asistan yanıtı yeni oyuna taşınmaz.
 
 Yerel SQL testi (yalnızca geçici PostgreSQL; canlıda çalıştırmayın):
 `tools/test_bootstrap.sql`, ardından migration, ardından
@@ -64,8 +70,8 @@ Yerel SQL testi (yalnızca geçici PostgreSQL; canlıda çalıştırmayın):
   kazanılan puan tahtanın üstünde yükselerek kaybolur ve skor sayaçları
   yeni değerine doğru sayar. Rakibin hamlesinde hamle sesi çalar.
 
-- Tahta görünümü: Ana menü → Tahta görünümü (misafirler dahil) ve Profil →
-  Tahta görünümü. Tahta teması (Ahşap, Mermer, Arduvaz, Buz) ile taş seti
+- Tahta görünümü: Profil → Tahta görünümü (misafirler dahil). Önizleme
+  sabittir; Tahta / Taşlar seçimi yalnızca ilgili seçenek listesini açar. Tahta teması (Ahşap, Mermer, Arduvaz, Buz) ile taş seti
   ayrı ayrı seçilir, cihazda `shared_preferences` ile saklanır. Veritabanı
   değişikliği gerekmez; hesaba bağlı değildir.
 - Tüm tahta ekranları artık kare ve taş görünümünü `lib/theme/board_theme.dart`
@@ -75,13 +81,14 @@ Yerel SQL testi (yalnızca geçici PostgreSQL; canlıda çalıştırmayın):
   Bazalt, Porselen ve Obsidyen, Gümüş ve Bronz, Art Deco, Sade Mat, Buz ve
   Lav. Ahşapla birlikte dokuz set. Hepsi 512 px kare, alfalı PNG, set başına
   170–400 KB, toplam 2.1 MB.
-- Yedi yeni set ortak geometriyi paylaşır: taban ≈ 479, merkez ≈ 255, şah
-  çerçevenin ~%88'i. Bu yüzden ölçek düzeltmesi almazlar. Cam set daha küçük
-  çizildiği için (şah %81, taban 467) `scale: 1.12` taşır.
+- Hazır taşların saydam kenarları çizim sırasında dışarıda bırakılır;
+  `piece_geometry.dart` dosya sınırlarını, `paintedPieceFrame` taş türüne göre
+  ortak yükseklik/genişlikleri belirler. Küçük piyon/kale/at büyütüldü ve iki
+  renk tüm malzemelerde aynı görsel boyuta getirildi. Standart piyon %10 küçüldü.
 - Taş görsellerine gölge gömülmez ve kodda da eklenmez. Bir `BoxDecoration`
   gölgesi taşın siluetini değil widget'ın dikdörtgenini çizdiği için her
   karede görünür bir kutu bırakıyordu; denemeyin.
-- Seti yeniden üretmek gerekirse `assets/pieces/glass/PROMPT.md`.
+- Seti yeniden üretmek gerekirse `assets/pieces/PROMPT.md`.
 
 ## Arkadaş düellosu, rövanş ve ortak tasarım (14 Ekim)
 

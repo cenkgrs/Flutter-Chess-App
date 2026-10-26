@@ -8,6 +8,7 @@ import 'package:chess_puzzle_app/widgets/analysis_markers.dart';
 
 /// Grants every claim without touching Supabase.
 final _alwaysAllowed = DailyFeatureLimits(
+    premium: () async => true,
     request: (name, params) async => {
           'allowed': true,
           'used': 1,

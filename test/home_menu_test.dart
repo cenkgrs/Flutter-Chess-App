@@ -14,6 +14,8 @@ void main() {
     expect(find.text('OYUNA BAŞLA'), findsOneWidget);
     expect(find.text('Bilgisayara karşı'), findsOneWidget);
     expect(find.text('Asistan'), findsOneWidget);
+    expect(find.byKey(const ValueKey('menu-premium')), findsNothing);
+    expect(find.byKey(const ValueKey('menu-board-theme')), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('online-play')));
     await tester.pumpAndSettle();

@@ -1,4 +1,3 @@
-import 'board_theme_screen.dart';
 import '../l10n/app_language.dart';
 import '../widgets/rok_style.dart';
 import 'package:flutter/material.dart';
@@ -200,28 +199,8 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
                                   icon: Icons.auto_awesome_outlined,
                                   title: 'Asistan',
                                   subtitle: 'Hamlelerini stratejistinle planla',
-                                  onTap: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          const PlayScreen(assistantMode: true),
-                                    ),
-                                  ),
-                                ),
-                                const _MenuDivider(),
-                                // A device preference, so guests reach it too;
-                                // the profile copy needs an account.
-                                _SecondaryAction(
-                                  key: const ValueKey('menu-board-theme'),
-                                  icon: Icons.grid_view_rounded,
-                                  title: 'Tahta görünümü',
-                                  subtitle: 'Tahta ve taş stilini seç',
-                                  onTap: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) =>
-                                            const BoardThemeScreen()),
-                                  ),
+                                  onTap: () =>
+                                      PlayScreen.launchAssistant(context),
                                 ),
                               ],
                             ),
@@ -264,11 +243,8 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
         IconButton(
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
-          onPressed: user == null
-              ? () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const AuthScreen()))
-              : () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const ProfileScreen())),
+          onPressed: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const ProfileScreen())),
           icon: const Icon(Icons.account_circle_outlined,
               color: mutedBone, size: 34),
         ),
