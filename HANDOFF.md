@@ -193,21 +193,60 @@ Yerel SQL testi (yalnızca geçici PostgreSQL; canlıda çalıştırmayın):
 `tools/test_bootstrap.sql`, ardından tüm migration'lar sırasıyla, ardından
 `tools/daily_puzzle_test.sql`. Test rollback ile biter.
 
-## Hâlâ açık yayın işleri
+## 1.0 yayın akışı (26 Ekim)
 
-- **Dağıtım engeli:** Uygulama Stockfish nedeniyle GPL-3.0-or-later olarak
-  dağıtılıyor; bağlı proprietary Google Mobile Ads SDK ile uyumluluk henüz
-  çözülmedi. Reklamın kapalı olması SDK bağlantısını ortadan kaldırmaz. App
-  Store'a build göndermeden önce ilk sürümden reklam SDK'sını çıkarmak veya
-  hukuk/uyum açısından kabul edilen farklı bir mimariye geçmek gerekiyor.
-- Canlı reklamları açmadan önce AdMob iOS unit/app ID, UMP mesajı, App Store
-  privacy beyanı ve app-ads.txt son kontrolü. `ROK_LIVE_ADS=true` ancak bundan
-  sonra verilmeli.
-- App Store Connect EU trader status doğrulaması.
-- Dört dil için kalan çevrilmemiş metin taraması ve Almanca/Rusça tüm ekran
-  smoke turu.
-- Asistan, tahta çizimi ve premove için bir kez gösterilen ilk kullanım ipuçları.
-- App Store Connect metadata, ekran görüntüleri ve review notes.
+### Çözülenler
+
+- **Dağıtım engeli kalktı.** Google Mobile Ads SDK ilk sürümden çıkarıldı.
+  Bağımlılıkların geri kalanı (chess, audioplayers, shared_preferences,
+  supabase_flutter, url_launcher, http, provider) MIT/BSD; GPL olan tek
+  bileşen Stockfish ve o uygulamanın kendi lisansını zaten belirliyor.
+  Reklam, motor sunucuya taşındıktan sonra 1.1'de değerlendirilecek.
+- Dört dil için çevrilmemiş metin taraması yapıldı; her UI metni `tr()`
+  içinden geçirilerek doğrulandı.
+- İlk kullanım ipuçları asistan ve tahta araçları için duruyor. Ön hamle
+  artık ipucu değil, başlıktaki kalıcı gösterge.
+
+### Yayından önce yapılacaklar
+
+1. **Kaynağı herkese açık hale getir.** Sürüm GPL-3 olduğu için release
+   build, dağıtılan binary ile birebir eşleşen herkese açık commit'i
+   gömmek zorunda. Dal master'a alınıp GitHub'a push edilmeden
+   `tools/verify_release_source.sh` geçmez ve uygulama release modunda
+   açılışta durur.
+2. **Supabase migration'ları canlıya uygula** (sırayla):
+   - `supabase/migrations/20261024120000_duel_spectate.sql`
+   - `supabase/migrations/20261024130000_daily_feature_limits.sql`
+   İkisi de uygulanmadan uygulama çalışır ama düello izleme boş bekleme
+   kutusuna düşer ve hesap başına günlük limit işlemez.
+3. **App Store Connect abonelik kurulumu.** Uygulamada ROK Premium ekranı
+   var; ürünler mağazada yoksa ekran "satışa açık değil" yazar. Apple'ın
+   eksik çalışan bir satın alma akışını reddetme riski olduğundan ürünler
+   bu sürümle birlikte incelemeye verilmeli. Ayrıntılar ve ürün
+   kimlikleri `SUBSCRIPTIONS.md` içinde. Ücretli uygulama sözleşmesi ile
+   banka/vergi bilgileri de tamamlanmalı.
+4. **EU trader status** doğrulaması.
+5. **Ekran görüntüleri**: gerçek iPhone'da release build, beş dikey ekran
+   (1179 × 2556).
+6. App Store Connect metadata ve review notes.
+
+### Doğrulanmamış kalanlar
+
+- Düello izleme canlı iki cihazda denenmedi.
+- StoreKit satın alma, yenileme, geri yükleme, iptal ve iade akışları
+  Apple test ortamında denenmedi. Dart testinin geçmesi bunu karşılamaz.
+- Dokuz taş seti × dört tahta temasının tamamı kontrast için taranmadı.
+- Almanca/Rusça tüm ekran smoke turu.
+
+### Release komutları
+
+```sh
+git rev-parse HEAD
+bash tools/verify_release_source.sh "$(git rev-parse HEAD)"
+flutter build ipa --release \
+  --dart-define-from-file=supabase.env.json \
+  --dart-define=ROK_SOURCE_REVISION="$(git rev-parse HEAD)"
+```
 
 Gizlilik: https://cenkgrs.github.io/rok-site/privacy.html
 
