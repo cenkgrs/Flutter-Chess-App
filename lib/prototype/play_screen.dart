@@ -1,3 +1,4 @@
+import '../widgets/premove_indicator.dart';
 import '../backend/feature_limits.dart';
 import '../widgets/daily_limit.dart';
 import '../theme/board_theme.dart';
@@ -93,11 +94,6 @@ class _PlayScreenState extends State<PlayScreen>
         premove = Premove(selected!, square);
         selected = null;
       });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: LText('Ön hamle: ${premove!.from} → ${premove!.to}'),
-          action: SnackBarAction(
-              label: tr(context, 'İptal'),
-              onPressed: () => setState(() => premove = null))));
     }
   }
 
@@ -481,9 +477,14 @@ class _PlayScreenState extends State<PlayScreen>
                               style: const TextStyle(
                                   color: Color(0xfff3eee7),
                                   fontWeight: FontWeight.bold))
-                          : showTurn
-                              ? const _TurnIndicator()
-                              : null,
+                          : premove != null
+                              ? PremoveIndicator(
+                                  move: premove!,
+                                  onCancel: () =>
+                                      setState(() => premove = null))
+                              : showTurn
+                                  ? const _TurnIndicator()
+                                  : null,
                     ),
                   ),
                   const SizedBox(height: 12),

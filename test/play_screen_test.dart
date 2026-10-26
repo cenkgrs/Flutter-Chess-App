@@ -52,6 +52,31 @@ void main() {
     expect(state.premove, isNull);
     expect(tester.takeException(), isNull);
   });
+  testWidgets('queued premove uses the board header and can be cancelled',
+      (tester) async {
+    usePhoneViewport(tester);
+    await tester.pumpWidget(playApp());
+    await move(tester, 'e2', 'e4');
+    await move(tester, 'g1', 'f3');
+    final dynamic state = tester.state(find.byType(PlayScreen));
+    expect(state.premove, isNotNull);
+    expect(find.byKey(const ValueKey('premove-indicator')), findsOneWidget);
+    expect(find.byType(SnackBar), findsNothing);
+    expect(
+        tester
+            .getBottomLeft(find.byKey(const ValueKey('premove-indicator')))
+            .dy,
+        lessThanOrEqualTo(
+            tester.getTopLeft(find.byKey(const ValueKey('square-a8'))).dy));
+    await tester.tap(find.byTooltip('İptal'));
+    await tester.pump();
+    expect(state.premove, isNull);
+    expect(find.byKey(const ValueKey('premove-indicator')), findsNothing);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Assistant stays below a full-size board without a modal',
       (tester) async {
     usePhoneViewport(tester);

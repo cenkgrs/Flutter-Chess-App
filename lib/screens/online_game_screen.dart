@@ -1,3 +1,4 @@
+import '../widgets/premove_indicator.dart';
 import '../theme/board_theme.dart';
 import '../l10n/app_language.dart';
 import '../widgets/rok_style.dart';
@@ -53,11 +54,6 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
         _premove = Premove(_selected!, square);
         _selected = null;
       });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: LText('Ön hamle: ${_premove!.from} → ${_premove!.to}'),
-          action: SnackBarAction(
-              label: tr(context, 'İptal'),
-              onPressed: () => setState(() => _premove = null))));
     }
   }
 
@@ -462,17 +458,22 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
                                   icon: const Icon(Icons.arrow_back_rounded),
                                   color: const Color(0xfff3eee7),
                                 ),
-                                const Spacer(),
-                                const LText(
-                                  'ÇEVRİMİÇİ OYUN',
-                                  style: TextStyle(
-                                    color: Color(0xfff3eee7),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 1.4,
-                                  ),
-                                ),
-                                const Spacer(),
+                                Expanded(
+                                    child: Center(
+                                        child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: _premove != null
+                                      ? PremoveIndicator(
+                                          move: _premove!,
+                                          onCancel: () =>
+                                              setState(() => _premove = null))
+                                      : const LText('ÇEVRİMİÇİ OYUN',
+                                          style: TextStyle(
+                                              color: Color(0xfff3eee7),
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: 1.4)),
+                                ))),
                                 BoardDrawingTools(controller: _drawing),
                               ],
                             ),
@@ -654,8 +655,8 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
                                         _premove?.to == square
                                     ? boardSkin.premove
                                     : _moveAnimation.lastMove.contains(square)
-                                        ? Color.alphaBlend(lastMoveTint,
-                                            boardSkin.base(light))
+                                        ? Color.alphaBlend(
+                                            lastMoveTint, boardSkin.base(light))
                                         : boardSkin.base(light),
                             child: Stack(
                               alignment: Alignment.center,
