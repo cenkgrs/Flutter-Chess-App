@@ -6,79 +6,102 @@ import '../theme/board_theme.dart';
 import '../widgets/rok_style.dart';
 
 /// Board skin and piece set, each with a live preview of the real board.
-class BoardThemeScreen extends StatelessWidget {
+class BoardThemeScreen extends StatefulWidget {
   const BoardThemeScreen({super.key});
-
   static const bone = Color(0xfff3eee7);
   static const mutedBone = Color(0xffb9b2a8);
-
-  /// A short, recognisable fragment that shows both sides and five of the six
-  /// piece shapes at a glance.
   static final _preview =
       c.Chess.fromFEN('4k3/pp3ppp/8/3n4/3B4/8/PP3PPP/2KR4 w - - 0 1');
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
-        listenable: BoardTheme.instance,
-        builder: (context, _) => RokScaffold(
-          appBar: AppBar(title: const LText('Tahta görünümü')),
-          body: ListView(
-            padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
-            children: [
-              Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 320),
-                  child: _PreviewBoard(
-                      skin: boardSkin, pieces: boardPieces, full: true),
-                ),
-              ),
-              const SizedBox(height: 28),
-              const _SectionTitle('TAHTA'),
-              const SizedBox(height: 10),
-              for (final skin in boardSkins) ...[
-                _Option(
-                  label: skin.label,
-                  selected: skin.id == boardSkin.id,
-                  onTap: () => BoardTheme.instance.selectSkin(skin.id),
-                  preview: _PreviewBoard(skin: skin, pieces: boardPieces),
-                ),
-                const SizedBox(height: 10),
-              ],
-              const SizedBox(height: 18),
-              const _SectionTitle('TAŞLAR'),
-              const SizedBox(height: 10),
-              for (final set in pieceSets)
-                if (BoardTheme.isPieceSetAvailable(set)) ...[
-                  _Option(
-                    label: set.label,
-                    selected: set.id == boardPieces.id,
-                    onTap: () => BoardTheme.instance.selectPieceSet(set.id),
-                    preview: _PreviewBoard(skin: boardSkin, pieces: set),
-                  ),
-                  const SizedBox(height: 10),
-                ],
-              if (pieceSets.any((set) => !BoardTheme.isPieceSetAvailable(set)))
-                const Padding(
-                  padding: EdgeInsets.only(top: 6),
-                  child: LText('Yeni taş setleri sonraki güncellemelerde gelir.',
-                      style: TextStyle(color: mutedBone, fontSize: 13)),
-                ),
-            ],
-          ),
-        ),
-      );
+  State<BoardThemeScreen> createState() => _BoardThemeScreenState();
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
-  final String text;
+class _BoardThemeScreenState extends State<BoardThemeScreen> {
+  bool _pieces = false;
+  final _scroll = ScrollController();
+
   @override
-  Widget build(BuildContext context) => LText(text,
-      style: const TextStyle(
-          color: BoardThemeScreen.mutedBone,
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.6));
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+      listenable: BoardTheme.instance,
+      builder: (context, _) => RokScaffold(
+          appBar: AppBar(title: const LText('Tahta görünümü')),
+          body: SafeArea(child: LayoutBuilder(builder: (context, bounds) {
+            final size = (bounds.maxHeight * .43)
+                .clamp(100.0, 300.0)
+                .clamp(0.0, bounds.maxWidth - 36);
+            return Column(children: [
+              Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
+                  child: Center(
+                      child: SizedBox(
+                          key: const ValueKey('theme-fixed-preview'),
+                          width: size,
+                          height: size,
+                          child: _PreviewBoard(
+                              skin: boardSkin,
+                              pieces: boardPieces,
+                              full: true)))),
+              Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  child: SegmentedButton<bool>(
+                      segments: const [
+                        ButtonSegment(
+                            value: false,
+                            label: LText('Tahta'),
+                            icon: Icon(Icons.grid_view_rounded)),
+                        ButtonSegment(
+                            value: true,
+                            label: LText('Taşlar'),
+                            icon: Icon(Icons.extension_outlined)),
+                      ],
+                      selected: {
+                        _pieces
+                      },
+                      onSelectionChanged: (value) {
+                        setState(() => _pieces = value.single);
+                        if (_scroll.hasClients) _scroll.jumpTo(0);
+                      })),
+              const SizedBox(height: 12),
+              Expanded(
+                  child: ListView(
+                      key:
+                          ValueKey(_pieces ? 'piece-options' : 'board-options'),
+                      controller: _scroll,
+                      padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
+                      children: [
+                    if (!_pieces)
+                      for (final skin in boardSkins) ...[
+                        _Option(
+                            label: skin.label,
+                            selected: skin.id == boardSkin.id,
+                            onTap: () =>
+                                BoardTheme.instance.selectSkin(skin.id),
+                            preview:
+                                _PreviewBoard(skin: skin, pieces: boardPieces)),
+                        const SizedBox(height: 10),
+                      ]
+                    else
+                      for (final set in pieceSets)
+                        if (BoardTheme.isPieceSetAvailable(set)) ...[
+                          _Option(
+                              label: set.label,
+                              selected: set.id == boardPieces.id,
+                              onTap: () =>
+                                  BoardTheme.instance.selectPieceSet(set.id),
+                              preview:
+                                  _PreviewBoard(skin: boardSkin, pieces: set)),
+                          const SizedBox(height: 10),
+                        ],
+                  ])),
+            ]);
+          }))));
 }
 
 class _Option extends StatelessWidget {

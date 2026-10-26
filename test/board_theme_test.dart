@@ -14,8 +14,8 @@ Future<void> _open(WidgetTester tester) async {
   tester.view.physicalSize = const Size(900, 2400);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  await tester
-      .pumpWidget(MaterialApp(theme: rokTheme(), home: const BoardThemeScreen()));
+  await tester.pumpWidget(
+      MaterialApp(theme: rokTheme(), home: const BoardThemeScreen()));
   await tester.pumpAndSettle();
 }
 
@@ -38,8 +38,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(boardSkin.id, marbleSkin.id);
-    expect(
-        (await SharedPreferences.getInstance()).getString('board_skin'),
+    expect((await SharedPreferences.getInstance()).getString('board_skin'),
         marbleSkin.id);
     expect(boardSkin.base(true), marbleSkin.light);
     expect(boardSkin.base(false), marbleSkin.dark);
@@ -54,11 +53,42 @@ void main() {
     for (final skin in boardSkins) {
       expect(find.text(skin.label), findsWidgets);
     }
+    await tester.tap(find.text('Taşlar'));
+    await tester.pumpAndSettle();
     for (final set in pieceSets) {
       expect(BoardTheme.isPieceSetAvailable(set), isTrue,
           reason: '${set.id} artwork is missing from the bundle');
       expect(find.text(set.label), findsWidgets);
     }
+  });
+
+  testWidgets('preview stays fixed while piece choices scroll on a phone',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+        MaterialApp(theme: rokTheme(), home: const BoardThemeScreen()));
+    await tester.pumpAndSettle();
+    final preview = find.byKey(const ValueKey('theme-fixed-preview'));
+    final initial = tester.getRect(preview);
+    await tester.tap(find.text('Taşlar'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('board-options')), findsNothing);
+    final list = find.byKey(const ValueKey('piece-options'));
+    final scrolling =
+        find.descendant(of: list, matching: find.byType(Scrollable)).first;
+    await tester.scrollUntilVisible(find.text(iceLavaPieces.label), 200,
+        scrollable: scrolling);
+    await tester.tap(find.text(iceLavaPieces.label));
+    await tester.pumpAndSettle();
+    expect(boardPieces.id, iceLavaPieces.id);
+    expect(tester.getRect(preview), initial);
+    await tester.tap(find.text('Tahta'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('piece-options')), findsNothing);
+    expect(find.text(marbleSkin.label), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   test('a set whose artwork is not bundled stays unavailable', () {
