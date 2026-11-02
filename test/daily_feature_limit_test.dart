@@ -286,6 +286,12 @@ void main() {
     expect(evaluated, 0);
   });
 
+  test('the testing bypass is off unless a build opts in', () {
+    // Guards the escape hatch: the test suite carries no dart-define, so the
+    // constant is false here, and a release build ignores it even when set.
+    expect(DailyFeatureLimits.testingBypassActive, isFalse);
+  });
+
   test('a backend failure grants the use rather than blocking play', () async {
     final limits = DailyFeatureLimits(
         signedIn: () => true,

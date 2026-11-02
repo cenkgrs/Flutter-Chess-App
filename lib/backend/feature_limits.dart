@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'subscriptions.dart';
 import 'app_backend.dart';
@@ -74,6 +75,17 @@ class DailyFeatureLimits {
 
   static DailyFeatureLimits instance = DailyFeatureLimits();
 
+  /// Testing escape hatch. A debug or profile build started with
+  /// `--dart-define=ROK_UNLIMITED_FEATURES=true` skips both counters, so the
+  /// day's allowance does not stop a tester after one game.
+  ///
+  /// It cannot reach the store: a release build ignores the define, and
+  /// without the define the constant is false and the branch is dropped at
+  /// compile time. Both conditions must hold.
+  static const _unlimitedDefine =
+      bool.fromEnvironment('ROK_UNLIMITED_FEATURES');
+  static bool get testingBypassActive => _unlimitedDefine && !kReleaseMode;
+
   Future<Map<String, dynamic>> _rpc(
           String name, Map<String, dynamic> params) async =>
       request != null
@@ -108,6 +120,7 @@ class DailyFeatureLimits {
     _pending = finished.future;
     await previous;
     try {
+      if (testingBypassActive) return const FeatureAllowance.unlimited();
       if (await _premium()) return const FeatureAllowance.unlimited();
       final prefs = await SharedPreferences.getInstance();
       final day = _day();
@@ -138,7 +151,7 @@ class DailyFeatureLimits {
   }
 
   Future<Map<DailyFeature, FeatureAllowance>> status() async {
-    if (await _premium()) {
+    if (testingBypassActive || await _premium()) {
       return {
         for (final f in DailyFeature.values)
           f: const FeatureAllowance.unlimited()
