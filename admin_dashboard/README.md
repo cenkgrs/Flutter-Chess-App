@@ -7,7 +7,7 @@ uygulamasından tamamen ayrıdır; tek bağlantısı Supabase'dir.
 
 ```sh
 cd admin_dashboard
-cp .env.example .env     # Supabase URL ve ANON anahtarını gir
+cp .env.example .env     # supabase.env.json'daki URL ve publishable key
 npm install
 npm run dev              # http://127.0.0.1:5173 adresinde açılır
 ```
@@ -26,8 +26,10 @@ Yetkisi olmayan bir hesapla girilirse panel veri göstermez; veritabanı
 ## Güvenlik
 
 - **Service-role anahtarı bu klasörde hiçbir yerde yok ve olmamalı.** Tek
-  kullanılan kimlik bilgisi Supabase'in `anon` anahtarıdır; bu anahtar zaten
-  istemciler için yayınlanır ve tek başına hiçbir şeye erişim vermez.
+  kullanılan kimlik bilgisi Supabase'in publishable (eski adıyla `anon`)
+  anahtarıdır — Flutter uygulamasının `supabase.env.json` içinde taşıdığı
+  anahtarın aynısı. Supabase onu istemciler için yayınlar; tek başına hiçbir
+  şeye erişim vermez.
 - Tüm okuma işlemleri `security definer` fonksiyonlar üzerinden yapılır ve
   her biri ilk satırda `is_analytics_admin()` kontrol eder. Anahtarı ele
   geçiren biri tek bir olay bile okuyamaz.
