@@ -1,3 +1,4 @@
+import '../backend/analytics.dart';
 import '../l10n/app_language.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -55,6 +56,9 @@ class _AuthScreenState extends State<AuthScreen> {
               email: _email.text,
               password: _password.text,
             );
+      AnalyticsService.instance.log(_register
+          ? AnalyticsEvent.userSignedUp
+          : AnalyticsEvent.userLoggedIn);
       if (!mounted) return;
       if (_register && response.session == null) {
         ScaffoldMessenger.of(context).showSnackBar(

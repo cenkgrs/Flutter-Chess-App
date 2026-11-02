@@ -1,3 +1,4 @@
+import '../backend/analytics.dart';
 import 'dart:async';
 import '../widgets/assistant_strip.dart';
 import '../widgets/premove_indicator.dart';
@@ -134,6 +135,10 @@ class _PlayScreenState extends State<PlayScreen> {
       GameSounds.instance.playStart();
       refreshAdvice();
     });
+    AnalyticsService.instance.log(AnalyticsEvent.gameStarted, metadata: {
+      'mode': widget.assistantMode ? 'assistant' : 'offline',
+      'elo': widget.initialElo,
+    });
   }
 
   bool get ended => resigned || game.game_over;
@@ -141,6 +146,17 @@ class _PlayScreenState extends State<PlayScreen> {
     if (!mounted || !ended || resultShown) return;
     resultShown = true;
     final won = !resigned && game.in_checkmate && game.turn != human;
+    AnalyticsService.instance.log(AnalyticsEvent.gameFinished, metadata: {
+      'mode': widget.assistantMode ? 'assistant' : 'offline',
+      'result': won
+          ? 'win'
+          : resigned
+              ? 'resigned'
+              : game.in_checkmate
+                  ? 'loss'
+                  : 'draw',
+      'moves': game.history.length,
+    });
     if (won) GameSounds.instance.playVictory();
     showDialog<void>(
       context: context,
@@ -418,6 +434,11 @@ class _PlayScreenState extends State<PlayScreen> {
       refresh();
     });
     GameSounds.instance.playStart();
+    AnalyticsService.instance.log(AnalyticsEvent.gameStarted, metadata: {
+      'mode': widget.assistantMode ? 'assistant' : 'offline',
+      'elo': engineElo,
+      'restart': true,
+    });
     await ai();
     await refreshAdvice();
   }
@@ -612,6 +633,8 @@ class _PlayScreenState extends State<PlayScreen> {
         }
         if (!mounted || ticket != generation) return;
         assistantClaimed = true;
+        AnalyticsService.instance.log(AnalyticsEvent.assistantUsed,
+            metadata: {'mode': 'offline'});
       }
       final fen = game.fen;
       final advice = await ChessEngine().explain(game);

@@ -1,3 +1,4 @@
+import 'backend/analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -25,6 +26,7 @@ Future<void> main() async {
   await AppLanguage.instance.load();
   await GameSounds.instance.load();
   await BoardTheme.instance.load();
+  AnalyticsService.instance.log(AnalyticsEvent.appOpened);
   runApp(const MyApp());
 }
 

@@ -1,3 +1,4 @@
+import 'analytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -65,6 +66,11 @@ class SubscriptionStore extends ChangeNotifier {
       final result = await _channel.invokeMethod<String>('purchase', id);
       if (result == 'pending') error = 'Satın alma onayı bekleniyor.';
       await refresh();
+      // Only a verified entitlement counts as a start.
+      if (active) {
+        AnalyticsService.instance
+            .log(AnalyticsEvent.subscriptionStarted, metadata: {'product': id});
+      }
     } catch (_) {
       error = 'Satın alma tamamlanamadı. Tekrar dene.';
     } finally {
@@ -80,7 +86,11 @@ class SubscriptionStore extends ChangeNotifier {
     notifyListeners();
     try {
       await _channel.invokeMethod<void>('restore');
-      if (!await refresh()) error = 'Etkin abonelik bulunamadı.';
+      if (!await refresh()) {
+        error = 'Etkin abonelik bulunamadı.';
+      } else {
+        AnalyticsService.instance.log(AnalyticsEvent.subscriptionRestored);
+      }
     } catch (_) {
       error = 'Satın alımlar geri yüklenemedi. Tekrar dene.';
     } finally {

@@ -1,3 +1,4 @@
+import '../backend/analytics.dart';
 import '../widgets/premove_indicator.dart';
 import '../theme/board_theme.dart';
 import '../l10n/app_language.dart';
@@ -60,6 +61,9 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
   String? _error;
   bool _finishSent = false;
   bool _resultShown = false;
+
+  /// The screen re-syncs constantly; the start is only interesting once.
+  bool _startLogged = false;
   bool _leaving = false;
   bool _refreshing = false;
   int _reconnectAttempt = 0;
@@ -191,9 +195,16 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
         GameSounds.instance
             .playMove(capture: captured, check: nextGame.in_check);
       }
+      if (row['status'] == 'active' && !_startLogged) {
+        _startLogged = true;
+        AnalyticsService.instance
+            .log(AnalyticsEvent.gameStarted, metadata: {'mode': 'online'});
+      }
       if (row['status'] != 'active' && !_resultShown && !_leaving) {
         _premove = null;
         _resultShown = true;
+        AnalyticsService.instance.log(AnalyticsEvent.gameFinished,
+            metadata: {'mode': 'online', 'status': row['status']});
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && !_leaving) _showResult(row);
         });

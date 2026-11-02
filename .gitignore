@@ -56,3 +56,6 @@ android/.kotlin/
 android/build/
 third_party/stockfish/android/.cxx/
 third_party/stockfish/ios/Stockfish/src/*.nnue
+admin_dashboard/node_modules/
+admin_dashboard/dist/
+admin_dashboard/.env

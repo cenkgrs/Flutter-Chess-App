@@ -1,3 +1,4 @@
+import '../backend/analytics.dart';
 import 'auth_screen.dart';
 import 'subscription_screen.dart';
 import '../backend/feature_limits.dart';
@@ -623,6 +624,8 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
         }
         if (!mounted) return;
         _analysisClaimed = true;
+        AnalyticsService.instance.log(AnalyticsEvent.analysisUsed,
+            metadata: {'moves': _moves?.length ?? 0});
       } finally {
         if (mounted) setState(() => _claimingAnalysis = false);
       }

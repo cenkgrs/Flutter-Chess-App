@@ -1,3 +1,4 @@
+import '../backend/analytics.dart';
 import 'piece_geometry.dart';
 import 'package:chess/chess.dart' as c;
 import 'package:flutter/material.dart';
@@ -324,6 +325,8 @@ class BoardTheme extends ChangeNotifier {
         boardSkins.firstWhere((s) => s.id == id, orElse: () => woodSkin);
     if (next.id == _skin.id) return;
     _skin = next;
+    AnalyticsService.instance
+        .log(AnalyticsEvent.themeChanged, metadata: {'skin': next.id});
     notifyListeners();
     await (await SharedPreferences.getInstance()).setString(_skinKey, next.id);
   }
@@ -333,6 +336,8 @@ class BoardTheme extends ChangeNotifier {
         pieceSets.firstWhere((p) => p.id == id, orElse: () => woodPieces);
     if (next.id == _pieces.id || !isPieceSetAvailable(next)) return;
     _pieces = next;
+    AnalyticsService.instance
+        .log(AnalyticsEvent.pieceSetChanged, metadata: {'set': next.id});
     notifyListeners();
     await (await SharedPreferences.getInstance())
         .setString(_pieceSetKey, next.id);
