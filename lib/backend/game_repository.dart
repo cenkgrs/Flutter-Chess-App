@@ -167,7 +167,20 @@ class GameRepository {
         .from('game_moves')
         .select('ply,san,uci,fen_after')
         .eq('game_id', gameId)
-        .order('ply');
-    return List<Map<String, dynamic>>.from(rows);
+        // The Dart client sorts descending unless told otherwise, which
+        // handed the review the game backwards.
+        .order('ply', ascending: true);
+    return movesInPlayOrder(List<Map<String, dynamic>>.from(rows));
   }
+}
+
+/// Moves in the order they were played. The caller replays them one after the
+/// other, so this is sorted here rather than trusted from the query: a server
+/// or client default that flips the direction would otherwise turn the review
+/// silently backwards.
+List<Map<String, dynamic>> movesInPlayOrder(List<Map<String, dynamic>> rows) {
+  final ordered = [...rows];
+  ordered.sort((a, b) => ((a['ply'] as num?) ?? 0).compareTo(
+      (b['ply'] as num?) ?? 0));
+  return ordered;
 }
