@@ -92,8 +92,10 @@ void main() {
     final after = tester.getRect(find.byKey(const ValueKey('square-a8')));
     expect(after, before);
     expect(find.byType(BottomSheet), findsNothing);
+    // The balloon reports the move in its headline and the reasoning below.
+    expect(find.text('Şimdi Nc3 oyna.'), findsOneWidget);
     expect(
-        tester.getTopLeft(find.textContaining('Öneri')).dy,
+        tester.getTopLeft(find.text('Açıklama')).dy,
         greaterThan(
             tester.getBottomLeft(find.byKey(const ValueKey('square-a1'))).dy));
     expect(tester.takeException(), isNull);
@@ -113,13 +115,15 @@ void main() {
     expect(find.text('Menüye dön'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
-  testWidgets('Assistant mode exposes explanation action', (tester) async {
+  testWidgets('Assistant mode opens with the commentary balloon',
+      (tester) async {
     usePhoneViewport(tester);
     await tester.pumpWidget(
       const MaterialApp(home: PlayScreen(assistantMode: true)),
     );
 
-    expect(find.byKey(const ValueKey('assistant-info')), findsOneWidget);
+    expect(find.byKey(const ValueKey('assistant-strip')), findsOneWidget);
+    expect(find.byKey(const ValueKey('assistant-toggle')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

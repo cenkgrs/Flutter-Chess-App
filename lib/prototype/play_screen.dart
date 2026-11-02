@@ -1,3 +1,5 @@
+import 'dart:async';
+import '../widgets/assistant_strip.dart';
 import '../widgets/premove_indicator.dart';
 import '../backend/feature_limits.dart';
 import '../widgets/daily_limit.dart';
@@ -76,8 +78,7 @@ class PlayScreen extends StatefulWidget {
   State<PlayScreen> createState() => _PlayScreenState();
 }
 
-class _PlayScreenState extends State<PlayScreen>
-    with SingleTickerProviderStateMixin {
+class _PlayScreenState extends State<PlayScreen> {
   c.Chess game = c.Chess();
   int engineElo = 1500;
   String? startingFen;
@@ -94,6 +95,13 @@ class _PlayScreenState extends State<PlayScreen>
   /// Whether this game has already spent a daily assistant use.
   bool assistantClaimed = false;
   bool _assistantBusy = false;
+
+  /// The balloon opens with the board and the player may fold it away; it
+  /// comes back open on the next game.
+  bool assistantOpen = true;
+
+  /// Set when the allowance ran out mid-game, so the strip stops asking.
+  String? assistantNotice;
   bool resultShown = false;
   Premove? premove;
   final drawing = BoardDrawingController();
@@ -111,7 +119,6 @@ class _PlayScreenState extends State<PlayScreen>
     }
   }
 
-  late final AnimationController assistantPulse;
 
   @override
   void initState() {
@@ -123,13 +130,10 @@ class _PlayScreenState extends State<PlayScreen>
       human = game.turn;
       flipped = human == c.Color.BLACK;
     }
-    assistantPulse = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1100),
-    );
-    if (widget.assistantMode) assistantPulse.repeat(reverse: true);
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => GameSounds.instance.playStart());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      GameSounds.instance.playStart();
+      refreshAdvice();
+    });
   }
 
   bool get ended => resigned || game.game_over;
@@ -253,6 +257,7 @@ class _PlayScreenState extends State<PlayScreen>
             .playMove(capture: lastMoveCaptured, check: game.in_check);
       }
       announceResult();
+      unawaited(refreshAdvice());
       final queued = premove;
       premove = null;
       if (!ended && queued != null) {
@@ -414,6 +419,7 @@ class _PlayScreenState extends State<PlayScreen>
     });
     GameSounds.instance.playStart();
     await ai();
+    await refreshAdvice();
   }
 
   void undo() {
@@ -430,7 +436,7 @@ class _PlayScreenState extends State<PlayScreen>
       if (game.turn != human && game.history.isNotEmpty) game.undo_move();
       refresh();
     });
-    ai();
+    ai().then((_) => refreshAdvice());
   }
 
   Future<void> resign() async {
@@ -460,7 +466,6 @@ class _PlayScreenState extends State<PlayScreen>
   @override
   void dispose() {
     generation++;
-    assistantPulse.dispose();
     drawing.dispose();
     super.dispose();
   }
@@ -520,7 +525,7 @@ class _PlayScreenState extends State<PlayScreen>
                                 controller: drawing,
                                 flipped: flipped,
                                 child: boardWidget())),
-                        if (assistantAdvice != null)
+                        if (assistantAdvice != null && assistantOpen)
                           Positioned.fill(
                             child: IgnorePointer(
                               child: CustomPaint(
@@ -536,26 +541,24 @@ class _PlayScreenState extends State<PlayScreen>
                       ]),
                     ),
                   ),
-                  if (widget.assistantMode && assistantAdvice != null)
-                    Expanded(child: _assistantPanel())
-                  else
+                  if (widget.assistantMode)
                     Expanded(
+                        child: Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                            child: Align(
+                                alignment: Alignment.topCenter,
+                                child: _assistantStrip())))
+                  else
+                    const Expanded(
                       child: SingleChildScrollView(
                         reverse: true,
-                        padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
-                        child: widget.assistantMode
-                            ? const FirstUseTip(
-                                id: 'assistant',
-                                icon: Icons.lightbulb_outline,
-                                message:
-                                    'Sağ üstteki asistana dokun: önerdiği hamleyi tahtada okla gösterir ve nedenini açıklar.',
-                              )
-                            : const FirstUseTip(
-                                id: 'board_tools',
-                                icon: Icons.draw_outlined,
-                                message:
-                                    'Kalem simgesiyle tahtaya ok ve işaret çizebilirsin. Sıra rakipteyken hamleni seçersen ön hamle olarak sıraya girer.',
-                              ),
+                        padding: EdgeInsets.fromLTRB(12, 8, 12, 6),
+                        child: FirstUseTip(
+                          id: 'board_tools',
+                          icon: Icons.draw_outlined,
+                          message:
+                              'Kalem simgesiyle tahtaya ok ve işaret çizebilirsin. Sıra rakipteyken hamleni seçersen ön hamle olarak sıraya girer.',
+                        ),
                       ),
                     ),
                   if (ended)
@@ -573,57 +576,49 @@ class _PlayScreenState extends State<PlayScreen>
             }),
             Positioned(
                 top: 8, left: 2, child: BoardDrawingTools(controller: drawing)),
-            if (widget.assistantMode)
-              Positioned(
-                top: 8,
-                right: 10,
-                child: AnimatedBuilder(
-                  animation: assistantPulse,
-                  builder: (context, child) => Transform.scale(
-                    scale: .94 + assistantPulse.value * .12,
-                    child: Transform.rotate(
-                      angle: math.sin(assistantPulse.value * math.pi * 2) * .1,
-                      child: child,
-                    ),
-                  ),
-                  child: IconButton.filledTonal(
-                    key: const ValueKey('assistant-info'),
-                    tooltip: tr(context, 'Asistana sor'),
-                    onPressed: !ended &&
-                            !thinking &&
-                            !_assistantBusy &&
-                            game.turn == human
-                        ? _showAssistant
-                        : null,
-                    icon: const Icon(Icons.auto_awesome_rounded),
-                  ),
-                ),
-              ),
           ]),
         ),
       ),
     );
   }
 
-  /// One free use covers a whole game, so the claim happens on the first
-  /// question rather than when the screen opens: a player who never asks
-  /// does not spend their day's allowance.
-  Future<void> _showAssistant() async {
+  /// Keeps the balloon talking by itself. Called after every position
+  /// change, so the player never has to ask; the first comment of a game
+  /// is what spends the daily use.
+  Future<void> refreshAdvice() async {
+    if (!widget.assistantMode || assistantNotice != null) return;
+    if (ended || thinking || game.turn != human) return;
     if (_assistantBusy) return;
     setState(() => _assistantBusy = true);
     final requestedGame = game;
+    final ticket = generation;
     try {
       if (!assistantClaimed) {
-        if (!await claimDailyFeature(context, DailyFeature.assistantGame,
-            limits: widget.limits)) {
+        bool granted;
+        try {
+          granted = await claimDailyFeature(context, DailyFeature.assistantGame,
+              limits: widget.limits);
+        } catch (_) {
+          // The commentary now starts on its own, so a counter that cannot
+          // be reached must not take the board down with it. Same rule as
+          // the counter's own: when it cannot be checked, play goes on.
+          granted = true;
+        }
+        if (!granted) {
+          if (mounted) {
+            setState(() => assistantNotice = 'Bugünlük asistan hakkın doldu.');
+          }
           return;
         }
-        if (!mounted || !identical(game, requestedGame)) return;
+        if (!mounted || ticket != generation) return;
         assistantClaimed = true;
       }
       final fen = game.fen;
       final advice = await ChessEngine().explain(game);
-      if (!mounted || !identical(game, requestedGame) || game.fen != fen) {
+      if (!mounted ||
+          ticket != generation ||
+          !identical(game, requestedGame) ||
+          game.fen != fen) {
         return;
       }
       setState(() => assistantAdvice = advice);
@@ -632,31 +627,30 @@ class _PlayScreenState extends State<PlayScreen>
     }
   }
 
-  Widget _assistantPanel() => LayoutBuilder(
-      builder: (context, bounds) => SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          child: Column(children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: IconButton(
-                onPressed: () => setState(() => assistantAdvice = null),
-                icon: const Icon(Icons.close),
-              ),
-            ),
-            SizedBox(
-              height: math.min(120, bounds.maxHeight * .38),
-              child: Image.asset('lib/images/assistant-strategist.png',
-                  fit: BoxFit.contain),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(4, 6, 4, 10),
-              child: LText(
-                '${assistantAdvice!.firstSentence}\n${assistantAdvice!.secondSentence}\nAna varyant: ${assistantAdvice!.variation.join('  ')}',
-                style:
-                    const TextStyle(color: rokBone, fontSize: 12, height: 1.35),
-              ),
-            ),
-          ])));
+  /// What the balloon says right now, which is not always a suggestion.
+  AssistantStrip _assistantStrip() {
+    final advice = assistantAdvice;
+    final headline = assistantNotice ??
+        (ended
+            ? status
+            : thinking
+                ? 'Rakip düşünüyor…'
+                : advice != null
+                    ? 'Şimdi ${advice.move} oyna.'
+                    : 'Konumu inceliyorum…');
+    return AssistantStrip(
+      key: const ValueKey('assistant-strip'),
+      open: assistantOpen,
+      onToggle: () => setState(() => assistantOpen = !assistantOpen),
+      headline: headline,
+      detail: assistantNotice == null && !ended ? advice?.secondSentence : null,
+      variation: assistantNotice == null && !ended && advice != null
+          ? advice.variation
+          : const [],
+      move: assistantNotice == null && !ended ? advice?.move : null,
+      thinking: _assistantBusy || thinking,
+    );
+  }
 
   Future<void> openReview() async {
     await showModalBottomSheet<void>(

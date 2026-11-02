@@ -58,6 +58,14 @@ Future<void> _settleAssistant(WidgetTester tester) async {
   }
 }
 
+/// Taps a square, then its destination, the way a player moves.
+Future<void> move(WidgetTester tester, String from, String to) async {
+  await tester.tap(find.byKey(ValueKey('square-$from')));
+  await tester.pump();
+  await tester.tap(find.byKey(ValueKey('square-$to')));
+  await tester.pump();
+}
+
 void _phone(WidgetTester tester) {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
@@ -95,7 +103,8 @@ void main() {
     expect(limits.claims, isEmpty);
   });
 
-  testWidgets('the assistant spends one use for a whole game', (tester) async {
+  testWidgets('the assistant comments on its own and spends one use',
+      (tester) async {
     _phone(tester);
     final limits = _Limits(allow: true);
     await tester.pumpWidget(MaterialApp(
@@ -103,14 +112,38 @@ void main() {
             assistantMode: true, evaluate: _fakeEngine, limits: limits)));
     await _settleAssistant(tester);
 
-    await tester.tap(find.byKey(const ValueKey('assistant-info')));
-    await _settleAssistant(tester);
+    // Nobody asked: the balloon opens with the board and talks by itself.
+    expect(find.byKey(const ValueKey('assistant-strip')), findsOneWidget);
     expect(limits.claims, ['assistant_game']);
+    expect(find.textContaining('Şimdi '), findsOneWidget);
 
-    // Asking again in the same game must not spend a second use.
-    await tester.tap(find.byKey(const ValueKey('assistant-info')));
+    // Playing on refreshes the commentary without spending another use.
+    await move(tester, 'e2', 'e4');
     await _settleAssistant(tester);
     expect(limits.claims, ['assistant_game']);
+  });
+
+  testWidgets('the balloon folds away and takes the board arrow with it',
+      (tester) async {
+    _phone(tester);
+    final limits = _Limits(allow: true);
+    await tester.pumpWidget(MaterialApp(
+        home: PlayScreen(
+            assistantMode: true, evaluate: _fakeEngine, limits: limits)));
+    await _settleAssistant(tester);
+    expect(find.byKey(const ValueKey('assistant-arrow')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('assistant-toggle')));
+    await _settleAssistant(tester);
+
+    // Collapsed: the headline stays, the reasoning and the arrow go.
+    expect(find.byKey(const ValueKey('assistant-strip')), findsOneWidget);
+    expect(find.byKey(const ValueKey('assistant-arrow')), findsNothing);
+    expect(find.text('Devamı:'), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('assistant-toggle')));
+    await _settleAssistant(tester);
+    expect(find.byKey(const ValueKey('assistant-arrow')), findsOneWidget);
   });
 
   testWidgets('a new game requires its own assistant allowance',
@@ -121,21 +154,19 @@ void main() {
         home: PlayScreen(
             assistantMode: true, evaluate: _fakeEngine, limits: limits)));
     await _settleAssistant(tester);
-    await tester.tap(find.byKey(const ValueKey('assistant-info')));
-    await _settleAssistant(tester);
+    expect(limits.claims, ['assistant_game']);
+
     final dynamic state = tester.state(find.byType(PlayScreen));
     final restart = state.newGame() as Future<void>;
     await _settleAssistant(tester);
     await tester.tap(find.text('Oyuna başla'));
     await _settleAssistant(tester);
     await restart;
-    await tester.tap(find.byKey(const ValueKey('assistant-info')));
     await _settleAssistant(tester);
     expect(limits.claims, ['assistant_game', 'assistant_game']);
   });
 
-  testWidgets(
-      'a used-up assistant allowance explains itself and gives no advice',
+  testWidgets('a used-up assistant allowance says so instead of advising',
       (tester) async {
     _phone(tester);
     final limits = _Limits(allow: false);
@@ -144,17 +175,12 @@ void main() {
             assistantMode: true, evaluate: _fakeEngine, limits: limits)));
     await _settleAssistant(tester);
 
-    await tester.tap(find.byKey(const ValueKey('assistant-info')));
-    await _settleAssistant(tester);
-
     expect(find.text('Bugünlük asistan hakkın doldu'), findsOneWidget);
     expect(
         find.text(
             'Bugünlük ücretsiz asistanlı maç hakkını kullandın. Abonelikle sınırsız asistanlı maç oynayabilirsin.'),
         findsOneWidget);
     expect(find.text('Hakkın 7 saat sonra yenilenir.'), findsOneWidget);
-    // The advice panel never opened.
-    expect(find.text('Ana varyant:'), findsNothing);
   });
 
   testWidgets('analysis asks for an allowance before running the engine',
@@ -207,7 +233,7 @@ void main() {
         reason: 're-running the same game charged again');
   });
 
-  testWidgets('repeated assistant taps share the pending allowance check',
+  testWidgets('a move during a pending claim does not spend a second use',
       (tester) async {
     _phone(tester);
     final response = Completer<void>();
@@ -215,16 +241,16 @@ void main() {
     await tester.pumpWidget(MaterialApp(
         home: PlayScreen(
             assistantMode: true, evaluate: _fakeEngine, limits: limits)));
-    await _settleAssistant(tester);
+    await tester.pump();
 
-    final button = find.byKey(const ValueKey('assistant-info'));
-    await tester.tap(button);
-    await tester.tap(button);
+    // The opening claim is still in flight; playing must not start another.
     expect(limits.claims, ['assistant_game']);
+    await move(tester, 'e2', 'e4');
+    expect(limits.claims, ['assistant_game']);
+
     response.complete();
     await _settleAssistant(tester);
     expect(limits.claims, ['assistant_game']);
-    expect(tester.widget<IconButton>(button).onPressed, isNotNull);
   });
 
   testWidgets('repeated analysis taps share the pending allowance check',

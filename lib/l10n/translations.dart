@@ -1111,6 +1111,23 @@ const translations = <String, List<String>>{
     'Подсказка сохраняет серию, но не приносит очков.'
   ],
   'Tahta görünümü': ['Board appearance', 'Brettdesign', 'Вид доски'],
+  'Konumu inceliyorum…': [
+    'Reading the position…',
+    'Ich lese die Stellung…',
+    'Изучаю позицию…'
+  ],
+  'Rakip düşünüyor…': [
+    'Your opponent is thinking…',
+    'Dein Gegner denkt nach…',
+    'Соперник думает…'
+  ],
+  'Bugünlük asistan hakkın doldu.': [
+    'No assistant games left today.',
+    'Heute keine Assistenz-Partien mehr.',
+    'На сегодня игры с помощником закончились.'
+  ],
+  'önerilen hamle': ['suggested move', 'Zugvorschlag', 'рекомендуемый ход'],
+  'Devamı:': ['Then:', 'Danach:', 'Далее:'],
   'Bugünlük asistan hakkın doldu': [
     'No assistant games left today',
     'Heute keine Assistenz-Partien mehr',
@@ -1250,6 +1267,11 @@ const templates = <String, List<String>>{
   r'^(.+) sn$': ['{1} sec', '{1} Sek.', '{1} сек.'],
   r'^(.+) hata$': ['{1} mistakes', '{1} Fehler', 'Ошибок: {1}'],
   r'^Tur (.+)$': ['Round {1}', 'Runde {1}', 'Раунд {1}'],
+  r'^Şimdi (.+) oyna\.$': [
+    'Play {1} now.',
+    'Spiele jetzt {1}.',
+    'Сейчас играйте {1}.'
+  ],
   r'^Hakkın (\d+) saat sonra yenilenir\.$': [
     'Your allowance renews in {1} hours.',
     'Dein Kontingent wird in {1} Stunden erneuert.',
