@@ -36,6 +36,18 @@ class ProfileScreen extends StatelessWidget {
   static final supportUri =
       Uri.parse('https://cenkgrs.github.io/rok-site/support.html');
 
+  /// This screen is stateless and only rebuilds on a language change, so a
+  /// successful sign-in would leave a stale 'Giriş yap' row behind. Returning
+  /// to the home menu instead both clears that and lands the user where the
+  /// signed-in state is actually visible.
+  Future<void> _signIn(BuildContext context) async {
+    final navigator = Navigator.of(context);
+    final authenticated = await navigator.push<bool>(
+      MaterialPageRoute(builder: (_) => const AuthScreen()),
+    );
+    if (authenticated == true) navigator.popUntil((route) => route.isFirst);
+  }
+
   Future<void> _openLink(BuildContext context, Uri uri) async {
     try {
       final opened = await (openLink?.call(uri) ??
@@ -144,10 +156,7 @@ class ProfileScreen extends StatelessWidget {
                       icon: Icons.login_rounded,
                       title: 'Giriş yap',
                       subtitle: 'Giriş yap veya hesap oluştur',
-                      onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const AuthScreen()))),
+                      onTap: () => _signIn(context)),
                 ],
                 const SizedBox(height: 16),
                 _ProfileLink(

@@ -243,8 +243,7 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
         IconButton(
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
-          onPressed: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const ProfileScreen())),
+          onPressed: () => _openProfile(context),
           icon: const Icon(Icons.account_circle_outlined,
               color: mutedBone, size: 34),
         ),
@@ -268,12 +267,8 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
         ),
         InkWell(
           key: const ValueKey('login'),
-          onTap: () => user == null
-              ? Navigator.push<bool>(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AuthScreen()),
-                )
-              : _showAccountActions(context),
+          onTap: () =>
+              user == null ? _openAuth(context) : _showAccountActions(context),
           borderRadius: BorderRadius.circular(4),
           child: SizedBox(
             width: 38,
@@ -313,7 +308,29 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
         ],
       ),
     );
-    if (signOut == true) await AuthRepository().signOut();
+    if (signOut != true) return;
+    await AuthRepository().signOut();
+    // The header reads `AppBackend.currentUser`, so it has to be rebuilt by
+    // hand: nothing in the backend notifies listeners of an auth change.
+    if (mounted) setState(() {});
+  }
+
+  /// Opens the sign-in screen and rebuilds the header afterwards, so the
+  /// 'Giriş' label becomes 'Çıkış' the moment the user comes back.
+  Future<void> _openAuth(BuildContext context) async {
+    await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const AuthScreen()),
+    );
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _openProfile(BuildContext context) async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+    );
+    if (mounted) setState(() {});
   }
 
   void _showTimeControls(BuildContext context) {
