@@ -1111,6 +1111,74 @@ const translations = <String, List<String>>{
     'Подсказка сохраняет серию, но не приносит очков.'
   ],
   'Tahta görünümü': ['Board appearance', 'Brettdesign', 'Вид доски'],
+  'Sınırsız asistan, sınırsız analiz': [
+    'Unlimited assistant, unlimited analysis',
+    'Unbegrenzter Assistent, unbegrenzte Analyse',
+    'Безлимитный помощник и анализ'
+  ],
+  'Günlük sınır olmadan oyna, her maçını motorla incele ve gelişimini hızlandır.': [
+    'Play without a daily limit, review every game with the engine, and improve faster.',
+    'Spiele ohne Tageslimit, analysiere jede Partie mit der Engine und verbessere dich schneller.',
+    'Играйте без дневного лимита, разбирайте каждую партию движком и растите быстрее.'
+  ],
+  'Sınırsız asistanlı maç': [
+    'Unlimited assisted games',
+    'Unbegrenzte Partien mit Assistent',
+    'Безлимитные партии с помощником'
+  ],
+  'Her oyunda yanında, günde bir maçla sınırlı kalmadan.': [
+    'With you in every game, not just one a day.',
+    'In jeder Partie dabei, nicht nur einmal am Tag.',
+    'С вами в каждой партии, а не раз в день.'
+  ],
+  'Sınırsız maç analizi': [
+    'Unlimited game analysis',
+    'Unbegrenzte Partieanalyse',
+    'Безлимитный анализ партий'
+  ],
+  'Oynadığın her partiyi hamle hamle motora inceletebilirsin.': [
+    'Have the engine walk through every game you play, move by move.',
+    'Lass die Engine jede deiner Partien Zug für Zug durchgehen.',
+    'Движок разберёт каждую вашу партию ход за ходом.'
+  ],
+  'Beklemeden devam': ['No waiting', 'Kein Warten', 'Без ожидания'],
+  'Hakkın dolduğunda gece yarısını beklemene gerek kalmaz.': [
+    'No waiting for midnight when the day\'s allowance runs out.',
+    'Kein Warten auf Mitternacht, wenn das Tageskontingent aufgebraucht ist.',
+    'Не нужно ждать полуночи, когда дневной лимит исчерпан.'
+  ],
+  'Geliştirmeyi destekle': [
+    'Support development',
+    'Entwicklung unterstützen',
+    'Поддержите разработку'
+  ],
+  'ROK reklamsız. Abonelik, geliştirilmeye devam etmesini sağlar.': [
+    'ROK has no ads. Subscriptions are what keep it being built.',
+    'ROK hat keine Werbung. Abonnements halten die Entwicklung am Laufen.',
+    'В ROK нет рекламы. Подписки позволяют продолжать разработку.'
+  ],
+  'Ücretsiz': ['Free', 'Kostenlos', 'Бесплатно'],
+  'Premium': ['Premium', 'Premium', 'Premium'],
+  'Asistanlı maç': ['Assisted games', 'Partien mit Assistent', 'Партии с помощником'],
+  'Maç analizi': ['Game analysis', 'Partieanalyse', 'Анализ партии'],
+  'Tüm tahta ve taş temaları': [
+    'All board and piece themes',
+    'Alle Brett- und Figurendesigns',
+    'Все темы доски и фигур'
+  ],
+  'günde 1': ['1 a day', '1 pro Tag', '1 в день'],
+  'sınırsız': ['unlimited', 'unbegrenzt', 'без лимита'],
+  'açık': ['included', 'enthalten', 'включено'],
+  '12 ay, tek ödeme': [
+    '12 months, one payment',
+    '12 Monate, eine Zahlung',
+    '12 месяцев, один платёж'
+  ],
+  '1 ay, her ay yenilenir': [
+    '1 month, renews monthly',
+    '1 Monat, monatliche Verlängerung',
+    '1 месяц, продление ежемесячно'
+  ],
   'Konumu inceliyorum…': [
     'Reading the position…',
     'Ich lese die Stellung…',

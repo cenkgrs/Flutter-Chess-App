@@ -60,9 +60,16 @@ void main() {
     await tester
         .pumpWidget(MaterialApp(home: SubscriptionScreen(store: store)));
     await tester.pumpAndSettle();
+    // The store failure is stated before any pitch, without scrolling.
     expect(find.text('Abonelikler şu anda satışa açık değil.'), findsOneWidget);
-    expect(find.text('Satın alımları geri yükle'), findsOneWidget);
+    // Nothing is offered for sale, and no price is invented.
     expect(find.byType(FilledButton), findsNothing);
+
+    // Restore stays reachable; the paywall is a scrolling page.
+    final restore = find.text('Satın alımları geri yükle');
+    await tester.scrollUntilVisible(restore, 200,
+        scrollable: find.byType(Scrollable).first);
+    expect(restore, findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
