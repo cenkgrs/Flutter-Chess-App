@@ -86,6 +86,42 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('A gap in the move list costs that move, not the analysis',
+      (tester) async {
+    // Online games are written one ply at a time, so a lost write leaves a
+    // hole. The stored position after each move carries the pass over it.
+    final board = c.Chess();
+    final moves = <Map<String, dynamic>>[];
+    for (final san in ['e4', 'e5', 'Nf3', 'Nc6']) {
+      board.move(san);
+      final played = board.history.last.move;
+      moves.add({
+        'san': san,
+        'uci': '${played.fromAlgebraic}${played.toAlgebraic}',
+        'fen_after': board.fen,
+      });
+    }
+    moves[1]['san'] = '';
+    moves[1]['uci'] = '';
+
+    await tester.pumpWidget(MaterialApp(
+        home: GameReviewScreen(
+            game: const {},
+            localMoves: moves,
+            limits: DailyFeatureLimits(
+                premium: () async => true,
+                request: (name, params) async =>
+                    {'allowed': true, 'used': 1, 'limit': 1, 'remaining': 0}),
+            evaluate: (fen) async => const EngineEvaluation('e2e4', 20, null))));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Motor analizi'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Analiz tamamlanamadı. Tekrar deneyebilirsin.'),
+        findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   test('Evaluation bar always uses white perspective', () {
     expect(whiteAdvantage(const EngineEvaluation(null, 0, null), true), .5);
     expect(whiteAdvantage(const EngineEvaluation(null, 300, null), true),

@@ -535,6 +535,14 @@ class _OutcomeIcon extends StatelessWidget {
   }
 }
 
+/// One replayed ply: the position it leads to, and the move in coordinates
+/// when we could establish it.
+class _ReviewPly {
+  const _ReviewPly(this.position, this.uci);
+  final c.Chess position;
+  final String? uci;
+}
+
 class GameReviewScreen extends StatefulWidget {
   const GameReviewScreen(
       {super.key,
@@ -621,6 +629,37 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
   Future<EngineEvaluation> _evaluate(String fen) =>
       widget.evaluate?.call(fen) ?? DeviceEngine.instance.evaluate(fen);
 
+  /// Plays [row] on top of [position]. Replaying the move is what tells us
+  /// which square it landed on, so that is tried first — by coordinates,
+  /// which have no dialect, then by SAN. A game with a gap in its move list
+  /// still has the position each move produced, and falling back to that
+  /// keeps the rest of the analysis rather than losing all of it.
+  _ReviewPly? _playPly(Map<String, dynamic> row, c.Chess position) {
+    final uci = row['uci'] as String?;
+    final next = c.Chess.fromFEN(position.fen);
+    final applied = uci != null && uci.length >= 4
+        ? next.move({
+            'from': uci.substring(0, 2),
+            'to': uci.substring(2, 4),
+            if (uci.length > 4) 'promotion': uci.substring(4),
+          })
+        : next.move(row['san'] as String);
+    if (applied == true) {
+      final played = next.history.last.move;
+      return _ReviewPly(
+          next,
+          '${played.fromAlgebraic}${played.toAlgebraic}'
+          '${played.promotion?.name ?? ''}');
+    }
+    final fen = row['fen_after'] as String?;
+    if (fen == null) return null;
+    try {
+      return _ReviewPly(c.Chess.fromFEN(fen), uci);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _analyze() async {
     if (_claimingAnalysis || _analyzing) return;
     // One free use covers this screen's game; re-running the pass on the
@@ -649,6 +688,10 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
       _destinations.clear();
       _progress = 0;
     });
+    // Each stored move carries the position it produced, so the pass walks
+    // those positions instead of replaying the game. A game with a gap in its
+    // move list — or a SAN spelling the parser will not take — then costs the
+    // player the moves around it, not the whole analysis.
     var position = _start;
     try {
       var before = await _evaluate(position.fen);
@@ -658,21 +701,10 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
         if (!mounted || ticket != _analysisGeneration) return;
         final row = _moves![i];
         final ourMove = position.turn == _player;
-        // Replay by coordinates where we have them: SAN has dialects (check
-        // marks, castling glyphs, disambiguation) and one the parser spells
-        // differently fails the whole pass. `uci` is unambiguous.
-        final stored = row['uci'] as String?;
-        final applied = stored != null && stored.length >= 4
-            ? position.move({
-                'from': stored.substring(0, 2),
-                'to': stored.substring(2, 4),
-                if (stored.length > 4) 'promotion': stored.substring(4),
-              })
-            : position.move(row['san'] as String);
-        if (applied != true) throw StateError('Eksik hamle geçmişi');
-        final played = position.history.last.move;
-        final uci =
-            '${played.fromAlgebraic}${played.toAlgebraic}${played.promotion?.name ?? ''}';
+        final ply = _playPly(row, position);
+        if (ply == null) throw StateError('Eksik hamle geçmişi');
+        final uci = ply.uci;
+        position = ply.position;
         final after = position.game_over
             ? EngineEvaluation(null, 0, position.in_checkmate ? -1 : null)
             : await _evaluate(position.fen);
@@ -685,9 +717,9 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
         setState(() {
           _evaluations[i + 1] = after;
           _progress = i + 1;
-          if (ourMove) {
+          if (ourMove && uci != null && uci.length >= 4) {
             _qualities[i] = moveQuality(loss, best: before.move == uci);
-            _destinations[i] = played.toAlgebraic;
+            _destinations[i] = uci.substring(2, 4);
           }
         });
         before = after;
