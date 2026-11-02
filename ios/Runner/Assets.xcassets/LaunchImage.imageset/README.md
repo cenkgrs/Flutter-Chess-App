@@ -1,5 +1,6 @@
-# Launch Screen Assets
+# Launch Image
 
-You can customize the launch screen with your own desired assets by replacing the image files in this directory.
-
-You can also do it by opening your Flutter project's Xcode project with `open ios/Runner.xcworkspace`, selecting `Runner/Assets.xcassets` in the Project Navigator and dropping in the desired images.
+The ROK wordmark the launch screen shows, centred on the home menu's brown
+(`#32180d`) so the app does not flash white before the first frame. Rendered
+from `tools/launch_wordmark.swift`; re-run that script to change it rather than
+editing the PNGs by hand.
