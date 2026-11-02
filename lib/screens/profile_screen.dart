@@ -8,6 +8,7 @@ import '../theme/board_theme.dart';
 import '../widgets/rok_style.dart';
 import 'dart:math' as math;
 import 'package:chess/chess.dart' as c;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -655,9 +656,20 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
       setState(() => _evaluations[0] = before);
       for (var i = 0; i < _moves!.length; i++) {
         if (!mounted || ticket != _analysisGeneration) return;
-        final san = _moves![i]['san'] as String;
+        final row = _moves![i];
         final ourMove = position.turn == _player;
-        if (!position.move(san)) throw StateError('Eksik hamle geçmişi');
+        // Replay by coordinates where we have them: SAN has dialects (check
+        // marks, castling glyphs, disambiguation) and one the parser spells
+        // differently fails the whole pass. `uci` is unambiguous.
+        final stored = row['uci'] as String?;
+        final applied = stored != null && stored.length >= 4
+            ? position.move({
+                'from': stored.substring(0, 2),
+                'to': stored.substring(2, 4),
+                if (stored.length > 4) 'promotion': stored.substring(4),
+              })
+            : position.move(row['san'] as String);
+        if (applied != true) throw StateError('Eksik hamle geçmişi');
         final played = position.history.last.move;
         final uci =
             '${played.fromAlgebraic}${played.toAlgebraic}${played.promotion?.name ?? ''}';
@@ -680,7 +692,10 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
         });
         before = after;
       }
-    } catch (_) {
+    } catch (error, stack) {
+      // The user gets one calm sentence; a test build gets the reason, since
+      // engine timeouts and broken move history fail identically on screen.
+      if (!kReleaseMode) debugPrint('analysis failed: $error\n$stack');
       if (mounted && ticket == _analysisGeneration) {
         setState(() => _error = 'Analiz tamamlanamadı. Tekrar deneyebilirsin.');
       }

@@ -48,6 +48,44 @@ void main() {
         findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+  testWidgets('A move whose SAN the parser rejects is replayed from its uci',
+      (tester) async {
+    // Online games store both spellings. SAN comes from whichever client
+    // played the move, so a dialect the parser will not take must not cost
+    // the player their analysis when the coordinates are right there.
+    final board = c.Chess();
+    final moves = <Map<String, dynamic>>[];
+    for (final san in ['e4', 'e5', 'Nf3']) {
+      board.move(san);
+      final played = board.history.last.move;
+      moves.add({
+        'san': san,
+        'uci': '${played.fromAlgebraic}${played.toAlgebraic}',
+        'fen_after': board.fen,
+      });
+    }
+    moves[1]['san'] = 'e7-e5!?';
+
+    await tester.pumpWidget(MaterialApp(
+        home: GameReviewScreen(
+            game: const {},
+            localMoves: moves,
+            // Its own allowance: the instance keeps a per-device count, so a
+            // shared one would refuse whichever test ran second.
+            limits: DailyFeatureLimits(
+                premium: () async => true,
+                request: (name, params) async =>
+                    {'allowed': true, 'used': 1, 'limit': 1, 'remaining': 0}),
+            evaluate: (fen) async => const EngineEvaluation('e2e4', 20, null))));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Motor analizi'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Analiz tamamlanamadı. Tekrar deneyebilirsin.'),
+        findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   test('Evaluation bar always uses white perspective', () {
     expect(whiteAdvantage(const EngineEvaluation(null, 0, null), true), .5);
     expect(whiteAdvantage(const EngineEvaluation(null, 300, null), true),

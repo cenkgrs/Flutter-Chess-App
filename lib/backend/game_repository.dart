@@ -165,7 +165,7 @@ class GameRepository {
   Future<List<Map<String, dynamic>>> gameMoves(String gameId) async {
     final rows = await AppBackend.client
         .from('game_moves')
-        .select('ply,san,fen_after')
+        .select('ply,san,uci,fen_after')
         .eq('game_id', gameId)
         .order('ply');
     return List<Map<String, dynamic>>.from(rows);

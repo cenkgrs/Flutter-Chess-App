@@ -196,7 +196,13 @@ class _PlayScreenState extends State<PlayScreen> {
     final moves = <Map<String, dynamic>>[];
     for (final san in game.getHistory().cast<String>()) {
       replay.move(san);
-      moves.add({'san': san, 'fen_after': replay.fen});
+      final played = replay.history.last.move;
+      moves.add({
+        'san': san,
+        'uci': '${played.fromAlgebraic}${played.toAlgebraic}'
+            '${played.promotion?.name ?? ''}',
+        'fen_after': replay.fen,
+      });
     }
     Navigator.push(
         context,
