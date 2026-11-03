@@ -12,12 +12,18 @@ void main() {
 
     await tester.pumpWidget(const MyApp());
     expect(find.text('OYUNA BAŞLA'), findsOneWidget);
-    expect(find.text('Bilgisayara karşı'), findsOneWidget);
     expect(find.text('Asistan'), findsOneWidget);
     expect(find.byKey(const ValueKey('menu-premium')), findsNothing);
     expect(find.byKey(const ValueKey('menu-board-theme')), findsNothing);
 
+    // The card asks which kind of game first; the clocks come after.
     await tester.tap(find.byKey(const ValueKey('online-play')));
+    await tester.pumpAndSettle();
+    expect(find.text('NASIL OYNAYALIM?'), findsOneWidget);
+    expect(find.byKey(const ValueKey('mode-friend')), findsOneWidget);
+    expect(find.byKey(const ValueKey('mode-computer')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('mode-online')));
     await tester.pumpAndSettle();
     expect(find.text('SÜRE SEÇ'), findsOneWidget);
     expect(find.byKey(const ValueKey('time-1+0')), findsOneWidget);
@@ -39,7 +45,10 @@ void main() {
     final initialTop = tester.getTopLeft(header).dy;
 
     expect(find.text('Arkadaşlar'), findsNothing);
-    expect(find.text('Arkadaşla oyna'), findsOneWidget);
+    // Playing a friend moved into the card's sheet, so the list no longer
+    // carries it; the assistant took the space it used to argue over.
+    expect(find.text('Arkadaşla oyna'), findsNothing);
+    expect(find.byKey(const ValueKey('assistant-play')), findsOneWidget);
 
     await tester.drag(
         find.byType(SingleChildScrollView), const Offset(0, -360));

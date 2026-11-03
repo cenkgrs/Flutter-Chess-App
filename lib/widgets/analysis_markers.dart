@@ -3,38 +3,55 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../prototype/stockfish_engine.dart';
 
+/// The five verdicts form one ordered scale, so the colours are a ramp whose
+/// lightness falls from best to worst rather than five unrelated hues. That
+/// ordering survives a greyscale print and colour-blind vision, and it is the
+/// only part a glance actually reads; the glyph and the row's own label carry
+/// the identity.
 Color qualityColor(String quality) => switch (quality) {
-      'En iyi' => const Color(0xff28c9bd),
-      'İyi' => const Color(0xff62c978),
-      'İsabetsizlik' => const Color(0xffe6ad45),
-      _ => const Color(0xffed5c59),
+      'En iyi' => const Color(0xff7fd8b4),
+      'İyi' => const Color(0xffa9cf7a),
+      'İsabetsizlik' => const Color(0xffdcb152),
+      'Hata' => const Color(0xffcc7c3f),
+      _ => const Color(0xffb4503f),
+    };
+
+IconData qualityIcon(String quality) => switch (quality) {
+      'En iyi' => Icons.star_rounded,
+      'İyi' => Icons.check_rounded,
+      'İsabetsizlik' => Icons.remove_rounded,
+      'Hata' => Icons.priority_high_rounded,
+      _ => Icons.close_rounded,
     };
 
 class QualityBadge extends StatelessWidget {
   const QualityBadge(this.quality, {super.key, this.size = 20});
   final String quality;
   final double size;
+
+  static const _ink = Color(0xff241a12);
+
   @override
   Widget build(BuildContext context) => Tooltip(
-      message: quality,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
+        message: quality,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
             color: qualityColor(quality),
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 1),
-            boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 3)]),
-        child: Icon(
-            switch (quality) {
-              'En iyi' => Icons.star_rounded,
-              'İyi' => Icons.check_rounded,
-              'İsabetsizlik' => Icons.remove_rounded,
-              _ => Icons.close_rounded,
-            },
-            size: size * .75,
-            color: const Color(0xff13201a)),
-      ));
+            // A ring in the board's own ink instead of a white outline and a
+            // blurred halo: the badge sits over pieces and squares, and the
+            // glow was what made it look pasted on.
+            border: Border.all(color: _ink, width: size * .07),
+          ),
+          child: Icon(
+            qualityIcon(quality),
+            size: size * .66,
+            color: _ink,
+          ),
+        ),
+      );
 }
 
 double whiteAdvantage(EngineEvaluation evaluation, bool whiteToMove) {

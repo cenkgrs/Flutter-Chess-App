@@ -991,11 +991,17 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                                                             _qualities[i]!),
                                                         const SizedBox(
                                                             width: 8),
+                                                        // The badge carries
+                                                        // the verdict's
+                                                        // colour; the words
+                                                        // stay readable.
                                                         LText(_qualities[i]!,
-                                                            style: TextStyle(
-                                                                color: qualityColor(
-                                                                    _qualities[
-                                                                        i]!))),
+                                                            style:
+                                                                const TextStyle(
+                                                                    color:
+                                                                        rokBone,
+                                                                    fontSize:
+                                                                        13)),
                                                       ]),
                                             onTap: () => _selectMove(i + 1)),
                                         childCount: _moves!.length)),

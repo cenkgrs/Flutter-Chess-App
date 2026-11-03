@@ -151,38 +151,12 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
                                 const SizedBox(height: 45),
                                 _PrimaryAction(
                                   key: const ValueKey('online-play'),
-                                  onTap: () => _showTimeControls(context),
+                                  onTap: () => _showPlayModes(context),
                                 ),
                                 const SizedBox(height: 36),
-                                _SecondaryAction(
-                                  icon: Icons.group_outlined,
-                                  title: 'Arkadaşla oyna',
-                                  subtitle: 'Oda kur veya davet kodu gir',
-                                  onTap: () => _openFriends(context),
-                                ),
-                                const _MenuDivider(),
-                                _SecondaryAction(
-                                  key: const ValueKey('computer-play'),
-                                  icon: Icons.memory_rounded,
-                                  title: 'Bilgisayara karşı',
-                                  subtitle: 'Çevrimdışı antrenman',
-                                  onTap: () => PlayScreen.launch(context),
-                                ),
-                                const _MenuDivider(),
                                 DailyPuzzleMenuEntry(
                                     key: ValueKey('daily-${user?.id}'),
                                     signedIn: user != null),
-                                const _MenuDivider(),
-                                _SecondaryAction(
-                                  icon: Icons.extension_outlined,
-                                  title: 'Bulmacalar',
-                                  subtitle: 'Seviyene uygun taktikleri çöz',
-                                  onTap: () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (_) =>
-                                              const PuzzleScreen())),
-                                ),
                                 const _MenuDivider(),
                                 _SecondaryAction(
                                     icon: Icons.bolt_outlined,
@@ -196,11 +170,23 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
                                                 const PuzzleDuelScreen()))),
                                 const _MenuDivider(),
                                 _SecondaryAction(
+                                  key: const ValueKey('assistant-play'),
                                   icon: Icons.auto_awesome_outlined,
                                   title: 'Asistan',
                                   subtitle: 'Hamlelerini stratejistinle planla',
                                   onTap: () =>
                                       PlayScreen.launchAssistant(context),
+                                ),
+                                const _MenuDivider(),
+                                _SecondaryAction(
+                                  icon: Icons.extension_outlined,
+                                  title: 'Bulmacalar',
+                                  subtitle: 'Seviyene uygun taktikleri çöz',
+                                  onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const PuzzleScreen())),
                                 ),
                               ],
                             ),
@@ -331,6 +317,31 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
       MaterialPageRoute(builder: (_) => const ProfileScreen()),
     );
     if (mounted) setState(() {});
+  }
+
+  /// The three ways to start a game. They used to be a card and two rows
+  /// competing for the same glance; one entry point asks the question once.
+  void _showPlayModes(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheet) => _PlayModeSheet(
+        onOnline: () {
+          Navigator.pop(sheet);
+          _showTimeControls(context);
+        },
+        onFriend: () {
+          Navigator.pop(sheet);
+          _openFriends(context);
+        },
+        onComputer: () {
+          Navigator.pop(sheet);
+          PlayScreen.launch(context);
+        },
+      ),
+    );
   }
 
   void _showTimeControls(BuildContext context) {
@@ -491,7 +502,7 @@ class _PrimaryAction extends StatelessWidget {
                       ),
                       SizedBox(height: 5),
                       LText(
-                        'Dereceli çevrimiçi eşleşme',
+                        'Çevrimiçi · arkadaş · bilgisayar',
                         maxLines: 1,
                         overflow: TextOverflow.fade,
                         softWrap: false,
@@ -733,6 +744,101 @@ class _TimeControlSheet extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      );
+}
+
+/// Online, with a friend, or against the engine.
+class _PlayModeSheet extends StatelessWidget {
+  const _PlayModeSheet({
+    required this.onOnline,
+    required this.onFriend,
+    required this.onComputer,
+  });
+
+  final VoidCallback onOnline, onFriend, onComputer;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
+        decoration: const BoxDecoration(
+          color: Color(0xfff3eee7),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 48,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xffb9aea5),
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+            const SizedBox(height: 17),
+            const Row(children: [
+              Icon(Icons.sports_esports_outlined, color: HomeMenuScreen.ink),
+              SizedBox(width: 10),
+              Expanded(
+                  child: LText('NASIL OYNAYALIM?',
+                      style: TextStyle(
+                    color: HomeMenuScreen.ink,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w700,
+                        letterSpacing: 1.4,
+                      ))),
+            ]),
+            const SizedBox(height: 16),
+            _row(const ValueKey('mode-online'), Icons.public_rounded,
+                'Çevrimiçi oyna', 'Dereceli eşleşme', onOnline),
+            const SizedBox(height: 10),
+            _row(const ValueKey('mode-friend'), Icons.group_outlined,
+                'Arkadaşla oyna', 'Oda kur veya davet kodu gir', onFriend),
+            const SizedBox(height: 10),
+            _row(const ValueKey('mode-computer'), Icons.memory_rounded,
+                'Bilgisayara karşı oyna', 'Çevrimdışı antrenman', onComputer),
+          ],
+        ),
+      );
+
+  Widget _row(Key key, IconData icon, String title, String subtitle,
+          VoidCallback onTap) =>
+      Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: key,
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xffb9aea5)),
+            ),
+            child: Row(children: [
+              Icon(icon, color: HomeMenuScreen.ink, size: 26),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    LText(title,
+                        style: const TextStyle(
+                            color: HomeMenuScreen.ink,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 3),
+                    LText(subtitle,
+                        style: const TextStyle(
+                            color: Color(0xff665a52), fontSize: 13)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded,
+                  color: Color(0xff665a52)),
+            ]),
+          ),
         ),
       );
 }
