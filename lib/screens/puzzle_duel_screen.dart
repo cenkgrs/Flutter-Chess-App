@@ -445,7 +445,7 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
         child: DecoratedBox(
           decoration: BoxDecoration(
               color: const Color(0x14ffffff),
-              borderRadius: BorderRadius.circular(rokCorner),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: const Color(0x22ffffff))),
           child: const Center(
               child: LText('Rakibin bulmacayı çözüyor…',

@@ -114,7 +114,7 @@ class ProfileScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: const Color(0xe6202120),
-                    borderRadius: BorderRadius.circular(rokCorner),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: const Color(0xff686966)),
                   ),
                   child: Row(
@@ -323,7 +323,7 @@ class _ProfileLink extends StatelessWidget {
   Widget build(BuildContext context) => Material(
         color: const Color(0xe6202120),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(rokCorner),
+          borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: Color(0xff686966), width: .8),
         ),
         clipBehavior: Clip.antiAlias,
@@ -370,7 +370,7 @@ class _ProfileSwitch extends StatelessWidget {
   Widget build(BuildContext context) => Material(
         color: const Color(0xe6202120),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(rokCorner),
+          borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: Color(0xff686966), width: .8),
         ),
         clipBehavior: Clip.antiAlias,
@@ -462,7 +462,7 @@ class RecentGamesScreen extends StatelessWidget {
                                   margin: EdgeInsets.zero,
                                   color: const Color(0xf2202120),
                                   shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(rokCorner),
+                                      borderRadius: BorderRadius.circular(10),
                                       side: const BorderSide(
                                           color: Color(0xff686966), width: .8)),
                                   child: ListTile(
@@ -905,7 +905,7 @@ class _GameReviewScreenState extends State<GameReviewScreen> {
                                         horizontal: 16, vertical: 10),
                                     decoration: BoxDecoration(
                                         color: const Color(0x990f0d0b),
-                                        borderRadius: BorderRadius.circular(rokCorner),
+                                        borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
                                             color: const Color(0x557f7062))),
                                     child: Column(children: [

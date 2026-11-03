@@ -143,7 +143,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     padding: const EdgeInsets.fromLTRB(22, 24, 22, 26),
                     decoration: BoxDecoration(
                       color: const Color(0xf2f3eee7),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: const Color(0xff8d8179)),
                       boxShadow: const [
                         BoxShadow(

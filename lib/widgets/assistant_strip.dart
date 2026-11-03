@@ -56,7 +56,7 @@ class AssistantStrip extends StatelessWidget {
               width: double.infinity,
               decoration: BoxDecoration(
                 color: _ground,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: _edge, width: .9),
                 boxShadow: const [
                   BoxShadow(
@@ -81,7 +81,7 @@ class AssistantStrip extends StatelessWidget {
         child: InkWell(
           key: const ValueKey('assistant-toggle'),
           onTap: onToggle,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 11, 10, 11),
             child: Row(children: [

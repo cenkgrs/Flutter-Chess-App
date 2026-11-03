@@ -2,11 +2,6 @@ import '../l10n/app_language.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// One corner radius for every large surface — dialogs, sheets, cards and
-/// the rows inside them. The app used to run from 14 to 24 depending on the
-/// widget, which read as soft-edged rather than deliberate.
-const rokCorner = 8.0;
-
 const rokBone = Color(0xfff3eee7);
 const rokGraphite = Color(0xff202120);
 
@@ -27,7 +22,7 @@ class RokResultDialog extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
         clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(rokCorner)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: DecoratedBox(
             decoration: rokWood,
             child: SingleChildScrollView(
@@ -65,7 +60,7 @@ class RokResultDialog extends StatelessWidget {
                                 foregroundColor: rokBone,
                                 minimumSize: const Size.fromHeight(50),
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(rokCorner)))),
+                                    borderRadius: BorderRadius.circular(10)))),
                       ),
                       child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -127,7 +122,7 @@ class RokWoodDialog extends StatelessWidget {
         backgroundColor: Colors.transparent,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(rokCorner),
+            borderRadius: BorderRadius.circular(18),
             side: const BorderSide(color: Color(0xff8b7966))),
         child: DecoratedBox(
             decoration: rokWood,
@@ -180,7 +175,7 @@ ThemeData rokTheme() => ThemeData(
           contentTextStyle: const TextStyle(
               color: Color(0xffd2c8be), fontSize: 16, height: 1.5),
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(rokCorner),
+              borderRadius: BorderRadius.circular(14),
               side: const BorderSide(color: Color(0xff8b7966)))),
       filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
@@ -195,7 +190,7 @@ ThemeData rokTheme() => ThemeData(
           backgroundColor: rokGraphite,
           surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(rokCorner)))),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(18)))),
       progressIndicatorTheme: const ProgressIndicatorThemeData(color: rokBone),
     );
 
@@ -231,7 +226,7 @@ class RokSheet extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
         decoration: const BoxDecoration(
           color: Color(0xff2a1a10),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(rokCorner)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
           border: Border(top: BorderSide(color: Color(0xff6d6356))),
         ),
         child: Column(
@@ -305,12 +300,12 @@ class RokSheetRow extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(rokCorner),
+          borderRadius: BorderRadius.circular(14),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: const Color(0x33000000),
-              borderRadius: BorderRadius.circular(rokCorner),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(color: RokSheet.border),
             ),
             child: Row(children: [

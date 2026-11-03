@@ -919,7 +919,7 @@ class _PlayScreenState extends State<PlayScreen> {
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 18),
       decoration: const BoxDecoration(
         color: Color(0xfffffbf2),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(rokCorner)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
               color: Colors.black38, blurRadius: 22, offset: Offset(0, -6))
@@ -993,7 +993,7 @@ class _PlayScreenState extends State<PlayScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: const Color(0xfff1eadc),
-              borderRadius: BorderRadius.circular(rokCorner),
+              borderRadius: BorderRadius.circular(13),
               border: Border.all(color: const Color(0xffe5dac7)),
             ),
             child: notation.isEmpty
@@ -1154,7 +1154,7 @@ class _ReviewAction extends StatelessWidget {
           side: const BorderSide(color: Color(0xffded1bd)),
           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 12),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(rokCorner)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
         ),
         icon: Icon(icon, size: 20),
         label: FittedBox(
