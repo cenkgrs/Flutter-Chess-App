@@ -286,7 +286,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
                 )
             ],
             backgroundColor: const Color(0xff202120),
-            foregroundColor: Colors.white),
+            foregroundColor: rokBone),
         body: AppBackend.currentUser == null
             ? Center(
                 child: FilledButton(
@@ -304,16 +304,19 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
                     padding: const EdgeInsets.all(16),
                     child: LText(
                       'Seviyen: ${attempt?['rating'] ?? 1200}  ·  Puan: ${attempt?['points'] ?? 0}',
-                      style: const TextStyle(color: Colors.white, fontSize: 18),
+                      style: const TextStyle(
+                          color: rokBone,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600),
                     )),
                 if (attempt != null && attempt!['empty'] != true) ...[
                   LText('Bulmaca zorluğu: ${attempt!['difficulty']}',
-                      style: const TextStyle(color: Colors.white70)),
+                      style: const TextStyle(color: Color(0xffb9aea5), fontSize: 13)),
                   ValueListenableBuilder<int>(
                       valueListenable: elapsed,
                       builder: (_, seconds, __) => LText(
                           '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}',
-                          style: const TextStyle(color: Colors.white70))),
+                          style: const TextStyle(color: Color(0xffb9aea5), fontSize: 13))),
                   // Whose move it is, beside the board rather than over it:
                   // on the board it covered a square, and the corner square
                   // is often the one the puzzle turns on.
@@ -336,7 +339,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
                             ? 'Bu seviyede yeni bulmaca havuzu hazırlanıyor. Daha sonra tekrar gel.'
                             : message,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white))),
+                        style: const TextStyle(color: rokBone, fontSize: 14, height: 1.35))),
                 if (attempt?['status'] == 'active')
                   Wrap(spacing: 8, children: [
                     TextButton(
@@ -358,7 +361,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
                     child: LText(
                         'Zorluk + hız bonusu · İpucu puan kazandırmaz\nYanlış denemeler puanı azaltır.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white54))),
+                        style: TextStyle(color: Color(0xff9a8f85), fontSize: 12.5, height: 1.4))),
               ]))),
       );
 }

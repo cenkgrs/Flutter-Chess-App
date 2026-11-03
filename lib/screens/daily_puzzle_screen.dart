@@ -375,17 +375,17 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
                         ),
                       ])),
               LText('En uzun seri: ${row?['best_streak'] ?? 0} gün',
-                  style: const TextStyle(color: Colors.white70)),
+                  style: const TextStyle(color: Color(0xffb9aea5), fontSize: 13)),
               if (row != null && row['empty'] != true) ...[
                 const SizedBox(height: 4),
                 LText('Bulmaca zorluğu: ${row['difficulty']}',
-                    style: const TextStyle(color: Colors.white70)),
+                    style: const TextStyle(color: Color(0xffb9aea5), fontSize: 13)),
                 if (row['status'] == 'active')
                   ValueListenableBuilder<int>(
                       valueListenable: elapsed,
                       builder: (_, seconds, __) => LText(
                           '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}',
-                          style: const TextStyle(color: Colors.white70))),
+                          style: const TextStyle(color: Color(0xffb9aea5), fontSize: 13))),
                 Padding(
                     padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
                     child: Row(
@@ -404,7 +404,7 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
                           : message,
                       key: const ValueKey('daily-message'),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white))),
+                      style: const TextStyle(color: rokBone, fontSize: 14, height: 1.35))),
               if (row?['status'] == 'active')
                 Wrap(spacing: 8, children: [
                   TextButton(
@@ -426,7 +426,7 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
                   child: LText(
                       'Herkese aynı bulmaca · Günde bir puanlı deneme\nİpucu seriyi korur ama puan kazandırmaz.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white54))),
+                      style: TextStyle(color: Color(0xff9a8f85), fontSize: 12.5, height: 1.4))),
             ]))),
     );
   }
