@@ -48,22 +48,32 @@ class ChessEngine {
 
   /// Advice for the player.
   ///
-  /// [bestMove] is the real engine: given a FEN it returns a move in
-  /// coordinates. The local search below is a fallback for tests and for a
-  /// device whose engine will not start — it is far weaker than the opponent
-  /// the player is facing, so advice from it would lose games.
+  /// [line] is the real engine: given a FEN it returns the line it intends
+  /// to play, in coordinates, best move first. One search already works the
+  /// whole line out, so the continuation shown to the player costs nothing
+  /// extra — asking the engine again for each ply used to make the advice
+  /// take three searches instead of one.
+  ///
+  /// The local search below is a fallback for tests and for a device whose
+  /// engine will not start; it is far weaker than the opponent the player is
+  /// facing, so advice from it would lose games.
   Future<ChessAdvice?> explain(
     Chess position, {
-    Future<String?> Function(String fen)? bestMove,
+    Future<List<String>> Function(String fen)? line,
   }) async {
-    final move = await _pick(position, bestMove, Difficulty.hard);
+    final engineLine = line == null ? const <String>[] : await _line(line, position);
+    final move = _fromUci(position, engineLine.isEmpty ? null : engineLine.first) ??
+        await choose(position, Difficulty.hard);
     if (move == null) return null;
     final before = position.get(move.toAlgebraic);
     final copy = position.copy()..move(move);
     final san = copy.getHistory().cast<String>().last;
     final variation = <String>[san];
     for (var ply = 0; ply < 2 && !copy.game_over; ply++) {
-      final reply = await _pick(copy, bestMove, Difficulty.medium);
+      final next = ply + 1 < engineLine.length
+          ? _fromUci(copy, engineLine[ply + 1])
+          : null;
+      final reply = next ?? await choose(copy, Difficulty.medium);
       if (reply == null) break;
       copy.move(reply);
       variation.add(copy.getHistory().cast<String>().last);
@@ -92,27 +102,25 @@ class ChessEngine {
     );
   }
 
-  /// The engine's move where there is one, the local search otherwise.
-  Future<Move?> _pick(Chess position, Future<String?> Function(String fen)? bestMove,
-      Difficulty fallback) async {
-    if (bestMove != null) {
-      String? uci;
-      try {
-        uci = await bestMove(position.fen);
-      } catch (_) {
-        uci = null;
-      }
-      if (uci != null && uci.length >= 4) {
-        final probe = position.copy();
-        final played = probe.move({
-          'from': uci.substring(0, 2),
-          'to': uci.substring(2, 4),
-          if (uci.length > 4) 'promotion': uci.substring(4),
-        });
-        if (played == true) return probe.history.last.move;
-      }
+  Future<List<String>> _line(
+      Future<List<String>> Function(String fen) ask, Chess position) async {
+    try {
+      return await ask(position.fen);
+    } catch (_) {
+      return const [];
     }
-    return choose(position, fallback);
+  }
+
+  /// The move [uci] names, or null when it is missing or does not apply.
+  Move? _fromUci(Chess position, String? uci) {
+    if (uci == null || uci.length < 4) return null;
+    final probe = position.copy();
+    final played = probe.move({
+      'from': uci.substring(0, 2),
+      'to': uci.substring(2, 4),
+      if (uci.length > 4) 'promotion': uci.substring(4),
+    });
+    return played == true ? probe.history.last.move : null;
   }
 
   int _priority(Move m) =>

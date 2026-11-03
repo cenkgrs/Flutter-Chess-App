@@ -204,12 +204,17 @@ class RokSheet extends StatelessWidget {
     required this.title,
     required this.child,
     this.note,
+    this.onBack,
   });
 
   final IconData icon;
   final String title;
   final String? note;
   final Widget child;
+
+  /// When a sheet has steps, going back is a step back inside it rather than
+  /// closing it and making the player start again from the card.
+  final VoidCallback? onBack;
 
   static const border = Color(0xff6d6356);
   static const muted = Color(0xffb9aea5);
@@ -237,7 +242,17 @@ class RokSheet extends StatelessWidget {
             ),
             const SizedBox(height: 17),
             Row(children: [
-              Icon(icon, color: rokBone),
+              if (onBack != null)
+                IconButton(
+                  onPressed: onBack,
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  color: rokBone,
+                  tooltip: 'Geri',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                )
+              else
+                Icon(icon, color: rokBone),
               const SizedBox(width: 10),
               Expanded(
                 child: LText(title,

@@ -2,9 +2,14 @@ import 'dart:async';
 import 'package:stockfish/stockfish.dart';
 
 class EngineEvaluation {
-  const EngineEvaluation(this.move, this.cp, this.mate);
+  const EngineEvaluation(this.move, this.cp, this.mate, {this.pv = const []});
   final String? move;
   final int? cp, mate;
+
+  /// The line the engine intends to play, in coordinates, best move first.
+  /// A search already works this out, so asking for it costs nothing — and
+  /// saves asking the engine again for every further move of a variation.
+  final List<String> pv;
   int get score => mate == null ? cp ?? 0 : (mate! > 0 ? 100000 : -100000);
 }
 
@@ -64,16 +69,22 @@ class DeviceEngine {
         final engine = _engine!;
         final done = Completer<EngineEvaluation>();
         int? cp, mate;
+        var pv = const <String>[];
         final sub = engine.stdout.listen((line) {
           final score = RegExp(r' score (cp|mate) (-?\d+)').firstMatch(line);
           if (score != null && !line.contains('bound')) {
             cp = score[1] == 'cp' ? int.parse(score[2]!) : null;
             mate = score[1] == 'mate' ? int.parse(score[2]!) : null;
           }
+          final variation = RegExp(r' pv ([a-h1-8qrbn ]+)$').firstMatch(line);
+          if (variation != null && !line.contains('bound')) {
+            pv = variation[1]!.trim().split(' ');
+          }
           if (line.startsWith('bestmove ') && !done.isCompleted) {
             final move = line.split(' ')[1];
             done.complete(EngineEvaluation(
-                move == '(none)' || move == '0000' ? null : move, cp, mate));
+                move == '(none)' || move == '0000' ? null : move, cp, mate,
+                pv: pv));
           }
         }, onError: (Object e) {
           if (!done.isCompleted) done.completeError(e);

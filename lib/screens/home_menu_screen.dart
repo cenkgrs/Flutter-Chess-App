@@ -319,8 +319,9 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
     if (mounted) setState(() {});
   }
 
-  /// The three ways to start a game. They used to be a card and two rows
-  /// competing for the same glance; one entry point asks the question once.
+  /// The three ways to start a game, and whatever that choice needs next,
+  /// all in one sheet. Picking a mode used to close it and open another, so
+  /// changing your mind meant starting over from the card.
   void _showPlayModes(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
@@ -328,31 +329,17 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (sheet) => _PlayModeSheet(
-        onOnline: () {
+        onOnline: (control) {
           Navigator.pop(sheet);
-          _showTimeControls(context);
+          _startOnline(context, control);
         },
         onFriend: () {
           Navigator.pop(sheet);
           _openFriends(context);
         },
-        onComputer: () {
+        onComputer: (elo) {
           Navigator.pop(sheet);
-          PlayScreen.launch(context);
-        },
-      ),
-    );
-  }
-
-  void _showTimeControls(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _TimeControlSheet(
-        onSelected: (control) {
-          Navigator.pop(context);
-          _startOnline(context, control);
+          PlayScreen.launch(context, elo: elo);
         },
       ),
     );
@@ -653,99 +640,122 @@ class _MenuDivider extends StatelessWidget {
       );
 }
 
-class _TimeControlSheet extends StatelessWidget {
-  const _TimeControlSheet({required this.onSelected});
+/// The clock presets, grouped by pool. Used on its own and as a step.
+class TimeControlOptions extends StatelessWidget {
+  const TimeControlOptions({super.key, required this.onSelected});
 
   final ValueChanged<TimeControl> onSelected;
 
   @override
-  Widget build(BuildContext context) => RokSheet(
-        icon: Icons.timer_outlined,
-        title: 'SÜRE SEÇ',
-        child: ListView(
-          shrinkWrap: true,
-          children: SpeedPool.values.map((pool) {
-            final controls = TimeControl.presets
-                .where((control) => control.pool == pool)
-                .toList();
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 15),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  LText(
-                    '${pool.label} · ${pool.description}',
-                    style: const TextStyle(
-                      color: RokSheet.muted,
-                      fontWeight: FontWeight.w600,
-                    ),
+  Widget build(BuildContext context) => ListView(
+        shrinkWrap: true,
+        children: SpeedPool.values.map((pool) {
+          final controls = TimeControl.presets
+              .where((control) => control.pool == pool)
+              .toList();
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LText(
+                  '${pool.label} · ${pool.description}',
+                  style: const TextStyle(
+                    color: RokSheet.muted,
+                    fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: controls
-                        .map(
-                          (control) => OutlinedButton(
-                            key: ValueKey('time-${control.label}'),
-                            onPressed: () => onSelected(control),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: rokBone,
-                              backgroundColor: const Color(0x33000000),
-                              side: const BorderSide(color: RokSheet.border),
-                            ),
-                            child: LText(
-                              control.label,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w700),
-                            ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: controls
+                      .map(
+                        (control) => OutlinedButton(
+                          key: ValueKey('time-${control.label}'),
+                          onPressed: () => onSelected(control),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: rokBone,
+                            backgroundColor: const Color(0x33000000),
+                            side: const BorderSide(color: RokSheet.border),
                           ),
-                        )
-                        .toList(),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
+                          child: LText(
+                            control.label,
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
       );
 }
 
-class _PlayModeSheet extends StatelessWidget {
+class _PlayModeSheet extends StatefulWidget {
   const _PlayModeSheet({
     required this.onOnline,
     required this.onFriend,
     required this.onComputer,
   });
 
-  final VoidCallback onOnline, onFriend, onComputer;
+  final ValueChanged<TimeControl> onOnline;
+  final VoidCallback onFriend;
+  final ValueChanged<int> onComputer;
 
   @override
-  Widget build(BuildContext context) => RokSheet(
-        icon: Icons.sports_esports_outlined,
-        title: 'NASIL OYNAYALIM?',
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          RokSheetRow(
-              key: const ValueKey('mode-online'),
-              icon: Icons.public_rounded,
-              title: 'Çevrimiçi oyna',
-              subtitle: 'Dereceli eşleşme',
-              onTap: onOnline),
-          const SizedBox(height: 10),
-          RokSheetRow(
-              key: const ValueKey('mode-friend'),
-              icon: Icons.group_outlined,
-              title: 'Arkadaşla oyna',
-              subtitle: 'Oda kur veya davet kodu gir',
-              onTap: onFriend),
-          const SizedBox(height: 10),
-          RokSheetRow(
-              key: const ValueKey('mode-computer'),
-              icon: Icons.memory_rounded,
-              title: 'Bilgisayara karşı oyna',
-              subtitle: 'Çevrimdışı antrenman',
-              onTap: onComputer),
-        ]),
-      );
+  State<_PlayModeSheet> createState() => _PlayModeSheetState();
 }
 
+enum _PlayStep { modes, clocks, strength }
+
+class _PlayModeSheetState extends State<_PlayModeSheet> {
+  _PlayStep step = _PlayStep.modes;
+
+  void _back() => setState(() => step = _PlayStep.modes);
+
+  @override
+  Widget build(BuildContext context) => switch (step) {
+        _PlayStep.modes => RokSheet(
+            icon: Icons.sports_esports_outlined,
+            title: 'NASIL OYNAYALIM?',
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              RokSheetRow(
+                  key: const ValueKey('mode-online'),
+                  icon: Icons.public_rounded,
+                  title: 'Çevrimiçi oyna',
+                  subtitle: 'Dereceli eşleşme',
+                  onTap: () => setState(() => step = _PlayStep.clocks)),
+              const SizedBox(height: 10),
+              RokSheetRow(
+                  key: const ValueKey('mode-friend'),
+                  icon: Icons.group_outlined,
+                  title: 'Arkadaşla oyna',
+                  subtitle: 'Oda kur veya davet kodu gir',
+                  onTap: widget.onFriend),
+              const SizedBox(height: 10),
+              RokSheetRow(
+                  key: const ValueKey('mode-computer'),
+                  icon: Icons.memory_rounded,
+                  title: 'Bilgisayara karşı oyna',
+                  subtitle: 'Çevrimdışı antrenman',
+                  onTap: () => setState(() => step = _PlayStep.strength)),
+            ]),
+          ),
+        _PlayStep.clocks => RokSheet(
+            icon: Icons.timer_outlined,
+            title: 'SÜRE SEÇ',
+            onBack: _back,
+            child: TimeControlOptions(onSelected: widget.onOnline),
+          ),
+        _PlayStep.strength => RokSheet(
+            icon: Icons.memory_rounded,
+            title: 'RAKİP GÜCÜ',
+            note: strengthNote,
+            onBack: _back,
+            child: StrengthOptions(onPick: widget.onComputer),
+          ),
+      };
+}

@@ -35,13 +35,17 @@ class PlayScreen extends StatefulWidget {
   /// Injected by tests in place of the Supabase allowance calls.
   final DailyFeatureLimits? limits;
   final String? initialFen;
-  static Future<void> launch(BuildContext context, {String? fen}) async {
-    final elo = await _chooseStrength(context);
-    if (!context.mounted || elo == null) return;
+  /// [elo] is the strength the caller already asked for; without it the
+  /// question is asked here.
+  static Future<void> launch(BuildContext context,
+      {String? fen, int? elo}) async {
+    final strength = elo ?? await _chooseStrength(context);
+    if (!context.mounted || strength == null) return;
     await Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (_) => PlayScreen(initialFen: fen, initialElo: elo)));
+            builder: (_) =>
+                PlayScreen(initialFen: fen, initialElo: strength)));
   }
 
   /// Asks which opponent to face. The engine's own range is 1320-3190; the
@@ -644,12 +648,15 @@ class _PlayScreenState extends State<PlayScreen> {
       }
       final fen = game.fen;
       // The assistant asks the same engine the opponent uses, but without
-      // the strength limit: its job is the best move, not a fair one.
-      final advice = await ChessEngine().explain(game, bestMove: (fen) async {
+      // the strength limit: its job is the best move, not a fair one. One
+      // search answers the whole balloon — the move and the line after it.
+      final advice = await ChessEngine().explain(game, line: (fen) async {
         final evaluation = widget.evaluate != null
             ? await widget.evaluate!(fen, 0)
-            : await DeviceEngine.instance.evaluate(fen, milliseconds: 900);
-        return evaluation.move;
+            : await DeviceEngine.instance.evaluate(fen, milliseconds: 700);
+        return evaluation.pv.isNotEmpty
+            ? evaluation.pv
+            : [if (evaluation.move != null) evaluation.move!];
       });
       if (!mounted ||
           ticket != generation ||
@@ -1328,6 +1335,44 @@ const _strengths = [
   _Strength(3190, 'Sınırsız', 'Motorun tam gücü'),
 ];
 
+/// The strength rungs, as rows. Shared by the standalone sheet and the step
+/// inside the home menu's play sheet, so both offer the same choice.
+class StrengthOptions extends StatelessWidget {
+  const StrengthOptions({super.key, required this.onPick});
+
+  final ValueChanged<int> onPick;
+
+  @override
+  Widget build(BuildContext context) => ListView.separated(
+        shrinkWrap: true,
+        itemCount: _strengths.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        itemBuilder: (_, index) {
+          final strength = _strengths[index];
+          return RokSheetRow(
+            key: ValueKey('elo-${strength.elo}'),
+            title: strength.name,
+            subtitle: strength.description,
+            onTap: () => onPick(strength.elo),
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xffd9b77e),
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text('${strength.elo}',
+                  style: const TextStyle(
+                      color: Color(0xff241a12),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700)),
+            ),
+          );
+        },
+      );
+}
+
+const strengthNote = 'Motor güç ayarıdır; online rating ile eşdeğer değildir.';
+
 class _StrengthSheet extends StatelessWidget {
   const _StrengthSheet();
 
@@ -1335,33 +1380,8 @@ class _StrengthSheet extends StatelessWidget {
   Widget build(BuildContext context) => RokSheet(
         icon: Icons.memory_rounded,
         title: 'RAKİP GÜCÜ',
-        note: 'Motor güç ayarıdır; online rating ile eşdeğer değildir.',
-        child: ListView.separated(
-          shrinkWrap: true,
-          itemCount: _strengths.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 10),
-          itemBuilder: (_, index) {
-            final strength = _strengths[index];
-            return RokSheetRow(
-              key: ValueKey('elo-${strength.elo}'),
-              title: strength.name,
-              subtitle: strength.description,
-              onTap: () => Navigator.pop(context, strength.elo),
-              trailing: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
-                decoration: BoxDecoration(
-                  color: const Color(0xffd9b77e),
-                  borderRadius: BorderRadius.circular(99),
-                ),
-                child: Text('${strength.elo}',
-                    style: const TextStyle(
-                        color: Color(0xff241a12),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700)),
-              ),
-            );
-          },
-        ),
+        note: strengthNote,
+        child: StrengthOptions(
+            onPick: (elo) => Navigator.pop(context, elo)),
       );
 }
