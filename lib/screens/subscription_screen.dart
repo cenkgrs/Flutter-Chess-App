@@ -83,7 +83,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   const SizedBox(height: 24),
                   _comparison(),
                   const SizedBox(height: 28),
-                  if (store.active) _activeCard() else ..._plans(),
+                  if (store.active)
+                    _activeCard()
+                  else if (store.products.isEmpty && !store.busy)
+                    // Without this the page ends in a hole: the plans are
+                    // what fills it, and there are none to draw.
+                    _unavailable()
+                  else
+                    ..._plans(),
                   if (store.busy)
                     const Padding(
                         padding: EdgeInsets.only(top: 18),
@@ -127,7 +134,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
             style: TextStyle(color: _muted, fontSize: 14.5, height: 1.45)),
       ]);
 
-  Widget _benefits() => const Column(children: [
+  static final _panel = BoxDecoration(
+      color: const Color(0x33000000),
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: const Color(0xff6c6257)));
+
+  Widget _benefits() => Container(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
+      decoration: _panel,
+      child: const Column(children: [
         _Benefit(
             icon: Icons.auto_awesome_rounded,
             title: 'Sınırsız asistanlı maç',
@@ -144,14 +159,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
             icon: Icons.favorite_rounded,
             title: 'Geliştirmeyi destekle',
             detail: 'ROK reklamsız. Abonelik, geliştirilmeye devam etmesini sağlar.'),
-      ]);
+      ]));
 
   Widget _comparison() => Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-            color: const Color(0x33000000),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xff6c6257))),
+        decoration: _panel,
         child: const Column(children: [
           Row(children: [
             Expanded(flex: 4, child: SizedBox()),
@@ -199,6 +211,27 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         ],
       ];
 
+  Widget _unavailable() => Container(
+        padding: const EdgeInsets.fromLTRB(18, 20, 18, 16),
+        decoration: _panel,
+        child: Column(children: [
+          const Icon(Icons.schedule_rounded, color: _gold, size: 30),
+          const SizedBox(height: 12),
+          const LText('Abonelik yakında',
+              style: TextStyle(
+                  color: _bone, fontSize: 17, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          const LText(
+              'Premium henüz satışa açılmadı. O zamana kadar asistan ve analiz günde bir kez herkese açık.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: _muted, fontSize: 13.5, height: 1.45)),
+          const SizedBox(height: 6),
+          TextButton(
+              onPressed: store.busy ? null : store.load,
+              child: const LText('Tekrar dene')),
+        ]),
+      );
+
   Widget _activeCard() => Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
@@ -216,18 +249,31 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         ]),
       );
 
+  static final _footerButton = OutlinedButton.styleFrom(
+      foregroundColor: _bone,
+      backgroundColor: const Color(0x33000000),
+      padding: const EdgeInsets.symmetric(vertical: 13),
+      side: const BorderSide(color: Color(0xff6c6257)));
+
   Widget _footer() => Column(children: [
-        Center(
-          child: TextButton(
-              onPressed: store.busy ? null : store.restore,
-              child: const LText('Satın alımları geri yükle')),
-        ),
-        Center(
-          child: TextButton(
-              onPressed: () =>
-                  _link('https://apps.apple.com/account/subscriptions'),
-              child: const LText('Aboneliği yönet')),
-        ),
+        Row(children: [
+          Expanded(
+            child: OutlinedButton(
+                onPressed: store.busy ? null : store.restore,
+                style: _footerButton,
+                child: const LText('Satın alımları geri yükle',
+                    textAlign: TextAlign.center)),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: OutlinedButton(
+                onPressed: () =>
+                    _link('https://apps.apple.com/account/subscriptions'),
+                style: _footerButton,
+                child: const LText('Aboneliği yönet',
+                    textAlign: TextAlign.center)),
+          ),
+        ]),
         const SizedBox(height: 14),
         const LText(
             'Ödeme Apple hesabından alınır. Abonelik iptal edilmedikçe otomatik yenilenir. Aboneliğini Apple hesap ayarlarından yönetebilir veya iptal edebilirsin.',

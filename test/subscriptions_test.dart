@@ -64,6 +64,12 @@ void main() {
     expect(find.text('Abonelikler şu anda satışa açık değil.'), findsOneWidget);
     // Nothing is offered for sale, and no price is invented.
     expect(find.byType(FilledButton), findsNothing);
+    // The page says so where the plans would have been, rather than ending
+    // in the empty space they left behind.
+    final soon = find.text('Abonelik yakında');
+    await tester.scrollUntilVisible(soon, 200,
+        scrollable: find.byType(Scrollable).first);
+    expect(soon, findsOneWidget);
 
     // Restore stays reachable; the paywall is a scrolling page.
     final restore = find.text('Satın alımları geri yükle');
