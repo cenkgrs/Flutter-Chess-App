@@ -706,27 +706,9 @@ class _PlayScreenState extends State<PlayScreen> {
     );
   }
 
-  Widget boardWidget() => DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xff8f5b2e), Color(0xff3a1a0d)],
-          ),
-          borderRadius: BorderRadius.circular(7),
-          border: Border.all(color: const Color(0xffb9874f), width: 1.2),
-          boxShadow: const [
-            BoxShadow(
-                color: Colors.black54, blurRadius: 18, offset: Offset(0, 9)),
-            BoxShadow(color: Color(0x55301a0c), blurRadius: 2, spreadRadius: 2),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(7),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(2),
-            child: LayoutBuilder(builder: (context, boardBox) {
-              String squareAt(Offset position) {
+  Widget boardWidget() => RokBoardFrame(
+        child: LayoutBuilder(builder: (context, boardBox) {
+          String squareAt(Offset position) {
                 final column =
                     (position.dx / (boardBox.maxWidth / 8)).floor().clamp(0, 7);
                 final row = (position.dy / (boardBox.maxHeight / 8))
@@ -905,9 +887,7 @@ class _PlayScreenState extends State<PlayScreen> {
                     ),
                 ]),
               );
-            }),
-          ),
-        ),
+        }),
       );
 
   Widget _piece(c.Piece piece) => BoardPiece(piece, padding: 1, scale: 1.14);

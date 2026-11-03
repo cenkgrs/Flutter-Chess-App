@@ -11,7 +11,11 @@ import '../online/time_control.dart';
 import 'online_game_screen.dart';
 
 class FriendRoomScreen extends StatefulWidget {
-  const FriendRoomScreen({super.key});
+  const FriendRoomScreen({super.key, this.embedded = false});
+
+  /// Rendered inside the home menu's play sheet rather than as its own page,
+  /// so the player can step back to the other modes without closing anything.
+  final bool embedded;
   @override
   State<FriendRoomScreen> createState() => _FriendRoomScreenState();
 }
@@ -116,7 +120,11 @@ class _FriendRoomScreenState extends State<FriendRoomScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => RokScaffold(
+  Widget build(BuildContext context) => widget.embedded
+      ? _rooms(shrinkWrap: true, padding: EdgeInsets.zero)
+      : _page(context);
+
+  Widget _page(BuildContext context) => RokScaffold(
         backgroundColor: const Color(0xff32180d),
         appBar: AppBar(
           title: const LText(
@@ -138,7 +146,13 @@ class _FriendRoomScreenState extends State<FriendRoomScreen> {
                   fit: BoxFit.cover,
                   colorFilter:
                       ColorFilter.mode(Color(0x44000000), BlendMode.darken))),
-          child: ListView(padding: const EdgeInsets.all(20), children: [
+          child: _rooms(
+              shrinkWrap: false, padding: const EdgeInsets.all(20)),
+        ),
+      );
+
+  Widget _rooms({required bool shrinkWrap, required EdgeInsets padding}) =>
+      ListView(shrinkWrap: shrinkWrap, padding: padding, children: [
             _card(
                 Icons.add_circle_outline_rounded,
                 'ODA KUR',
@@ -224,9 +238,7 @@ class _FriendRoomScreenState extends State<FriendRoomScreen> {
                   padding: const EdgeInsets.only(top: 14),
                   child: LText(_error!,
                       style: const TextStyle(color: Color(0xffffd0c8)))),
-          ]),
-        ),
-      );
+          ]);
 
   InputDecoration _inputDecoration({
     required String label,

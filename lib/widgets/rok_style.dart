@@ -198,6 +198,38 @@ ThemeData rokTheme() => ThemeData(
       progressIndicatorTheme: const ProgressIndicatorThemeData(color: rokBone),
     );
 
+/// The frame every board sits in: a lit wooden bevel, a thin brass edge and
+/// the shadow that lifts it off the page. The play screen had it and the
+/// puzzle screens did not, so the same board looked like two products.
+class RokBoardFrame extends StatelessWidget {
+  const RokBoardFrame({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xff8f5b2e), Color(0xff3a1a0d)],
+          ),
+          borderRadius: BorderRadius.circular(7),
+          border: Border.all(color: const Color(0xffb9874f), width: 1.2),
+          boxShadow: const [
+            BoxShadow(
+                color: Colors.black54, blurRadius: 18, offset: Offset(0, 9)),
+            BoxShadow(color: Color(0x55301a0c), blurRadius: 2, spreadRadius: 2),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(7),
+          child: ClipRRect(
+              borderRadius: BorderRadius.circular(2), child: child),
+        ),
+      );
+}
+
 /// The shell every bottom sheet in ROK wears: the board's own dark wood, a
 /// grab handle, and a titled header. Sheets used to be bone-coloured panels
 /// on a dark wooden app, which read as borrowed from somewhere else.

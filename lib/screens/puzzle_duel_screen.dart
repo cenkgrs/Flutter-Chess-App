@@ -716,7 +716,9 @@ class _PuzzleDuelScreenState extends State<PuzzleDuelScreen> {
                       Stack(alignment: Alignment.center, children: [
                         if (board != null)
                           AspectRatio(
-                              aspectRatio: 1, child: _board(board, flipped))
+                              aspectRatio: 1,
+                              child: RokBoardFrame(
+                                  child: _board(board, flipped)))
                         else if (watched != null)
                           SpectatorBoard(
                               board: watched,

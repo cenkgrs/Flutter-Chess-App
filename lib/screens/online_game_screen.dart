@@ -554,18 +554,8 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
         ),
       );
 
-  Widget _board() => DecoratedBox(
-        decoration: BoxDecoration(
-          color: const Color(0xff4a2715),
-          border: Border.all(color: const Color(0xffb9874f), width: 2),
-          boxShadow: const [
-            BoxShadow(
-                color: Colors.black54, blurRadius: 16, offset: Offset(0, 8))
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(6),
-          child: LayoutBuilder(
+  Widget _board() => RokBoardFrame(
+        child: LayoutBuilder(
             builder: (context, boardBox) {
               String squareAt(Offset position) {
                 final column =
@@ -708,7 +698,6 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
                 ]),
               );
             },
-          ),
         ),
       );
 

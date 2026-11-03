@@ -4,6 +4,8 @@ import '../widgets/rok_style.dart';
 import 'dart:async';
 import 'package:chess/chess.dart' as c;
 import 'package:flutter/material.dart';
+
+import '../widgets/turn_king.dart';
 import '../backend/app_backend.dart';
 import 'auth_screen.dart';
 import '../audio/game_sounds.dart';
@@ -290,7 +292,8 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
 
   Widget _board() => AspectRatio(
       aspectRatio: 1,
-      child: AnimatedBoardPieces(
+      child: RokBoardFrame(
+          child: AnimatedBoardPieces(
           position: boardPosition(game),
           flipped: flipped,
           pieceBuilder: (square) => _piece(game.get(square)!),
@@ -318,7 +321,7 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
                         ]),
                       ));
                 },
-              )));
+              ))));
 
   @override
   void dispose() {
@@ -383,7 +386,13 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
                       builder: (_, seconds, __) => LText(
                           '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}',
                           style: const TextStyle(color: Colors.white70))),
-                Padding(padding: const EdgeInsets.all(12), child: _board()),
+                Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Stack(clipBehavior: Clip.none, children: [
+                      _board(),
+                      Positioned(
+                          top: -10, right: -10, child: TurnKing(game.turn)),
+                    ])),
               ],
               if (busy) const LinearProgressIndicator(),
               Padding(

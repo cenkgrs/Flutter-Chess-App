@@ -4,6 +4,8 @@ import '../widgets/rok_style.dart';
 import 'dart:async';
 import 'package:chess/chess.dart' as c;
 import 'package:flutter/material.dart';
+
+import '../widgets/turn_king.dart';
 import '../backend/app_backend.dart';
 import 'auth_screen.dart';
 import 'puzzle_leaderboard_screen.dart';
@@ -314,7 +316,16 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
                           style: const TextStyle(color: Colors.white70))),
                   Padding(
                       padding: const EdgeInsets.all(12),
-                      child: AspectRatio(aspectRatio: 1, child: _board())),
+                      child: AspectRatio(
+                          aspectRatio: 1,
+                          child: Stack(children: [
+                            Positioned.fill(
+                                child: RokBoardFrame(child: _board())),
+                            Positioned(
+                                top: -10,
+                                right: -10,
+                                child: TurnKing(game.turn)),
+                          ]))),
                 ],
                 if (busy) const LinearProgressIndicator(),
                 Padding(

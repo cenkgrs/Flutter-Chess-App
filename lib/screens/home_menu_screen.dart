@@ -709,7 +709,7 @@ class _PlayModeSheet extends StatefulWidget {
   State<_PlayModeSheet> createState() => _PlayModeSheetState();
 }
 
-enum _PlayStep { modes, clocks, strength }
+enum _PlayStep { modes, clocks, strength, friend }
 
 class _PlayModeSheetState extends State<_PlayModeSheet> {
   _PlayStep step = _PlayStep.modes;
@@ -734,7 +734,11 @@ class _PlayModeSheetState extends State<_PlayModeSheet> {
                   icon: Icons.group_outlined,
                   title: 'Arkadaşla oyna',
                   subtitle: 'Oda kur veya davet kodu gir',
-                  onTap: widget.onFriend),
+                  // A room needs an account. Signing in is a page of its own,
+                  // so that case leaves the sheet; everyone else stays in it.
+                  onTap: () => AppBackend.currentUser == null
+                      ? widget.onFriend()
+                      : setState(() => step = _PlayStep.friend)),
               const SizedBox(height: 10),
               RokSheetRow(
                   key: const ValueKey('mode-computer'),
@@ -756,6 +760,12 @@ class _PlayModeSheetState extends State<_PlayModeSheet> {
             note: strengthNote,
             onBack: _back,
             child: StrengthOptions(onPick: widget.onComputer),
+          ),
+        _PlayStep.friend => RokSheet(
+            icon: Icons.group_outlined,
+            title: 'ARKADAŞLA OYNA',
+            onBack: _back,
+            child: const FriendRoomScreen(embedded: true),
           ),
       };
 }
