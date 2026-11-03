@@ -21,11 +21,19 @@ class TurnKing extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: const Color(0xcc241a12),
-            shape: BoxShape.circle,
+            // The piece stands on a square of the player's own board, so the
+            // indicator belongs to the board rather than floating above it.
+            color: turn == c.Color.WHITE ? boardSkin.light : boardSkin.dark,
+            borderRadius: BorderRadius.circular(6),
             border: Border.all(color: const Color(0xffb9874f), width: 1.2),
+            boxShadow: const [
+              BoxShadow(
+                  color: Color(0x66000000),
+                  blurRadius: 6,
+                  offset: Offset(0, 3)),
+            ],
           ),
-          padding: const EdgeInsets.all(3),
+          padding: const EdgeInsets.all(2),
           child: BoardPiece(
             c.Piece(c.PieceType.KING, turn),
             padding: 0,

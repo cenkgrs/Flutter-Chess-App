@@ -141,7 +141,6 @@ void main() {
     })));
     await tester.pumpAndSettle();
     expect(find.text('Seri: 2 gün'), findsOneWidget);
-    expect(find.text('En uzun seri: 4 gün'), findsOneWidget);
     expect(find.text('Beyaz oynar · Matı bul'), findsOneWidget);
 
     await _tapSquare(tester, 'a1');

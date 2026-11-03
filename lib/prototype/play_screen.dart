@@ -219,7 +219,9 @@ class _PlayScreenState extends State<PlayScreen> {
                 )));
   }
 
-  void leaveCompletedGame() => Navigator.maybePop(context);
+  // maybePop would be caught by this screen's own PopScope; leaving on
+  // purpose should not have to answer the guard meant for stray swipes.
+  void leaveCompletedGame() => Navigator.of(context).pop();
 
   String get status {
     if (error != null) return error!;
@@ -503,6 +505,41 @@ class _PlayScreenState extends State<PlayScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // A drag that starts near the left edge is also iOS's back gesture, so
+    // reaching for a piece there threw the player out of the game. Leaving
+    // goes through the board's own button instead.
+    return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) _confirmLeave();
+        },
+        child: _scaffold(context));
+  }
+
+  Future<void> _confirmLeave() async {
+    if (ended) {
+      leaveCompletedGame();
+      return;
+    }
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => RokDialog(
+        title: const LText('Maçtan çık'),
+        content: const LText('Bu maç kaydedilmeyecek. Çıkmak istiyor musun?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(dialog, false),
+              child: const LText('Devam et')),
+          FilledButton(
+              onPressed: () => Navigator.pop(dialog, true),
+              child: const LText('Çık')),
+        ],
+      ),
+    );
+    if (leave == true && mounted) Navigator.of(context).pop();
+  }
+
+  Widget _scaffold(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xff3b1e0f),
       body: DecoratedBox(

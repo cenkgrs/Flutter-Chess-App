@@ -374,20 +374,30 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
                                   fontWeight: FontWeight.w600)),
                         ),
                       ])),
-              LText('En uzun seri: ${row?['best_streak'] ?? 0} gün',
-                  style: const TextStyle(color: Color(0xffb9aea5), fontSize: 13)),
               if (row != null && row['empty'] != true) ...[
-                const SizedBox(height: 4),
-                LText('Bulmaca zorluğu: ${row['difficulty']}',
-                    style: const TextStyle(color: Color(0xffb9aea5), fontSize: 13)),
-                if (row['status'] == 'active')
-                  ValueListenableBuilder<int>(
-                      valueListenable: elapsed,
-                      builder: (_, seconds, __) => LText(
-                          '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}',
-                          style: const TextStyle(color: Color(0xffb9aea5), fontSize: 13))),
+                const SizedBox(height: 10),
+                // Clock on one side, level on the other, framing the board.
                 Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          if (row['status'] == 'active')
+                            ValueListenableBuilder<int>(
+                                valueListenable: elapsed,
+                                builder: (_, seconds, __) => RokStatChip(
+                                    icon: Icons.timer_outlined,
+                                    value:
+                                        '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}'))
+                          else
+                            const SizedBox.shrink(),
+                          RokStatChip(
+                              icon: Icons.trending_up_rounded,
+                              label: 'Seviye',
+                              value: '${row['difficulty']}'),
+                        ])),
+                Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
                     child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [TurnKing(game.turn, size: 54)])),
@@ -406,13 +416,20 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: rokBone, fontSize: 14, height: 1.35))),
               if (row?['status'] == 'active')
-                Wrap(spacing: 8, children: [
-                  TextButton(
+                Wrap(spacing: 10, alignment: WrapAlignment.center, children: [
+                  TextButton.icon(
                       onPressed: busy ? null : () => action('hint'),
-                      child: const LText('İpucu')),
-                  TextButton(
+                      icon: const Icon(Icons.lightbulb_outline_rounded,
+                          size: 19),
+                      label: const LText('İpucu')),
+                  OutlinedButton.icon(
                       onPressed: busy ? null : _confirmReveal,
-                      child: const LText('Çözümü göster')),
+                      icon: const Icon(Icons.visibility_outlined, size: 19),
+                      style: OutlinedButton.styleFrom(
+                          foregroundColor: rokBone,
+                          backgroundColor: const Color(0x33000000),
+                          side: const BorderSide(color: Color(0xff6d6356))),
+                      label: const LText('Çözümü göster')),
                 ])
               else if (finished)
                 const LText('Yarın yeni bulmaca seni bekliyor.',
@@ -421,12 +438,6 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
               else if (!busy)
                 FilledButton(
                     onPressed: load, child: const LText('Tekrar dene')),
-              const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: LText(
-                      'Herkese aynı bulmaca · Günde bir puanlı deneme\nİpucu seriyi korur ama puan kazandırmaz.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Color(0xff9a8f85), fontSize: 12.5, height: 1.4))),
             ]))),
     );
   }

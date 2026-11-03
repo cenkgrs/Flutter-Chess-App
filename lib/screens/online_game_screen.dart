@@ -255,7 +255,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
           FilledButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              Navigator.maybePop(context);
+              Navigator.of(context).pop();
             },
             child: const LText('Menüye dön'),
           ),
@@ -409,7 +409,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
     if (_row?['status'] == 'active') {
       _resign(exitAfter: true);
     } else {
-      Navigator.maybePop(context);
+      Navigator.of(context).pop();
     }
   }
 
@@ -425,7 +425,17 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  // Same reason as the offline board: a drag from the left edge is iOS's
+  // back gesture, and here it would also look like abandoning a rated game.
+  Widget build(BuildContext context) => PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) _exit();
+        },
+        child: _scaffold(context),
+      );
+
+  Widget _scaffold(BuildContext context) => Scaffold(
         backgroundColor: const Color(0xff3b1e0f),
         body: DecoratedBox(
           decoration: const BoxDecoration(

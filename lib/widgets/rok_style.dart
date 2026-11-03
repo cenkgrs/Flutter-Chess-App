@@ -198,6 +198,39 @@ ThemeData rokTheme() => ThemeData(
       progressIndicatorTheme: const ProgressIndicatorThemeData(color: rokBone),
     );
 
+/// A small labelled value that sits beside a board: the clock, the level.
+class RokStatChip extends StatelessWidget {
+  const RokStatChip(
+      {super.key, required this.icon, required this.value, this.label});
+
+  final IconData icon;
+  final String value;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: const Color(0x55241a12),
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(color: const Color(0xff6d6356)),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, size: 15, color: const Color(0xffd9b77e)),
+          const SizedBox(width: 7),
+          if (label != null) ...[
+            LText(label!,
+                style: const TextStyle(
+                    color: Color(0xffb9aea5), fontSize: 12.5)),
+            const SizedBox(width: 5),
+          ],
+          Text(value,
+              style: const TextStyle(
+                  color: rokBone, fontSize: 13.5, fontWeight: FontWeight.w700)),
+        ]),
+      );
+}
+
 /// The frame every board sits in: a lit wooden bevel, a thin brass edge and
 /// the shadow that lifts it off the page. The play screen had it and the
 /// puzzle screens did not, so the same board looked like two products.
