@@ -36,30 +36,25 @@ class PlayScreen extends StatefulWidget {
   final DailyFeatureLimits? limits;
   final String? initialFen;
   static Future<void> launch(BuildContext context, {String? fen}) async {
-    final elo = await showDialog<int>(
-        context: context,
-        builder: (ctx) => RokWoodDialog(
-              title: const LText('Stockfish gücü'),
-              content: Column(mainAxisSize: MainAxisSize.min, children: [
-                const LText(
-                    'Motor güç ayarıdır; online rating ile eşdeğer değildir.'),
-                for (final value in [1320, 1500, 1800, 2100, 2400, 2800, 3190])
-                  TextButton(
-                      onPressed: () => Navigator.pop(ctx, value),
-                      child: LText('$value')),
-              ]),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const LText('Vazgeç'))
-              ],
-            ));
+    final elo = await _chooseStrength(context);
     if (!context.mounted || elo == null) return;
     await Navigator.push(
         context,
         MaterialPageRoute(
             builder: (_) => PlayScreen(initialFen: fen, initialElo: elo)));
   }
+
+  /// Asks which opponent to face. The engine's own range is 1320-3190; the
+  /// names are what the number means to a player, since an engine setting is
+  /// not an online rating and reads as one if left bare.
+  static Future<int?> _chooseStrength(BuildContext context) =>
+      showModalBottomSheet<int>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Colors.transparent,
+        builder: (sheet) => const _StrengthSheet(),
+      );
 
   static Future<void> launchAssistant(BuildContext context,
       {DailyFeatureLimits? limits}) async {
@@ -68,10 +63,15 @@ class PlayScreen extends StatefulWidget {
       return;
     }
     if (!context.mounted) return;
+    // The assistant game is a game like any other: the player picks who they
+    // are facing, rather than being given a fixed opponent.
+    final elo = await _chooseStrength(context);
+    if (!context.mounted || elo == null) return;
     await Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (_) => PlayScreen(assistantMode: true, limits: limits)));
+            builder: (_) => PlayScreen(
+                assistantMode: true, limits: limits, initialElo: elo)));
   }
 
   final int initialElo;
@@ -643,7 +643,14 @@ class _PlayScreenState extends State<PlayScreen> {
             metadata: {'mode': 'offline'});
       }
       final fen = game.fen;
-      final advice = await ChessEngine().explain(game);
+      // The assistant asks the same engine the opponent uses, but without
+      // the strength limit: its job is the best move, not a fair one.
+      final advice = await ChessEngine().explain(game, bestMove: (fen) async {
+        final evaluation = widget.evaluate != null
+            ? await widget.evaluate!(fen, 0)
+            : await DeviceEngine.instance.evaluate(fen, milliseconds: 900);
+        return evaluation.move;
+      });
       if (!mounted ||
           ticket != generation ||
           !identical(game, requestedGame) ||
@@ -1302,4 +1309,128 @@ class _MoveArrowPainter extends CustomPainter {
       oldDelegate.from != from ||
       oldDelegate.to != to ||
       oldDelegate.flipped != flipped;
+}
+
+/// One rung of the engine's strength, named for what it plays like.
+class _Strength {
+  const _Strength(this.elo, this.name, this.description);
+  final int elo;
+  final String name, description;
+}
+
+const _strengths = [
+  _Strength(1320, 'Başlangıç', 'Taşları yeni öğrenenler için'),
+  _Strength(1500, 'Acemi', 'Basit taktikleri görür'),
+  _Strength(1800, 'Kulüp oyuncusu', 'Açılışları bilir, hatayı affetmez'),
+  _Strength(2100, 'Usta adayı', 'Planlı oynar, baskı kurar'),
+  _Strength(2400, 'Usta', 'Küçük hataları cezalandırır'),
+  _Strength(2800, 'Büyükusta', 'Neredeyse kusursuz'),
+  _Strength(3190, 'Sınırsız', 'Motorun tam gücü'),
+];
+
+class _StrengthSheet extends StatelessWidget {
+  const _StrengthSheet();
+
+  static const _ink = Color(0xff211712);
+  static const _muted = Color(0xff665a52);
+  static const _border = Color(0xffb9aea5);
+
+  @override
+  Widget build(BuildContext context) => Container(
+        constraints:
+            BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * .78),
+        padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
+        decoration: const BoxDecoration(
+          color: Color(0xfff3eee7),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 48,
+              height: 4,
+              decoration: BoxDecoration(
+                color: _border,
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+            const SizedBox(height: 17),
+            const Row(children: [
+              Icon(Icons.memory_rounded, color: _ink),
+              SizedBox(width: 10),
+              LText('RAKİP GÜCÜ',
+                  style: TextStyle(
+                    color: _ink,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.4,
+                  )),
+            ]),
+            const SizedBox(height: 6),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: LText(
+                  'Motor güç ayarıdır; online rating ile eşdeğer değildir.',
+                  style: TextStyle(color: _muted, fontSize: 13)),
+            ),
+            const SizedBox(height: 14),
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: _strengths.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (_, index) => _row(context, _strengths[index]),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _row(BuildContext context, _Strength strength) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: ValueKey('elo-${strength.elo}'),
+          onTap: () => Navigator.pop(context, strength.elo),
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: _border),
+            ),
+            child: Row(children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    LText(strength.name,
+                        style: const TextStyle(
+                            color: _ink,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 3),
+                    LText(strength.description,
+                        style: const TextStyle(color: _muted, fontSize: 13)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xff211712),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text('${strength.elo}',
+                    style: const TextStyle(
+                        color: Color(0xffd9b77e),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700)),
+              ),
+            ]),
+          ),
+        ),
+      );
 }

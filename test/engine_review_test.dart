@@ -190,8 +190,16 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.tap(find.text('Buradan bilgisayarla devam et'));
     await tester.pumpAndSettle();
-    expect(find.text('Stockfish gücü'), findsOneWidget);
+    expect(find.text('RAKİP GÜCÜ'), findsOneWidget);
+    // The rungs are named, not bare numbers; the rating rides along as a chip.
+    expect(find.text('Başlangıç'), findsOneWidget);
     expect(find.text('1320'), findsOneWidget);
+    // The strongest rung is below the fold on a small phone; it has to be
+    // reachable, not merely present.
+    await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('elo-3190')), 120,
+        scrollable: find.byType(Scrollable).last);
+    expect(find.byKey(const ValueKey('elo-3190')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

@@ -46,15 +46,24 @@ class ChessEngine {
     return best;
   }
 
-  Future<ChessAdvice?> explain(Chess position) async {
-    final move = await choose(position, Difficulty.hard);
+  /// Advice for the player.
+  ///
+  /// [bestMove] is the real engine: given a FEN it returns a move in
+  /// coordinates. The local search below is a fallback for tests and for a
+  /// device whose engine will not start — it is far weaker than the opponent
+  /// the player is facing, so advice from it would lose games.
+  Future<ChessAdvice?> explain(
+    Chess position, {
+    Future<String?> Function(String fen)? bestMove,
+  }) async {
+    final move = await _pick(position, bestMove, Difficulty.hard);
     if (move == null) return null;
     final before = position.get(move.toAlgebraic);
     final copy = position.copy()..move(move);
     final san = copy.getHistory().cast<String>().last;
     final variation = <String>[san];
     for (var ply = 0; ply < 2 && !copy.game_over; ply++) {
-      final reply = await choose(copy, Difficulty.medium);
+      final reply = await _pick(copy, bestMove, Difficulty.medium);
       if (reply == null) break;
       copy.move(reply);
       variation.add(copy.getHistory().cast<String>().last);
@@ -81,6 +90,29 @@ class ChessEngine {
       '${move.fromAlgebraic} karesindeki taşı ${move.toAlgebraic} karesine götürmeni öneriyorum.',
       '$san hamlesi $mainReason. Bu hamleden sonra rakibin tehdidini kontrol edip taşlarını güvenli karelerde tut.',
     );
+  }
+
+  /// The engine's move where there is one, the local search otherwise.
+  Future<Move?> _pick(Chess position, Future<String?> Function(String fen)? bestMove,
+      Difficulty fallback) async {
+    if (bestMove != null) {
+      String? uci;
+      try {
+        uci = await bestMove(position.fen);
+      } catch (_) {
+        uci = null;
+      }
+      if (uci != null && uci.length >= 4) {
+        final probe = position.copy();
+        final played = probe.move({
+          'from': uci.substring(0, 2),
+          'to': uci.substring(2, 4),
+          if (uci.length > 4) 'promotion': uci.substring(4),
+        });
+        if (played == true) return probe.history.last.move;
+      }
+    }
+    return choose(position, fallback);
   }
 
   int _priority(Move m) =>

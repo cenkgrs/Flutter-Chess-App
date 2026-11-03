@@ -1,5 +1,19 @@
 // English, German, Russian. Turkish source keys keep the existing copy auditable.
 const translations = <String, List<String>>{
+  'RAKİP GÜCÜ': ['OPPONENT STRENGTH', 'GEGNERSTÄRKE', 'СИЛА СОПЕРНИКА'],
+  'Taşları yeni öğrenenler için': ['For players learning the pieces', 'Für alle, die die Figuren lernen', 'Для тех, кто учит фигуры'],
+  'Acemi': ['Novice', 'Neuling', 'Новичок'],
+  'Basit taktikleri görür': ['Spots simple tactics', 'Erkennt einfache Taktiken', 'Видит простые тактики'],
+  'Kulüp oyuncusu': ['Club player', 'Vereinsspieler', 'Клубный игрок'],
+  'Açılışları bilir, hatayı affetmez': ['Knows openings, punishes slips', 'Kennt Eröffnungen, verzeiht nichts', 'Знает дебюты, не прощает ошибок'],
+  'Usta adayı': ['Candidate master', 'Anwärter auf den Meister', 'Кандидат в мастера'],
+  'Planlı oynar, baskı kurar': ['Plays with a plan and presses', 'Spielt planvoll und setzt unter Druck', 'Играет по плану и давит'],
+  'Usta': ['Master', 'Meister', 'Мастер'],
+  'Küçük hataları cezalandırır': ['Punishes small mistakes', 'Bestraft kleine Fehler', 'Наказывает за мелкие ошибки'],
+  'Büyükusta': ['Grandmaster', 'Großmeister', 'Гроссмейстер'],
+  'Neredeyse kusursuz': ['Close to flawless', 'Nahezu fehlerfrei', 'Почти безупречно'],
+  'Sınırsız': ['Unlimited', 'Unbegrenzt', 'Без ограничений'],
+  'Motorun tam gücü': ['The engine at full strength', 'Die Engine mit voller Stärke', 'Движок на полной силе'],
   "Tahta": ["Board", "Brett", "Доска"],
   "Taşlar": ["Pieces", "Figuren", "Фигуры"],
   "Giriş yap veya hesap oluştur": [
