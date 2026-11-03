@@ -387,12 +387,13 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
                           '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}',
                           style: const TextStyle(color: Colors.white70))),
                 Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Stack(clipBehavior: Clip.none, children: [
-                      _board(),
-                      Positioned(
-                          top: -10, right: -10, child: TurnKing(game.turn)),
-                    ])),
+                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [TurnKing(game.turn, size: 54)])),
+                Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
+                    child: _board()),
               ],
               if (busy) const LinearProgressIndicator(),
               Padding(

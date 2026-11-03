@@ -314,18 +314,19 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
                       builder: (_, seconds, __) => LText(
                           '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}',
                           style: const TextStyle(color: Colors.white70))),
+                  // Whose move it is, beside the board rather than over it:
+                  // on the board it covered a square, and the corner square
+                  // is often the one the puzzle turns on.
                   Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [TurnKing(game.turn, size: 54)])),
+                  Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
                       child: AspectRatio(
                           aspectRatio: 1,
-                          child: Stack(children: [
-                            Positioned.fill(
-                                child: RokBoardFrame(child: _board())),
-                            Positioned(
-                                top: -10,
-                                right: -10,
-                                child: TurnKing(game.turn)),
-                          ]))),
+                          child: RokBoardFrame(child: _board()))),
                 ],
                 if (busy) const LinearProgressIndicator(),
                 Padding(
