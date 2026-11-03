@@ -66,31 +66,24 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 children: [
                   _hero(),
                   // A store that will not answer is the first thing to say,
-                  // not something to find below three screens of pitch.
-                  if (store.error != null) ...[
+                  // not something to find below three screens of pitch — and
+                  // it is said once, in a panel, rather than as loose text
+                  // here and again where the plans would have been.
+                  if (!store.active && store.products.isEmpty) ...[
+                    const SizedBox(height: 22),
+                    _unavailable(),
+                  ] else if (store.error != null) ...[
                     const SizedBox(height: 20),
                     LText(store.error!,
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: _gold, fontSize: 13.5)),
-                    Center(
-                      child: TextButton(
-                          onPressed: store.busy ? null : store.load,
-                          child: const LText('Tekrar dene')),
-                    ),
                   ],
                   const SizedBox(height: 28),
                   _benefits(),
                   const SizedBox(height: 24),
                   _comparison(),
                   const SizedBox(height: 28),
-                  if (store.active)
-                    _activeCard()
-                  else if (store.products.isEmpty && !store.busy)
-                    // Without this the page ends in a hole: the plans are
-                    // what fills it, and there are none to draw.
-                    _unavailable()
-                  else
-                    ..._plans(),
+                  if (store.active) _activeCard() else ..._plans(),
                   if (store.busy)
                     const Padding(
                         padding: EdgeInsets.only(top: 18),
@@ -221,10 +214,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               style: TextStyle(
                   color: _bone, fontSize: 17, fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          const LText(
-              'Premium henüz satışa açılmadı. O zamana kadar asistan ve analiz günde bir kez herkese açık.',
+          LText(
+              store.error ??
+                  'Premium henüz satışa açılmadı. O zamana kadar asistan ve analiz günde bir kez herkese açık.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: _muted, fontSize: 13.5, height: 1.45)),
+              style: const TextStyle(
+                  color: _muted, fontSize: 13.5, height: 1.45)),
           const SizedBox(height: 6),
           TextButton(
               onPressed: store.busy ? null : store.load,
@@ -342,36 +337,47 @@ class _CompareRow extends StatelessWidget {
   /// that would imply the free tier misses out.
   final bool both;
 
+  /// The values are what the table is read for, so they are marks rather than
+  /// another run of small grey text: what Premium adds is picked out, what
+  /// both tiers already have is stated plainly on each side.
+  static Widget _value(String text, {required bool highlight}) => Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: highlight
+                ? const Color(0x33d9b77e)
+                : const Color(0x22000000),
+            borderRadius: BorderRadius.circular(99),
+            border: Border.all(
+                color: highlight
+                    ? const Color(0xffd9b77e)
+                    : const Color(0x33f3eee7)),
+          ),
+          child: LText(text,
+              style: TextStyle(
+                  color: highlight
+                      ? const Color(0xffe8c88f)
+                      : _SubscriptionScreenState._muted,
+                  fontSize: 12,
+                  fontWeight: highlight ? FontWeight.w700 : FontWeight.w500)),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: 7),
         child: Row(children: [
           Expanded(
               flex: 4,
               child: LText(label,
                   style: const TextStyle(
                       color: rokBone, fontSize: 13.5, height: 1.3))),
+          Expanded(flex: 3, child: _value(free, highlight: false)),
           Expanded(
-            flex: 3,
-            child: LText(free,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    color: _SubscriptionScreenState._muted, fontSize: 12.5)),
-          ),
-          Expanded(
-            flex: 3,
-            child: both
-                ? LText(free,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        color: _SubscriptionScreenState._muted, fontSize: 12.5))
-                : const LText('sınırsız',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: _SubscriptionScreenState._gold,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700)),
-          ),
+              flex: 3,
+              child: both
+                  ? _value(free, highlight: false)
+                  : _value('sınırsız', highlight: true)),
         ]),
       );
 }
