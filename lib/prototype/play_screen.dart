@@ -1167,8 +1167,10 @@ class _ReviewAction extends StatelessWidget {
   Widget build(BuildContext context) => OutlinedButton.icon(
         onPressed: enabled ? onPressed : null,
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xff35271d),
-          side: const BorderSide(color: Color(0xffded1bd)),
+          foregroundColor: rokBone,
+          disabledForegroundColor: const Color(0xff8a8077),
+          backgroundColor: const Color(0x33000000),
+          side: const BorderSide(color: Color(0xff6d6356)),
           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 12),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
