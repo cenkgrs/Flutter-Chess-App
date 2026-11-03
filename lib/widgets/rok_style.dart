@@ -194,6 +194,136 @@ ThemeData rokTheme() => ThemeData(
       progressIndicatorTheme: const ProgressIndicatorThemeData(color: rokBone),
     );
 
+/// The shell every bottom sheet in ROK wears: the board's own dark wood, a
+/// grab handle, and a titled header. Sheets used to be bone-coloured panels
+/// on a dark wooden app, which read as borrowed from somewhere else.
+class RokSheet extends StatelessWidget {
+  const RokSheet({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.child,
+    this.note,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? note;
+  final Widget child;
+
+  static const border = Color(0xff6d6356);
+  static const muted = Color(0xffb9aea5);
+
+  @override
+  Widget build(BuildContext context) => Container(
+        constraints:
+            BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * .78),
+        padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
+        decoration: const BoxDecoration(
+          color: Color(0xff2a1a10),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+          border: Border(top: BorderSide(color: Color(0xff6d6356))),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 48,
+              height: 4,
+              decoration: BoxDecoration(
+                color: muted,
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+            const SizedBox(height: 17),
+            Row(children: [
+              Icon(icon, color: rokBone),
+              const SizedBox(width: 10),
+              Expanded(
+                child: LText(title,
+                    style: const TextStyle(
+                      color: rokBone,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.4,
+                    )),
+              ),
+            ]),
+            if (note != null) ...[
+              const SizedBox(height: 6),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: LText(note!,
+                    style: const TextStyle(color: muted, fontSize: 13)),
+              ),
+            ],
+            const SizedBox(height: 14),
+            Flexible(child: child),
+          ],
+        ),
+      );
+}
+
+/// A tappable row inside a [RokSheet].
+class RokSheetRow extends StatelessWidget {
+  const RokSheetRow({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.icon,
+    this.trailing,
+  });
+
+  final String title, subtitle;
+  final VoidCallback onTap;
+  final IconData? icon;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: const Color(0x33000000),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: RokSheet.border),
+            ),
+            child: Row(children: [
+              if (icon != null) ...[
+                Icon(icon, color: rokBone, size: 26),
+                const SizedBox(width: 14),
+              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    LText(title,
+                        style: const TextStyle(
+                            color: rokBone,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 3),
+                    LText(subtitle,
+                        style: const TextStyle(
+                            color: RokSheet.muted, fontSize: 13)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              trailing ??
+                  const Icon(Icons.chevron_right_rounded,
+                      color: RokSheet.muted),
+            ]),
+          ),
+        ),
+      );
+}
+
 /// Default page surface for every new ROK screen, including its app bar.
 class RokScaffold extends StatelessWidget {
   const RokScaffold(

@@ -1331,106 +1331,37 @@ const _strengths = [
 class _StrengthSheet extends StatelessWidget {
   const _StrengthSheet();
 
-  static const _ink = Color(0xff211712);
-  static const _muted = Color(0xff665a52);
-  static const _border = Color(0xffb9aea5);
-
   @override
-  Widget build(BuildContext context) => Container(
-        constraints:
-            BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * .78),
-        padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
-        decoration: const BoxDecoration(
-          color: Color(0xfff3eee7),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 48,
-              height: 4,
-              decoration: BoxDecoration(
-                color: _border,
-                borderRadius: BorderRadius.circular(99),
-              ),
-            ),
-            const SizedBox(height: 17),
-            const Row(children: [
-              Icon(Icons.memory_rounded, color: _ink),
-              SizedBox(width: 10),
-              LText('RAKİP GÜCÜ',
-                  style: TextStyle(
-                    color: _ink,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.4,
-                  )),
-            ]),
-            const SizedBox(height: 6),
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: LText(
-                  'Motor güç ayarıdır; online rating ile eşdeğer değildir.',
-                  style: TextStyle(color: _muted, fontSize: 13)),
-            ),
-            const SizedBox(height: 14),
-            Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: _strengths.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (_, index) => _row(context, _strengths[index]),
-              ),
-            ),
-          ],
-        ),
-      );
-
-  Widget _row(BuildContext context, _Strength strength) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          key: ValueKey('elo-${strength.elo}'),
-          onTap: () => Navigator.pop(context, strength.elo),
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: _border),
-            ),
-            child: Row(children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    LText(strength.name,
-                        style: const TextStyle(
-                            color: _ink,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 3),
-                    LText(strength.description,
-                        style: const TextStyle(color: _muted, fontSize: 13)),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
+  Widget build(BuildContext context) => RokSheet(
+        icon: Icons.memory_rounded,
+        title: 'RAKİP GÜCÜ',
+        note: 'Motor güç ayarıdır; online rating ile eşdeğer değildir.',
+        child: ListView.separated(
+          shrinkWrap: true,
+          itemCount: _strengths.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 10),
+          itemBuilder: (_, index) {
+            final strength = _strengths[index];
+            return RokSheetRow(
+              key: ValueKey('elo-${strength.elo}'),
+              title: strength.name,
+              subtitle: strength.description,
+              onTap: () => Navigator.pop(context, strength.elo),
+              trailing: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
                 decoration: BoxDecoration(
-                  color: const Color(0xff211712),
+                  color: const Color(0xffd9b77e),
                   borderRadius: BorderRadius.circular(99),
                 ),
                 child: Text('${strength.elo}',
                     style: const TextStyle(
-                        color: Color(0xffd9b77e),
+                        color: Color(0xff241a12),
                         fontSize: 13,
                         fontWeight: FontWeight.w700)),
               ),
-            ]),
-          ),
+            );
+          },
         ),
       );
 }

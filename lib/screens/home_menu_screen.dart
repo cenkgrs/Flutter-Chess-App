@@ -659,96 +659,58 @@ class _TimeControlSheet extends StatelessWidget {
   final ValueChanged<TimeControl> onSelected;
 
   @override
-  Widget build(BuildContext context) => Container(
-        constraints:
-            BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * .78),
-        padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
-        decoration: const BoxDecoration(
-          color: Color(0xfff3eee7),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 48,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xffb9aea5),
-                borderRadius: BorderRadius.circular(99),
-              ),
-            ),
-            const SizedBox(height: 17),
-            const Row(
-              children: [
-                Icon(Icons.timer_outlined, color: HomeMenuScreen.ink),
-                SizedBox(width: 10),
-                LText(
-                  'SÜRE SEÇ',
-                  style: TextStyle(
-                    color: HomeMenuScreen.ink,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.4,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Flexible(
-              child: ListView(
-                shrinkWrap: true,
-                children: SpeedPool.values.map((pool) {
-                  final controls = TimeControl.presets
-                      .where((control) => control.pool == pool)
-                      .toList();
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 15),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        LText(
-                          '${pool.label} · ${pool.description}',
-                          style: const TextStyle(
-                            color: Color(0xff665a52),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: controls
-                              .map(
-                                (control) => OutlinedButton(
-                                  key: ValueKey('time-${control.label}'),
-                                  onPressed: () => onSelected(control),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: HomeMenuScreen.ink,
-                                    side: const BorderSide(
-                                        color: Color(0xffb9aea5)),
-                                  ),
-                                  child: LText(
-                                    control.label,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w700),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      ],
+  Widget build(BuildContext context) => RokSheet(
+        icon: Icons.timer_outlined,
+        title: 'SÜRE SEÇ',
+        child: ListView(
+          shrinkWrap: true,
+          children: SpeedPool.values.map((pool) {
+            final controls = TimeControl.presets
+                .where((control) => control.pool == pool)
+                .toList();
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  LText(
+                    '${pool.label} · ${pool.description}',
+                    style: const TextStyle(
+                      color: RokSheet.muted,
+                      fontWeight: FontWeight.w600,
                     ),
-                  );
-                }).toList(),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: controls
+                        .map(
+                          (control) => OutlinedButton(
+                            key: ValueKey('time-${control.label}'),
+                            onPressed: () => onSelected(control),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: rokBone,
+                              backgroundColor: const Color(0x33000000),
+                              side: const BorderSide(color: RokSheet.border),
+                            ),
+                            child: LText(
+                              control.label,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
               ),
-            ),
-          ],
+            );
+          }).toList(),
         ),
       );
 }
 
-/// Online, with a friend, or against the engine.
 class _PlayModeSheet extends StatelessWidget {
   const _PlayModeSheet({
     required this.onOnline,
@@ -759,86 +721,31 @@ class _PlayModeSheet extends StatelessWidget {
   final VoidCallback onOnline, onFriend, onComputer;
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
-        decoration: const BoxDecoration(
-          color: Color(0xfff3eee7),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 48,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xffb9aea5),
-                borderRadius: BorderRadius.circular(99),
-              ),
-            ),
-            const SizedBox(height: 17),
-            const Row(children: [
-              Icon(Icons.sports_esports_outlined, color: HomeMenuScreen.ink),
-              SizedBox(width: 10),
-              Expanded(
-                  child: LText('NASIL OYNAYALIM?',
-                      style: TextStyle(
-                    color: HomeMenuScreen.ink,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w700,
-                        letterSpacing: 1.4,
-                      ))),
-            ]),
-            const SizedBox(height: 16),
-            _row(const ValueKey('mode-online'), Icons.public_rounded,
-                'Çevrimiçi oyna', 'Dereceli eşleşme', onOnline),
-            const SizedBox(height: 10),
-            _row(const ValueKey('mode-friend'), Icons.group_outlined,
-                'Arkadaşla oyna', 'Oda kur veya davet kodu gir', onFriend),
-            const SizedBox(height: 10),
-            _row(const ValueKey('mode-computer'), Icons.memory_rounded,
-                'Bilgisayara karşı oyna', 'Çevrimdışı antrenman', onComputer),
-          ],
-        ),
-      );
-
-  Widget _row(Key key, IconData icon, String title, String subtitle,
-          VoidCallback onTap) =>
-      Material(
-        color: Colors.transparent,
-        child: InkWell(
-          key: key,
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xffb9aea5)),
-            ),
-            child: Row(children: [
-              Icon(icon, color: HomeMenuScreen.ink, size: 26),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    LText(title,
-                        style: const TextStyle(
-                            color: HomeMenuScreen.ink,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 3),
-                    LText(subtitle,
-                        style: const TextStyle(
-                            color: Color(0xff665a52), fontSize: 13)),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right_rounded,
-                  color: Color(0xff665a52)),
-            ]),
-          ),
-        ),
+  Widget build(BuildContext context) => RokSheet(
+        icon: Icons.sports_esports_outlined,
+        title: 'NASIL OYNAYALIM?',
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          RokSheetRow(
+              key: const ValueKey('mode-online'),
+              icon: Icons.public_rounded,
+              title: 'Çevrimiçi oyna',
+              subtitle: 'Dereceli eşleşme',
+              onTap: onOnline),
+          const SizedBox(height: 10),
+          RokSheetRow(
+              key: const ValueKey('mode-friend'),
+              icon: Icons.group_outlined,
+              title: 'Arkadaşla oyna',
+              subtitle: 'Oda kur veya davet kodu gir',
+              onTap: onFriend),
+          const SizedBox(height: 10),
+          RokSheetRow(
+              key: const ValueKey('mode-computer'),
+              icon: Icons.memory_rounded,
+              title: 'Bilgisayara karşı oyna',
+              subtitle: 'Çevrimdışı antrenman',
+              onTap: onComputer),
+        ]),
       );
 }
+
