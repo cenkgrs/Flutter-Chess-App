@@ -59,3 +59,6 @@ third_party/stockfish/ios/Stockfish/src/*.nnue
 admin_dashboard/node_modules/
 admin_dashboard/dist/
 admin_dashboard/.env
+
+# Site repository, cloned for editing; it has its own history.
+website/
