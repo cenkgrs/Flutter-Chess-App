@@ -935,7 +935,7 @@ class _PlayScreenState extends State<PlayScreen> {
       height: math.min(520, screenHeight * .58),
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 18),
       decoration: const BoxDecoration(
-        color: Color(0xfffffbf2),
+        color: Color(0xff2a1a10),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
@@ -948,18 +948,18 @@ class _PlayScreenState extends State<PlayScreen> {
             width: 52,
             height: 5,
             decoration: BoxDecoration(
-                color: const Color(0xffd5cbb9),
+                color: const Color(0xffb9aea5),
                 borderRadius: BorderRadius.circular(99)),
           ),
         ),
         const SizedBox(height: 7),
         Row(children: [
           const Icon(Icons.manage_search_rounded,
-              size: 30, color: Color(0xff2d2118)),
+              size: 30, color: rokBone),
           const SizedBox(width: 9),
           const LText('İNCELEME',
               style: TextStyle(
-                  color: Color(0xff2d2118),
+                  color: rokBone,
                   fontFamily: 'serif',
                   fontSize: 19,
                   letterSpacing: 1.2,
@@ -971,16 +971,16 @@ class _PlayScreenState extends State<PlayScreen> {
             label: const LText('Kapat'),
           ),
         ]),
-        const Divider(height: 20, color: Color(0xffddd3c2)),
+        const Divider(height: 20, color: Color(0xff6d6356)),
         if (game.turn != human || ended || error != null) ...[
           LText(status,
               style: const TextStyle(
-                  color: Color(0xff755b3e), fontWeight: FontWeight.w600)),
+                  color: Color(0xffd9b77e), fontWeight: FontWeight.w600)),
           const SizedBox(height: 9),
         ],
         Row(children: [
           const Icon(Icons.receipt_long_outlined,
-              size: 23, color: Color(0xff2d2118)),
+              size: 23, color: rokBone),
           const SizedBox(width: 9),
           const Expanded(
             child: LText('Hamle geçmişi',
@@ -1009,14 +1009,14 @@ class _PlayScreenState extends State<PlayScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xfff1eadc),
+              color: const Color(0x33000000),
               borderRadius: BorderRadius.circular(13),
-              border: Border.all(color: const Color(0xffe5dac7)),
+              border: Border.all(color: const Color(0xff6d6356)),
             ),
             child: notation.isEmpty
                 ? const Center(
                     child: LText('Henüz hamle yapılmadı',
-                        style: TextStyle(color: Color(0xff827566))))
+                        style: TextStyle(color: Color(0xffb9aea5))))
                 : ListView.builder(
                     itemCount: (notation.length + 1) ~/ 2,
                     itemBuilder: (context, i) => Padding(
@@ -1025,7 +1025,7 @@ class _PlayScreenState extends State<PlayScreen> {
                         SizedBox(
                           width: 34,
                           child: LText('${i + 1}.',
-                              style: const TextStyle(color: Color(0xff9a8974))),
+                              style: const TextStyle(color: Color(0xffb9aea5))),
                         ),
                         Expanded(child: LText(notation[i * 2])),
                         Expanded(

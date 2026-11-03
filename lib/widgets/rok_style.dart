@@ -97,6 +97,14 @@ class RokDialog extends StatelessWidget {
       data: rokTheme(),
       child: AlertDialog(
         scrollable: true,
+        // The same dark wood the sheets use. A flat grey panel was the one
+        // surface in the app that belonged to Material rather than to ROK.
+        backgroundColor: const Color(0xff2a1a10),
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: const BorderSide(color: Color(0xff8b7966))),
+        clipBehavior: Clip.antiAlias,
         icon: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
