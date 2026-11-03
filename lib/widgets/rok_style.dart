@@ -22,7 +22,11 @@ class RokResultDialog extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
         clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        // The wood runs to the edge, so without an outline the dialog melts
+        // into the board behind it. Every other dialog already had one.
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0xff8b7966))),
         child: DecoratedBox(
             decoration: rokWood,
             child: SingleChildScrollView(
