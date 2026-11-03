@@ -154,10 +154,6 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
                                   onTap: () => _showPlayModes(context),
                                 ),
                                 const SizedBox(height: 36),
-                                DailyPuzzleMenuEntry(
-                                    key: ValueKey('daily-${user?.id}'),
-                                    signedIn: user != null),
-                                const _MenuDivider(),
                                 _SecondaryAction(
                                     icon: Icons.bolt_outlined,
                                     title: 'Bulmaca Düellosu',
@@ -188,6 +184,10 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
                                           builder: (_) =>
                                               const PuzzleScreen())),
                                 ),
+                                const _MenuDivider(),
+                                DailyPuzzleMenuEntry(
+                                    key: ValueKey('daily-${user?.id}'),
+                                    signedIn: user != null),
                               ],
                             ),
                           ),
