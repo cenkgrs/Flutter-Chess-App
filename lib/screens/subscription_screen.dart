@@ -150,7 +150,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
             color: const Color(0x33000000),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(rokCorner),
             border: Border.all(color: const Color(0xff6c6257))),
         child: const Column(children: [
           Row(children: [
@@ -203,7 +203,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
             color: const Color(0x222e7d32),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(rokCorner),
             border: Border.all(color: const Color(0xff6fd38a))),
         child: const Row(children: [
           Icon(Icons.verified_rounded, color: Color(0xff6fd38a), size: 28),
@@ -264,7 +264,7 @@ class _Benefit extends StatelessWidget {
             height: 38,
             decoration: BoxDecoration(
                 color: const Color(0x33e2b75f),
-                borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(rokCorner)),
             child: Icon(icon, color: _SubscriptionScreenState._gold, size: 20),
           ),
           const SizedBox(width: 14),
@@ -353,7 +353,7 @@ class _PlanCard extends StatelessWidget {
               yearly ? _SubscriptionScreenState._gold : const Color(0xff2b2722),
           foregroundColor: yearly ? const Color(0xff241c0f) : rokBone,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(rokCorner),
               side: BorderSide(
                   color: yearly
                       ? _SubscriptionScreenState._gold

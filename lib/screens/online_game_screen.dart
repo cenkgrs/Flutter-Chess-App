@@ -839,7 +839,7 @@ class _GameResultBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
       decoration: BoxDecoration(
         color: const Color(0xee202120),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(rokCorner),
         border: Border.all(color: const Color(0xff81776c)),
       ),
       child: Row(

@@ -23,7 +23,7 @@ class FastPuzzles extends StatelessWidget {
           width: width * 0.9,
           height: 125,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
             color: Colors.white,
             boxShadow: [
               BoxShadow(

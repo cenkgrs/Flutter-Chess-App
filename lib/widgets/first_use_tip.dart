@@ -63,7 +63,7 @@ class _FirstUseTipState extends State<FirstUseTip> {
                 color: const Color(0xf0302620),
                 elevation: 6,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(rokCorner),
                   side: const BorderSide(color: Color(0xff8b7966)),
                 ),
                 child: Padding(

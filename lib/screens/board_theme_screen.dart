@@ -121,7 +121,7 @@ class _Option extends StatelessWidget {
   Widget build(BuildContext context) => Material(
         color: const Color(0xe6202120),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(rokCorner),
           side: BorderSide(
               color: selected ? BoardThemeScreen.bone : const Color(0xff686966),
               width: selected ? 1.6 : .8),

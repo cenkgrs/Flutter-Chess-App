@@ -266,7 +266,7 @@ class _FriendRoomScreenState extends State<FriendRoomScreen> {
         padding: const EdgeInsets.fromLTRB(18, 17, 18, 20),
         decoration: BoxDecoration(
           color: const Color(0xf2202120),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(rokCorner),
           border: Border.all(color: _line, width: .8),
           boxShadow: const [
             BoxShadow(

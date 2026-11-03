@@ -444,12 +444,12 @@ class _PrimaryAction extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(rokCorner),
           child: Ink(
             height: 102,
             decoration: BoxDecoration(
               color: HomeMenuScreen.graphite,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(rokCorner),
               border: Border.all(color: const Color(0xff666765), width: .8),
               boxShadow: const [
                 BoxShadow(
@@ -522,12 +522,12 @@ class _ActiveGameCard extends StatelessWidget {
         child: InkWell(
           key: const ValueKey('resume-online-game'),
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(rokCorner),
           child: Ink(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
             decoration: BoxDecoration(
               color: const Color(0xff744326),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(rokCorner),
               border: Border.all(color: const Color(0xffd9b77e)),
             ),
             child: const Row(
