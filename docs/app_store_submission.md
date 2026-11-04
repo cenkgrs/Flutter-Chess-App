@@ -113,12 +113,25 @@ makes both unlimited. Monthly and yearly; renews automatically unless
 cancelled in your Apple account settings.
 
 Plays in English, German, Russian and Turkish.
+
+Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy Policy: https://cenkgrs.github.io/rok-site/privacy.html
 ```
 
 **Keywords (100):**
 ```
 chess,puzzle,tactics,board game,strategy,online,duel,stockfish,endgame,coach,blitz,elo
 ```
+
+### Neden açıklamanın içinde
+
+4 Kasım 2026'da 1.0 bu yüzden reddedildi: abonelik satan bir uygulamanın
+EULA bağlantısı **App Store ürün sayfasında** görünmek zorunda; uygulamanın
+içinde olması yetmiyor. Apple'ın standart EULA'sını kullandığımız için
+bağlantıyı her yerelleştirmenin açıklamasına koymak yeterli — App Store
+Connect'e ayrı bir custom EULA yüklemeye gerek yok.
+
+Yeni dil eklenirse bu iki satır da eklenmeli.
 
 ### Türkçe
 
@@ -162,6 +175,9 @@ Premium ikisini de sınırsız yapar. Aylık ve yıllık; Apple hesap ayarların
 iptal edilmedikçe otomatik yenilenir.
 
 Türkçe, İngilizce, Almanca ve Rusça oynanır.
+
+Kullanım Koşulları (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Gizlilik Politikası: https://cenkgrs.github.io/rok-site/privacy.html
 ```
 
 **Keywords (100):**
