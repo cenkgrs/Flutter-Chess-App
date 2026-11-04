@@ -65,3 +65,6 @@ website/
 
 # Store artwork: large PNGs, kept out of the public repo
 store/screenshots/
+
+# Screen recordings for the short videos: large, kept out of the repo
+store/videos/
