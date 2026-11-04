@@ -22,6 +22,7 @@ Future<void> main() async {
       await rootBundle.loadString('third_party/stockfish/LICENSE'),
     );
   });
+  await loadAppVersion();
   await AppBackend.initialize();
   await AppLanguage.instance.load();
   await GameSounds.instance.load();

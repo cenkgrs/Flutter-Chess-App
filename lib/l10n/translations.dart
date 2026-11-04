@@ -1390,6 +1390,18 @@ const translations = <String, List<String>>{
   'kale': ['rook', 'Turm', 'ладья'],
   'vezir': ['queen', 'Dame', 'ферзь'],
   'şah': ['king', 'König', 'король'],
+  'Aylık Premium': ['Monthly Premium', 'Monatlich Premium', 'Premium на месяц'],
+  'Yıllık Premium': ['Yearly Premium', 'Jährlich Premium', 'Premium на год'],
+  'Verilerimin Türkiye dışındaki sunucularda işlenmesini kabul ediyorum.': [
+    'I agree to my data being processed on servers outside Türkiye.',
+    'Ich stimme zu, dass meine Daten auf Servern außerhalb der Türkei verarbeitet werden.',
+    'Я согласен на обработку моих данных на серверах за пределами Турции.'
+  ],
+  'Devam etmek için bu onayı vermen gerekiyor.': [
+    'You need to agree to this before you can continue.',
+    'Ohne diese Zustimmung geht es nicht weiter.',
+    'Без этого согласия продолжить нельзя.'
+  ],
 };
 const templates = <String, List<String>>{
   r'^Seri: 1 gün$': ['Streak: 1 day', 'Serie: 1 Tag', 'Серия: 1 день'],

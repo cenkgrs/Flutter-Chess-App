@@ -1,72 +1,37 @@
-# 1.1 — biriken işler
+# 1.1 — durum
 
-1.0 incelemedeyken ortaya çıkan, o sürüme dokunmamak için ertelenen maddeler.
-Sıra etkiye göre: en üsttekinin karşılığı en büyük.
+Beş madde de yazıldı. Kalanlar elle yapılacak işler.
 
-## 1. Puan isteme penceresi
+## Yapıldı
 
-Mağaza sıralaması yıldız sayısına bakıyor ve şu an hiç yıldızımız yok.
-`SKStoreReviewController`'ı iyi bir anda göster: oyuncu bir maç kazandıktan
-ya da günlük bulmacayı çözdükten hemen sonra. Kaybettikten sonra **gösterme**.
+- **Puan isteme.** `lib/backend/rating_prompt.dart` ve AppDelegate'teki
+  `rok/review` kanalı. Üçüncü iyi andan sonra soruyor, sonra dört ay
+  susuyor; iyi an bilgisayara karşı kazanılan maç ve çözülen günlük bulmaca.
+  Kaybedince sormuyor. Kurallar `test/rating_prompt_test.dart` ile sabit.
+- **Açık rıza.** Kayıt ekranında ayrı onay kutusu, işaretlenmeden kayıt
+  olmuyor; rıza `profiles.cross_border_consent_at` sütununa, profili yaratan
+  tetikleyicinin içinde yazılıyor.
+- **Analitik sürümü.** `loadAppVersion()` sürümü paketin kendisinden okuyor,
+  dart-define yalnızca yedek. Artık derleme komutunda unutulamaz.
+- **Plan başlığı.** Premium sayfasındaki plan adı uygulamanın dilinden
+  geliyor, fiyat StoreKit'ten.
+- **Export compliance.** `ITSAppUsesNonExemptEncryption` Info.plist'te.
+- Ölü iki dosya silindi; çeviri testi artık hiçbir dosyayı atlamıyor.
 
-iOS yılda üç kez göstermeye izin veriyor, gerisini kendi yutuyor; o yüzden anı
-iyi seçmek gerekiyor. Bir de ilk açılışta sorma — oyuncunun uygulamayı
-beğenecek kadar kullanmış olması lazım, en az üç maç gibi bir eşik koy.
+## Elle yapılacak
 
-## 2. Yurt dışına veri aktarımı için açık rıza
+1. **Migration'ı uygula.** `supabase/migrations/20261104150000_cross_border_consent.sql`
+   Supabase SQL editöründe çalıştırılmalı. Bunu yapmadan 1.1 yayınlanırsa
+   kayıt ekranı rızayı sorar ama veritabanı kaydedemez.
+   Doğrulaması: `tools/cross_border_consent_test.sql` (tek kullanımlık yerel
+   PostgreSQL'de; eski tetikleyiciye karşı düştüğü görüldü).
+2. **Sürümü yükselt.** `pubspec.yaml` içinde `1.0.0+2` → `1.1.0+3`.
+3. **Gizlilik metnine rızadan bahset.** Site artık verinin nerede tutulduğunu
+   yazıyor ama rızanın alındığını ve nasıl geri çekileceğini yazmıyor. Geri
+   çekmenin pratik karşılığı hesabın silinmesi; bunu dürüstçe söyle.
 
-Supabase Frankfurt'ta; Türkiye'deki bir kullanıcı için bu KVKK 9. madde
-anlamında yurt dışına aktarım. Gizlilik metni bunu artık açıkça yazıyor ama
-aktarımın hukuki dayanağı yok.
+## Sonraki sürümde bakılacak
 
-Yapılacak:
-
-- Kayıt ekranına ayrı bir onay kutusu: "Verilerimin yurt dışındaki sunucularda
-  işlenmesini kabul ediyorum." İşaretlenmeden kayıt tamamlanmasın. Gizlilik
-  politikasına bağlantı versin.
-- Rızayı kaydet: `profiles` tablosuna `cross_border_consent_at timestamptz`
-  gibi bir sütun. Rızanın ne zaman alındığını gösterebilmek gerekiyor.
-- Gizlilik metninde bu rızaya atıf yap ve nasıl geri alınacağını yaz.
-
-Rızayı geri alan kullanıcı için pratik karşılık hesabın silinmesi; metinde bunu
-dürüstçe söyle.
-
-## 3. Release build analitiğe build numarasını bildirsin
-
-`lib/backend/analytics.dart` içindeki `appVersion`, `ROK_APP_VERSION`
-tanımlanmamışsa `'1.0.0'`'a düşüyor. App Store IPA'sını bu define olmadan
-derlediğim için yayındaki sürüm analitikte build numarasız görünüyor.
-
-Şans eseri işimize yaradı — reviewer'ın oturumunu bu sayede ayırt ettik — ama
-doğrusu bu değil. İki yoldan biri:
-
-- `flutter build ipa` komutuna da `--dart-define=ROK_APP_VERSION=...` geçir ve
-  bunu bir betiğe bağla ki unutulmasın, ya da
-- `package_info_plus` ile sürümü uygulamanın kendisinden oku; define tamamen
-  kalksın.
-
-İkincisi daha sağlam.
-
-## 4. Abonelik planının adı uygulamanın dilinden gelsin
-
-Premium sayfasında plan başlığı StoreKit'in `displayName` değerinden geliyor.
-StoreKit bunu uygulamanın diline göre değil, cihazın App Store mağazasına göre
-seçiyor; mağazası ABD olan bir kullanıcı uygulamayı Türkçe kullansa bile
-"Monthly Premium" görüyor.
-
-Fiyat StoreKit'ten gelmeye devam etsin (zorunlu ve doğru), ama başlığı kendi
-çevirimizden yaz: `lib/screens/subscription_screen.dart` içinde
-`title ?? (yearly ? 'Yıllık' : 'Aylık')` ifadesini tersine çevir.
-
-## 5. Export compliance anahtarı
-
-`ios/Runner/Info.plist` içine `ITSAppUsesNonExemptEncryption = false`.
-Uygulama kendi şifrelemesini içermiyor, yalnızca iOS'un TLS yığınını
-kullanıyor. Bu anahtar olmadan her yüklemede App Store Connect aynı soruyu
-soruyor.
-
-## Ayrıca
-
-Ölü dosyalar duruyor: `lib/screens/home_page_screen.dart` ve
-`lib/widgets/fast_puzzles.dart`. Uygulamadan erişilmiyorlar, çeviri testi de
-onları atlıyor. Silinsinler.
+Rıza kutusu yalnızca yeni hesaplara soruluyor. 1.0'da kayıt olmuş
+kullanıcılarda `cross_border_consent_at` null kalıyor. Sayıları anlamlı
+büyürse mevcut kullanıcılara da bir kez soran bir ekran gerekir.

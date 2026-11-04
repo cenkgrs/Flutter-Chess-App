@@ -1,6 +1,7 @@
 import '../backend/analytics.dart';
 import '../l10n/app_language.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../backend/app_backend.dart';
@@ -24,6 +25,7 @@ class _AuthScreenState extends State<AuthScreen> {
   late bool _register = widget.startWithRegister;
   bool _busy = false;
   bool _obscurePassword = true;
+  bool _consent = false;
   String? _error;
 
   @override
@@ -51,6 +53,7 @@ class _AuthScreenState extends State<AuthScreen> {
               username: _username.text,
               email: _email.text,
               password: _password.text,
+              crossBorderConsent: _consent,
             )
           : await _auth.signIn(
               email: _email.text,
@@ -228,6 +231,10 @@ class _AuthScreenState extends State<AuthScreen> {
                                 ? null
                                 : 'Şifre en az 8 karakter olmalı.',
                           ),
+                          if (_register) ...[
+                            const SizedBox(height: 18),
+                            _consentRow(),
+                          ],
                           if (_error != null) ...[
                             const SizedBox(height: 14),
                             LText(
@@ -294,6 +301,83 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
             ),
           ),
+        ),
+      );
+
+  /// The database is in Frankfurt, so a player in Türkiye is agreeing to a
+  /// transfer abroad. The law wants that asked plainly rather than buried in
+  /// a policy nobody opens, so it is a box of its own and sign-up waits for
+  /// it.
+  Widget _consentRow() => FormField<bool>(
+        initialValue: _consent,
+        validator: (_) => _consent
+            ? null
+            : 'Devam etmek için bu onayı vermen gerekiyor.',
+        builder: (state) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 26,
+                  height: 26,
+                  child: Checkbox(
+                    key: const ValueKey('consent-box'),
+                    value: _consent,
+                    visualDensity: VisualDensity.compact,
+                    onChanged: (value) {
+                      setState(() => _consent = value ?? false);
+                      state.didChange(_consent);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      const LText(
+                        'Verilerimin Türkiye dışındaki sunucularda işlenmesini kabul ediyorum.',
+                        style: TextStyle(
+                            fontSize: 13,
+                            height: 1.35,
+                            color: Color(0xff4b433d)),
+                      ),
+                      const SizedBox(width: 5),
+                      GestureDetector(
+                        onTap: () => launchUrl(
+                          Uri.parse(
+                              'https://cenkgrs.github.io/rok-site/privacy.html'),
+                          mode: LaunchMode.externalApplication,
+                        ),
+                        child: const LText(
+                          'Gizlilik Politikası',
+                          style: TextStyle(
+                            fontSize: 13,
+                            height: 1.35,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xff6b4a33),
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (state.hasError) ...[
+              const SizedBox(height: 6),
+              LText(
+                state.errorText!,
+                style: const TextStyle(
+                    color: Color(0xff9b3028),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600),
+              ),
+            ],
+          ],
         ),
       );
 

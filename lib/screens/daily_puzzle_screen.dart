@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import '../widgets/turn_king.dart';
 import '../backend/app_backend.dart';
+import '../backend/rating_prompt.dart';
 import 'auth_screen.dart';
 import '../audio/game_sounds.dart';
 import '../widgets/move_animation.dart';
@@ -177,6 +178,7 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
       if (solved) {
         GameSounds.instance.playVictory();
         unawaited(_celebrate());
+        unawaited(RatingPrompt.instance.goodMoment());
       }
     } catch (_) {
       if (mounted) {

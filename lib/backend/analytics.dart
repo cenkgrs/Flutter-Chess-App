@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'app_backend.dart';
 
@@ -33,10 +34,26 @@ enum AnalyticsEvent {
   final String name;
 }
 
-/// Set at build time so a release can be told apart from a test build:
-/// `--dart-define=ROK_APP_VERSION=1.0.0+1`.
-const appVersion =
-    String.fromEnvironment('ROK_APP_VERSION', defaultValue: '1.0.0');
+/// Reported with every event so one build can be told apart from another.
+///
+/// `loadAppVersion` reads it from the bundle at startup, which is the only
+/// source that cannot be forgotten: the App Store build of 1.0 went out
+/// without the dart-define and reported "1.0.0" for every build number. The
+/// define stays as the fallback for tests and for a platform with no bundle.
+String appVersion =
+    const String.fromEnvironment('ROK_APP_VERSION', defaultValue: '1.0.0');
+
+/// Never throws: analytics must not be able to stop the app from starting.
+Future<void> loadAppVersion() async {
+  try {
+    final info = await PackageInfo.fromPlatform();
+    if (info.version.isEmpty) return;
+    final build = info.buildNumber;
+    appVersion = build.isEmpty ? info.version : '${info.version}+$build';
+  } catch (_) {
+    // Keep whatever the dart-define left.
+  }
+}
 
 String get currentPlatform {
   if (kIsWeb) return 'web';

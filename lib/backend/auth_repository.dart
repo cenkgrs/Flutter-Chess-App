@@ -18,15 +18,21 @@ class AuthRepository {
         password: password,
       );
 
+  /// [crossBorderConsent] travels in the sign-up metadata so the database
+  /// trigger can stamp the profile in the same statement that creates it.
   Future<AuthResponse> register({
     required String username,
     required String email,
     required String password,
+    required bool crossBorderConsent,
   }) =>
       _client.auth.signUp(
         email: email.trim(),
         password: password,
-        data: {'username': username.trim()},
+        data: {
+          'username': username.trim(),
+          'cross_border_consent': crossBorderConsent ? 'true' : 'false',
+        },
         emailRedirectTo: 'com.silveroaktech.rok://login-callback/',
       );
 

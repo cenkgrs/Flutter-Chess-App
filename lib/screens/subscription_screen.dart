@@ -191,9 +191,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
   List<Widget> _plans() => [
         for (final product in store.products) ...[
           _PlanCard(
-            title: (product['title'] as String?)?.trim().isNotEmpty == true
-                ? product['title'] as String
-                : null,
             yearly: (product['id'] as String).endsWith('.yearly'),
             price: product['price'] as String? ?? '',
             onTap: store.busy
@@ -387,11 +384,11 @@ class _PlanCard extends StatelessWidget {
     required this.yearly,
     required this.price,
     required this.onTap,
-    this.title,
   });
 
-  /// The store's own display name, when it has one.
-  final String? title;
+  // The store's own display name follows the device's App Store storefront,
+  // not the language the player chose here, so a Turkish page could read
+  // "Monthly Premium". The name is ours; only the price comes from StoreKit.
   final bool yearly;
   final String price;
   final VoidCallback? onTap;
@@ -419,7 +416,7 @@ class _PlanCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    LText(title ?? (yearly ? 'Yıllık' : 'Aylık'),
+                    LText(yearly ? 'Yıllık Premium' : 'Aylık Premium',
                         style: const TextStyle(
                             fontSize: 16.5, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 2),

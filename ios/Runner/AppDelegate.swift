@@ -5,6 +5,7 @@ import StoreKit
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private var subscriptions: RokSubscriptions?
+  private var review: RokReview?
 
   override func application(
     _ application: UIApplication,
@@ -17,6 +18,9 @@ import StoreKit
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "RokSubscriptions") {
       subscriptions = RokSubscriptions(messenger: registrar.messenger())
+    }
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "RokReview") {
+      review = RokReview(messenger: registrar.messenger())
     }
   }
 }
@@ -97,4 +101,32 @@ private final class RokSubscriptions {
   }
 
   deinit { updates?.cancel() }
+}
+
+/// The rating prompt. iOS decides whether the sheet is actually shown and
+/// limits how often; the app only says when the moment is a good one.
+@MainActor
+private final class RokReview {
+  private let channel: FlutterMethodChannel
+
+  init(messenger: FlutterBinaryMessenger) {
+    channel = FlutterMethodChannel(name: "rok/review", binaryMessenger: messenger)
+    channel.setMethodCallHandler { call, result in
+      guard call.method == "request" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      guard let scene = UIApplication.shared.connectedScenes
+        .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene else {
+        result(false)
+        return
+      }
+      if #available(iOS 16.0, *) {
+        AppStore.requestReview(in: scene)
+      } else {
+        SKStoreReviewController.requestReview(in: scene)
+      }
+      result(true)
+    }
+  }
 }

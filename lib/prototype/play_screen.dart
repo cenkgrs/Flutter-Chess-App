@@ -1,4 +1,5 @@
 import '../backend/analytics.dart';
+import '../backend/rating_prompt.dart';
 import 'dart:async';
 import '../widgets/assistant_strip.dart';
 import '../widgets/premove_indicator.dart';
@@ -161,7 +162,10 @@ class _PlayScreenState extends State<PlayScreen> {
                   : 'draw',
       'moves': game.history.length,
     });
-    if (won) GameSounds.instance.playVictory();
+    if (won) {
+      GameSounds.instance.playVictory();
+      unawaited(RatingPrompt.instance.goodMoment());
+    }
     showDialog<void>(
       context: context,
       barrierDismissible: false,

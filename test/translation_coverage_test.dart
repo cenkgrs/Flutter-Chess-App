@@ -51,10 +51,6 @@ void main() {
     for (final entity in Directory('lib').listSync(recursive: true)) {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
       if (entity.path.contains('l10n/')) continue;
-      // Not reachable from the app; left out rather than translated.
-      if (entity.path.endsWith('home_page_screen.dart')) continue;
-      if (entity.path.endsWith('fast_puzzles.dart')) continue;
-
       for (final line in entity.readAsLinesSync()) {
         if (line.trimLeft().startsWith('//')) continue;
         if (plumbing.hasMatch(line)) continue;

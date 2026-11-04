@@ -21,6 +21,7 @@ dependencies:
 
   provider: 
   supabase_flutter: ^2.14.2
+  package_info_plus: ^9.0.1
 
 
 dev_dependencies:

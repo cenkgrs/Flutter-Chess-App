@@ -52,4 +52,39 @@ void main() {
     expect(find.byKey(const ValueKey('auth-error')), findsOneWidget);
     expect(find.textContaining('Supabase bağlantısı'), findsOneWidget);
   });
+
+  testWidgets('registration waits for the cross-border consent',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 1100);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const MyApp());
+    await tester.tap(find.byKey(const ValueKey('login')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('auth-mode-toggle')));
+    await tester.pump();
+
+    await tester.enterText(
+        find.byKey(const ValueKey('username-field')), 'oyuncu');
+    await tester.enterText(
+        find.byKey(const ValueKey('email-field')), 'oyuncu@example.com');
+    await tester.enterText(
+        find.byKey(const ValueKey('password-field')), 'guclu-sifre');
+
+    // The box is untouched, so the form must not go anywhere: without the
+    // consent the sign-up has no basis for sending the data to Frankfurt.
+    await tester.tap(find.byKey(const ValueKey('auth-submit')));
+    await tester.pump();
+    expect(find.textContaining('onayı vermen gerekiyor'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('consent-box')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('auth-submit')));
+    await tester.pump();
+
+    // Past the consent, the backend is the only thing left to complain.
+    expect(find.textContaining('onayı vermen gerekiyor'), findsNothing);
+  });
 }
