@@ -80,7 +80,7 @@ class ChessEngine {
     }
     final reasons = <String>[];
     if (before != null) {
-      reasons.add('rakibin ${before.type.name} taşını kazanıyor');
+      reasons.add('rakibin ${_pieceName(before.type.name)} taşını kazanıyor');
     }
     if (copy.in_check) reasons.add('şah çekerek rakibi cevap vermeye zorluyor');
     if ('d4e4d5e5'.contains(move.toAlgebraic)) {
@@ -181,3 +181,14 @@ class ChessAdvice {
   final String firstSentence;
   final String secondSentence;
 }
+
+/// `PieceType.name` is the single letter the engine speaks in, so the advice
+/// read "wins the opponent's b". The player gets the piece's own name.
+String _pieceName(String letter) => switch (letter) {
+      'p' => 'piyon',
+      'n' => 'at',
+      'b' => 'fil',
+      'r' => 'kale',
+      'q' => 'vezir',
+      _ => 'şah',
+    };

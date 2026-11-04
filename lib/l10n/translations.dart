@@ -1384,8 +1384,20 @@ const translations = <String, List<String>>{
     'Premium ist noch nicht im Verkauf. Bis dahin sind Assistent und Analyse einmal täglich für alle kostenlos.',
     'Premium пока не продаётся. До тех пор помощник и анализ доступны всем раз в день.'
   ],
+  'piyon': ['pawn', 'Bauer', 'пешка'],
+  'at': ['knight', 'Springer', 'конь'],
+  'fil': ['bishop', 'Läufer', 'слон'],
+  'kale': ['rook', 'Turm', 'ладья'],
+  'vezir': ['queen', 'Dame', 'ферзь'],
+  'şah': ['king', 'König', 'король'],
 };
 const templates = <String, List<String>>{
+  r'^Seri: 1 gün$': ['Streak: 1 day', 'Serie: 1 Tag', 'Серия: 1 день'],
+  r'^En uzun seri: 1 gün$': [
+    'Best streak: 1 day',
+    'Längste Serie: 1 Tag',
+    'Лучшая серия: 1 день'
+  ],
   r'^Seri: (\d+) gün$': [
     'Streak: {1} days',
     'Serie: {1} Tage',

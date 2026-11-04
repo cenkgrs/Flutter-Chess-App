@@ -552,9 +552,8 @@ class _DailyPuzzleMenuEntryState extends State<DailyPuzzleMenuEntry>
                     LText(
                       subtitle,
                       key: const ValueKey('daily-puzzle-status'),
-                      maxLines: 1,
-                      overflow: TextOverflow.fade,
-                      softWrap: false,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Color(0xffb9aea5),
                         fontSize: 14,

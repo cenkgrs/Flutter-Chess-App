@@ -490,9 +490,8 @@ class _PrimaryAction extends StatelessWidget {
                       SizedBox(height: 5),
                       LText(
                         'Çevrimiçi · arkadaş · bilgisayar',
-                        maxLines: 1,
-                        overflow: TextOverflow.fade,
-                        softWrap: false,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: HomeMenuScreen.mutedBone,
                           fontSize: 14,
@@ -609,9 +608,8 @@ class _SecondaryAction extends StatelessWidget {
                       const SizedBox(height: 4),
                       LText(
                         subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.fade,
-                        softWrap: false,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: HomeMenuScreen.mutedBone,
                           fontSize: 14,
