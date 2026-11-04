@@ -471,33 +471,16 @@ class _PrimaryAction extends StatelessWidget {
                   color: const Color(0xff777775),
                 ),
                 const Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      LText(
-                        'OYUNA BAŞLA',
-                        maxLines: 1,
-                        overflow: TextOverflow.fade,
-                        softWrap: false,
-                        style: TextStyle(
-                          color: HomeMenuScreen.bone,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.7,
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      LText(
-                        'Çevrimiçi · arkadaş · bilgisayar',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: HomeMenuScreen.mutedBone,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
+                  child: LText(
+                    'OYUNA BAŞLA',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: HomeMenuScreen.bone,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.7,
+                    ),
                   ),
                 ),
                 const Icon(Icons.chevron_right_rounded,
