@@ -60,7 +60,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('menu entry shows today and the streak in every language',
+  testWidgets('menu entry shows today in every language',
       (tester) async {
     Future<Map<String, dynamic>> request(
             String name, Map<String, dynamic> params) async =>
@@ -79,14 +79,14 @@ void main() {
 
     await tester.pumpWidget(entry());
     await tester.pumpAndSettle();
-    expect(find.text('Bugün çözüldü · Seri: 5 gün'), findsOneWidget);
+    expect(find.text('Bugün çözüldü'), findsOneWidget);
     expect(find.text('5'), findsOneWidget);
     expect(find.byIcon(Icons.event_available_outlined), findsOneWidget);
 
     for (final (code, title, status) in [
-      ('en', 'Daily puzzle', 'Solved today · Streak: 5 days'),
-      ('de', 'Tagesaufgabe', 'Heute gelöst · Serie: 5 Tage'),
-      ('ru', 'Задача дня', 'Решено сегодня · Серия: 5 дн.'),
+      ('en', 'Daily puzzle', 'Solved today'),
+      ('de', 'Tagesaufgabe', 'Heute gelöst'),
+      ('ru', 'Задача дня', 'Решено сегодня'),
     ]) {
       AppLanguage.instance.locale = Locale(code);
       await tester.pumpWidget(const SizedBox());
@@ -110,7 +110,7 @@ void main() {
                       'best_streak': 3,
                     }))));
     await tester.pumpAndSettle();
-    expect(find.text('Bugün çözülmedi · Seri: 0 gün'), findsOneWidget);
+    expect(find.text('Bugün çözülmedi'), findsOneWidget);
     expect(find.byIcon(Icons.local_fire_department_rounded), findsNothing);
   });
 

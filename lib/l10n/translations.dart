@@ -318,9 +318,9 @@ const translations = <String, List<String>>{
   'Yeni oyun': ['New game', 'Neue Partie', 'Новая партия'],
   'PGN kopyala': ['Copy PGN', 'PGN kopieren', 'Копировать PGN'],
   'Hamlelerini stratejistinle planla': [
-    'Plan your moves with your strategist',
-    'Plane deine Züge mit deinem Strategen',
-    'Планируйте ходы со своим стратегом'
+    'Plan moves with a strategist',
+    'Züge mit dem Strategen planen',
+    'Ходы вместе со стратегом'
   ],
   'En az 3 karakter yaz.': [
     'Enter at least 3 characters.',
@@ -562,9 +562,9 @@ const translations = <String, List<String>>{
   ],
   '10 bulmaca': ['10 puzzles', '10 Aufgaben', '10 задач'],
   'Sıra tabanlı rekabet': [
-    'Turn-based competition',
-    'Rundenbasierter Wettkampf',
-    'Пошаговое соревнование'
+    'head to head',
+    'Duell Zug um Zug',
+    'ход за ходом'
   ],
   'Dereceli çevrimiçi eşleşme': [
     'Rated online matchmaking',

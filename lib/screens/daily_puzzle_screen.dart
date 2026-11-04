@@ -501,11 +501,11 @@ class _DailyPuzzleMenuEntryState extends State<DailyPuzzleMenuEntry>
     final solved = status?['status'] == 'solved';
     final subtitle = status == null
         ? 'Her gün yeni bulmaca · Seri kur'
-        : '${switch (status['status']) {
+        : switch (status['status']) {
             'solved' => 'Bugün çözüldü',
             'revealed' || 'expired' => 'Bugün kaçırıldı',
             _ => 'Bugün çözülmedi',
-          }} · Seri: $streak gün';
+          };
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -552,7 +552,7 @@ class _DailyPuzzleMenuEntryState extends State<DailyPuzzleMenuEntry>
                     LText(
                       subtitle,
                       key: const ValueKey('daily-puzzle-status'),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Color(0xffb9aea5),

@@ -591,7 +591,7 @@ class _SecondaryAction extends StatelessWidget {
                       const SizedBox(height: 4),
                       LText(
                         subtitle,
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: HomeMenuScreen.mutedBone,
