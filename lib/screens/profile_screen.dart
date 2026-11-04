@@ -75,8 +75,11 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildProfile(BuildContext context) {
     final user = AppBackend.currentUser;
     final username = user?.userMetadata?['username']?.toString().trim();
-    final displayName =
-        username == null || username.isEmpty ? 'ROK Oyuncusu' : username;
+    // A real username belongs to the player and is never translated; the
+    // stand-in for a guest is ours to say in their language.
+    final displayName = username == null || username.isEmpty
+        ? tr(context, 'ROK Oyuncusu')
+        : username;
 
     return RokScaffold(
       extendBodyBehindAppBar: true,
