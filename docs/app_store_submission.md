@@ -64,52 +64,118 @@ under Profile > Open source.
 
 ## Metadata
 
-**Name:** ROK Chess
-**Subtitle (30):** Satranç, bulmaca ve düello
+Birincil dil **İngilizce (U.S.)**, hedef kitle yurt dışı. Türkçe yerelleştirme
+aynı alanların altında. Almanca ve Rusça uygulama içinde çevrili ama mağaza
+metni girilmedi; girilmezse Apple İngilizce'yi gösterir.
+
+### English (U.S.) — primary
+
+**Name (30):** ROK Chess
+**Subtitle (30):** Play, learn, solve, duel
 
 **Promotional Text (170):**
 ```
-Tahta ve taş temalarını seç, motora karşı oyna, günlük bulmacayı çöz ve
-arkadaşlarınla bulmaca düellosuna gir.
+An in-game assistant that names the move and says why. Daily puzzles, puzzle
+duels against real opponents, and nine board and piece sets to play on.
 ```
 
 **Description:**
 ```
-ROK, satrancı sade ve güzel bir tahtada buluşturan bir oyun.
+ROK is chess on a board worth looking at, with a coach that talks back.
 
-MOTORA KARŞI OYNA
-Stockfish destekli motora karşı, seçtiğin zorlukta oyna. Oyun içi asistan
-sıradaki hamleyi gerekçesiyle anlatır; maç bitince analiz, nerede
-sapıldığını gösterir.
+AN ASSISTANT THAT EXPLAINS
+Ask mid-game and ROK names the move, draws the arrow and tells you what it
+wins — then shows the line it expects to follow. After the game, the review
+walks every move with an engine verdict: best, good, inaccuracy, mistake,
+blunder.
 
-ONLINE OYNA
-Gerçek rakiplerle eşleş, arkadaşlarını özel odaya çağır. Saatler sunucu
-tarafında tutulur; bağlantın koparsa maç kaldığı yerden devam eder.
+PLAY THE COMPUTER
+A Stockfish engine at the strength you pick, from a gentle 800 to a level
+that will punish you. Pick your opponent's rating before the game starts.
 
-BULMACA VE DÜELLO
-Her gün yeni bir bulmaca ve seri takibi. Bulmaca düellosunda rakibinle aynı
-anda çöz, onun tahtasını canlı izle.
+PLAY ONLINE
+Rated matches against real players in bullet, blitz, rapid and classical.
+Clocks run on the server, so a dropped connection does not lose your game —
+reopen the app and the match is still there. Invite a friend with a six-digit
+room code.
 
-TEMALAR
-Cam, mermer, porselen, art deco ve daha fazlası. Tahta ve taş setlerini
-ayrı ayrı seç.
+PUZZLES AND DUELS
+A new puzzle every day with a streak to keep. In a puzzle duel you race an
+opponent through the same ten puzzles and watch their board live.
+
+NINE BOARDS, NINE PIECE SETS
+Wood, marble, slate, ice, glass, porcelain, art deco and more. Board and
+pieces are chosen separately.
 
 ROK PREMIUM
-Ücretsiz kullanıcı günde bir asistanlı maç ve bir maç analizi yapabilir.
-Premium ile ikisi de sınırsız. Aylık ve yıllık abonelik seçenekleri var;
-abonelik dönem sonunda otomatik yenilenir, iptal ayarlardan yapılır.
+Free accounts get one assisted game and one game review per day. Premium
+makes both unlimited. Monthly and yearly; renews automatically unless
+cancelled in your Apple account settings.
 
-Dört dil: Türkçe, İngilizce, Almanca, Rusça.
+Plays in English, German, Russian and Turkish.
 ```
 
 **Keywords (100):**
 ```
-satranç,chess,bulmaca,puzzle,online,düello,stockfish,strateji,tahta oyunu,zeka
+chess,puzzle,tactics,board game,strategy,online,duel,stockfish,endgame,coach,blitz,elo
 ```
+
+### Türkçe
+
+**Subtitle (30):** Satranç, bulmaca ve düello
+
+**Promotional Text (170):**
+```
+Hamleyi adıyla söyleyen bir oyun içi asistan. Günlük bulmacalar, gerçek
+rakiplere karşı bulmaca düellosu ve dokuz tahta ile taş seti.
+```
+
+**Description:**
+```
+ROK, bakmaya değer bir tahtada oynanan satranç — üstüne konuşan bir antrenörle.
+
+AÇIKLAYAN ASİSTAN
+Oyunun ortasında sor; ROK hamleyi adıyla söyler, oku çizer, ne kazandırdığını
+anlatır ve beklediği devamı gösterir. Maç bitince inceleme her hamleyi motor
+değerlendirmesiyle gezer: en iyi, iyi, isabetsizlik, hata, vahim hata.
+
+BİLGİSAYARA KARŞI OYNA
+Stockfish motoru, senin seçtiğin güçte. Rakibin rating'ini maç başlamadan
+belirle.
+
+ONLINE OYNA
+Bullet, blitz, rapid ve klasik dereceli maçlar. Saatler sunucuda işler;
+bağlantın koparsa maçı kaybetmezsin, uygulamayı açtığında kaldığı yerde
+durur. Arkadaşını altı haneli oda koduyla çağır.
+
+BULMACA VE DÜELLO
+Her gün yeni bir bulmaca ve koruman gereken bir seri. Bulmaca düellosunda
+rakibinle aynı on bulmacayı yarışır, onun tahtasını canlı izlersin.
+
+DOKUZ TAHTA, DOKUZ TAŞ SETİ
+Ahşap, mermer, arduvaz, buz, cam, porselen, art deco ve dahası. Tahta ile
+taşlar ayrı ayrı seçilir.
+
+ROK PREMIUM
+Ücretsiz hesaplar günde bir asistanlı maç ve bir maç incelemesi yapabilir.
+Premium ikisini de sınırsız yapar. Aylık ve yıllık; Apple hesap ayarlarından
+iptal edilmedikçe otomatik yenilenir.
+
+Türkçe, İngilizce, Almanca ve Rusça oynanır.
+```
+
+**Keywords (100):**
+```
+satranç,chess,bulmaca,puzzle,online,düello,strateji,tahta oyunu,taktik,zeka,açılış,elo
+```
+
+### Her iki dilde ortak
 
 **Category:** Primary Games → Board. Secondary Games → Strategy.
 **Age rating:** 4+ (şiddet, kumar ve kullanıcı içeriği yok; sohbet yok).
 **Copyright:** 2026 Cenk Gürses
+**Support URL:** https://cenkgrs.github.io/rok-site/support.html
+**Privacy Policy URL:** https://cenkgrs.github.io/rok-site/privacy.html
 
 ## Ekran görüntüleri
 
@@ -119,12 +185,20 @@ alınabilir. App Store Connect bu kareleri küçük cihazlara kendisi ölçekler
 yüzden başka boyut yüklemek gerekmez. Alfa kanalı olmamalı — telefonun kendi
 ekran görüntüsü zaten PNG/opak.
 
-Beş kare:
+Çekilmiş hâlleri `store/screenshots/` altında, yükleme sırasına göre
+adlandırılmış (klasör `.gitignore`'da; repo public ve kareler birkaç MB):
 
-1. Ana menü
-2. Motora karşı maç, asistan balonu açık
-3. Bulmaca düellosu, rakibin tahtası görünür
-4. Tema seçimi
-5. Profil
+1. `01-assistant.png` — asistanlı maç, balon açık, ok tahtada
+2. `02-game-review.png` — motor analizi, değerlendirme çubuğu, rozetler
+3. `03-daily-puzzle.png` — seri, süre ve seviye rozetleri
+4. `04-home-menu.png` — menü, dört mod birden
+5. `05-board-appearance.png` — tahta ve taş seçimi
+
+`06-play-modes.png` de var ama arkası karartılmış bir popup olduğu için
+galeride sönük duruyor; yüklenmedi.
+
+Premium ekranı Paid Apps sözleşmesi aktifleşip fiyatlar görünmeden
+çekilemiyor. Apple review için zorunlu değil, abonelik ürünlerinin kendi
+ekran görüntüsü alanı için gerekiyor.
 
 Kişisel e-posta, test kullanıcı adı veya hata mesajı görünmemeli.
