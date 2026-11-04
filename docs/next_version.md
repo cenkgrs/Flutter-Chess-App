@@ -20,9 +20,7 @@ Beş madde de yazıldı. Kalanlar elle yapılacak işler.
 
 ## Elle yapılacak
 
-1. **Migration'ı uygula.** `supabase/migrations/20261104150000_cross_border_consent.sql`
-   Supabase SQL editöründe çalıştırılmalı. Bunu yapmadan 1.1 yayınlanırsa
-   kayıt ekranı rızayı sorar ama veritabanı kaydedemez.
+1. ~~Migration'ı uygula.~~ 4 Kasım 2026'da uygulandı.
    Doğrulaması: `tools/cross_border_consent_test.sql` (tek kullanımlık yerel
    PostgreSQL'de; eski tetikleyiciye karşı düştüğü görüldü).
 2. **Sürümü yükselt.** `pubspec.yaml` içinde `1.0.0+2` → `1.1.0+3`.
