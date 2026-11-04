@@ -1334,6 +1334,56 @@ const translations = <String, List<String>>{
     'Die Engine hat nicht geantwortet',
     'Движок не ответил'
   ],
+  'NASIL OYNAYALIM?': ['HOW SHALL WE PLAY?', 'WIE SPIELEN WIR?', 'КАК ИГРАЕМ?'],
+  'Bilgisayara karşı oyna': [
+    'Play the computer',
+    'Gegen den Computer spielen',
+    'Играть с компьютером'
+  ],
+  'Dereceli eşleşme': ['Rated match', 'Gewertete Partie', 'Рейтинговый матч'],
+  'SÜRE SEÇ': ['PICK A TIME', 'ZEIT WÄHLEN', 'ВЫБЕРИТЕ ВРЕМЯ'],
+  'Geri': ['Back', 'Zurück', 'Назад'],
+  'Seviye': ['Level', 'Stufe', 'Уровень'],
+  'Pat': ['Stalemate', 'Patt', 'Пат'],
+  'KAPAT': ['CLOSE', 'SCHLIESSEN', 'ЗАКРЫТЬ'],
+  'GELEN İSTEKLER': ['INCOMING REQUESTS', 'EINGEHENDE ANFRAGEN', 'ВХОДЯЩИЕ ЗАПРОСЫ'],
+  'ARKADAŞLARIM': ['MY FRIENDS', 'MEINE FREUNDE', 'МОИ ДРУЗЬЯ'],
+  'GÖNDERİLEN İSTEKLER': [
+    'SENT REQUESTS',
+    'GESENDETE ANFRAGEN',
+    'ОТПРАВЛЕННЫЕ ЗАПРОСЫ'
+  ],
+  'RÖVANŞ': ['REMATCH', 'REVANCHE', 'РЕВАНШ'],
+  'RÖVANŞI KABUL ET': [
+    'ACCEPT REMATCH',
+    'REVANCHE ANNEHMEN',
+    'ПРИНЯТЬ РЕВАНШ'
+  ],
+  'RAKİBİN YANITI BEKLENİYOR': [
+    'WAITING FOR YOUR OPPONENT',
+    'WARTEN AUF DEN GEGNER',
+    'ОЖИДАНИЕ СОПЕРНИКА'
+  ],
+  'BAĞLANTI KURULAMADI': [
+    'CONNECTION FAILED',
+    'VERBINDUNG FEHLGESCHLAGEN',
+    'НЕ УДАЛОСЬ ПОДКЛЮЧИТЬСЯ'
+  ],
+  'RAKİP ARANIYOR': ['SEARCHING', 'SUCHE LÄUFT', 'ПОИСК СОПЕРНИКА'],
+  'RAKİP BULUNDU': ['OPPONENT FOUND', 'GEGNER GEFUNDEN', 'СОПЕРНИК НАЙДЕН'],
+  'RAKİP ARA': ['FIND AN OPPONENT', 'GEGNER SUCHEN', 'НАЙТИ СОПЕРНИКА'],
+  'ARAMAYI İPTAL ET': ['CANCEL SEARCH', 'SUCHE ABBRECHEN', 'ОТМЕНИТЬ ПОИСК'],
+  'BULMACA DÜELLOSU': ['PUZZLE DUEL', 'AUFGABEN-DUELL', 'ДУЭЛЬ ЗАДАЧ'],
+  'ODA KUR': ['CREATE A ROOM', 'RAUM ERSTELLEN', 'СОЗДАТЬ КОМНАТУ'],
+  'KODLA KATIL': ['JOIN WITH A CODE', 'MIT CODE BEITRETEN', 'ВОЙТИ ПО КОДУ'],
+  'HESAP OLUŞTUR': ['CREATE ACCOUNT', 'KONTO ERSTELLEN', 'СОЗДАТЬ АККАУНТ'],
+  'GİRİŞ YAP': ['SIGN IN', 'ANMELDEN', 'ВОЙТИ'],
+  'KAYIT OL': ['SIGN UP', 'REGISTRIEREN', 'РЕГИСТРАЦИЯ'],
+  'Premium henüz satışa açılmadı. O zamana kadar asistan ve analiz günde bir kez herkese açık.': [
+    'Premium is not on sale yet. Until then the assistant and analysis are free once a day for everyone.',
+    'Premium ist noch nicht im Verkauf. Bis dahin sind Assistent und Analyse einmal täglich für alle kostenlos.',
+    'Premium пока не продаётся. До тех пор помощник и анализ доступны всем раз в день.'
+  ],
 };
 const templates = <String, List<String>>{
   r'^Seri: (\d+) gün$': [
