@@ -115,6 +115,26 @@ void main() {
     expect(find.text('Menüye dön'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+  testWidgets('Finished game trades resign for analysis in the sheet',
+      (tester) async {
+    usePhoneViewport(tester);
+    await tester.pumpWidget(playApp());
+    await move(tester, 'e2', 'e4');
+    final dynamic state = tester.state(find.byType(PlayScreen));
+    state.game = c.Chess.fromFEN('8/8/8/8/8/5k2/6q1/7K w - - 0 1');
+    state.setState(() {});
+    state.announceResult();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tahtayı incele'));
+    await tester.pumpAndSettle();
+    // The result dialog never comes back, so the engine's reading has to
+    // live somewhere the player can still reach.
+    await tester.tap(find.byKey(const ValueKey('inspection')));
+    await tester.pumpAndSettle();
+    expect(find.text('Motor analizi'), findsOneWidget);
+    expect(find.text('Teslim ol'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('Assistant mode opens with the commentary balloon',
       (tester) async {
     usePhoneViewport(tester);

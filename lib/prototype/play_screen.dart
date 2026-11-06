@@ -633,15 +633,38 @@ class _PlayScreenState extends State<PlayScreen> {
                         ),
                       ),
                     ),
-                  if (ended)
-                    TextButton.icon(
-                      onPressed: leaveCompletedGame,
-                      icon: const Icon(Icons.arrow_back),
-                      label: const LText('Menüye dön'),
-                      style: TextButton.styleFrom(
-                          foregroundColor: const Color(0xfff3eee7)),
+                  // The way out stands beside the inspection button rather
+                  // than above it: a row of its own would cost the board
+                  // height, and the board must not move when a game ends.
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (ended) ...[
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: TextButton.icon(
+                                onPressed: leaveCompletedGame,
+                                icon: const Icon(Icons.arrow_back),
+                                label: const LText('Menüye dön', maxLines: 1),
+                                style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xfff3eee7)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: _InspectionButton(onPressed: openReview),
+                          ),
+                        ),
+                      ],
                     ),
-                  _InspectionButton(onPressed: openReview),
+                  ),
                   const SizedBox(height: 18),
                 ]),
               );
@@ -1067,16 +1090,28 @@ class _PlayScreenState extends State<PlayScreen> {
             ),
           ),
           const SizedBox(width: 8),
+          // Once the result dialog is gone it never comes back, so the
+          // sheet carries whichever of the two the game still allows:
+          // resigning while it runs, the engine's reading once it is over.
           Expanded(
-            child: _ReviewAction(
-              icon: Icons.flag_rounded,
-              label: 'Teslim ol',
-              enabled: !ended,
-              onPressed: () {
-                Navigator.pop(sheetContext);
-                resign();
-              },
-            ),
+            child: ended
+                ? _ReviewAction(
+                    icon: Icons.insights_rounded,
+                    label: 'Motor analizi',
+                    enabled: notation.isNotEmpty,
+                    onPressed: () {
+                      Navigator.pop(sheetContext);
+                      openAnalysis();
+                    },
+                  )
+                : _ReviewAction(
+                    icon: Icons.flag_rounded,
+                    label: 'Teslim ol',
+                    onPressed: () {
+                      Navigator.pop(sheetContext);
+                      resign();
+                    },
+                  ),
           ),
         ]),
       ]),
