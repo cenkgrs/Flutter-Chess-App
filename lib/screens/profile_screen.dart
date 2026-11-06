@@ -21,6 +21,7 @@ import '../prototype/play_screen.dart';
 import '../prototype/stockfish_engine.dart';
 import '../widgets/analysis_markers.dart';
 import '../audio/game_sounds.dart';
+import '../backend/puzzle_reminder.dart';
 import '../l10n/app_language.dart';
 import 'delete_account_screen.dart';
 import 'open_source_screen.dart';
@@ -258,6 +259,23 @@ class ProfileScreen extends StatelessWidget {
                           subtitle: 'Hamle, oyun başlangıcı ve zafer sesleri',
                           value: GameSounds.instance.enabled,
                           onChanged: GameSounds.instance.setEnabled,
+                        )),
+                const SizedBox(height: 12),
+                ListenableBuilder(
+                    listenable: PuzzleReminder.instance,
+                    builder: (context, _) => _ProfileSwitch(
+                          key: const ValueKey('puzzle-reminder-toggle'),
+                          icon: PuzzleReminder.instance.enabled
+                              ? Icons.notifications_active_rounded
+                              : Icons.notifications_off_rounded,
+                          title: 'Bulmaca hatırlatıcısı',
+                          subtitle:
+                              'Günün bulmacası çözülmediyse akşam haber ver',
+                          value: PuzzleReminder.instance.enabled,
+                          onChanged: (on) async {
+                            await PuzzleReminder.instance.markAsked();
+                            await PuzzleReminder.instance.setEnabled(on);
+                          },
                         )),
                 const SizedBox(height: 12),
                 _ProfileLink(

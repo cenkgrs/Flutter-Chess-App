@@ -31,9 +31,16 @@ class AppLanguage extends ChangeNotifier {
 String tr(BuildContext context, String source) {
   // Always register a locale dependency, including when the user overrides it.
   final inheritedLocale = Localizations.maybeLocaleOf(context);
-  final code = AppLanguage.instance.locale?.languageCode ??
-      inheritedLocale?.languageCode ??
-      'tr';
+  return trLang(
+      AppLanguage.instance.locale?.languageCode ??
+          inheritedLocale?.languageCode ??
+          'tr',
+      source);
+}
+
+/// The same translation, for the few places that speak without a widget
+/// tree — a notification is written long before anyone reads it.
+String trLang(String code, String source) {
   final index = ['en', 'de', 'ru'].indexOf(code);
   if (index < 0) return source;
   final direct = translations[source];
@@ -53,14 +60,14 @@ String tr(BuildContext context, String source) {
     for (var i = 1; i <= match.groupCount; i++) {
       final capture = match[i] ?? '';
       output = output.replaceAll('{$i}',
-          capture.length < source.length ? tr(context, capture) : capture);
+          capture.length < source.length ? trLang(code, capture) : capture);
     }
     return output;
   }
   for (final separator in ['\n', '  ·  ', ' · ', ' ve ']) {
     if (source.contains(separator)) {
       final translated =
-          source.split(separator).map((part) => tr(context, part)).toList();
+          source.split(separator).map((part) => trLang(code, part)).toList();
       return translated.join(
           separator == ' ve ' ? [' and ', ' und ', ' и '][index] : separator);
     }

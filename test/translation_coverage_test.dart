@@ -45,6 +45,8 @@ void main() {
       'setoption name Hash value 32',
       // Thrown, not rendered.
       'Account deletion was not confirmed',
+      // An Android notification channel name; the app ships on iOS only.
+      'Daily puzzle',
     };
     final missing = <String>{};
 

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'backend/app_backend.dart';
+import 'backend/puzzle_reminder.dart';
 import 'screens/home_menu_screen.dart';
 import 'route_observer.dart';
 import 'widgets/rok_style.dart';
@@ -26,6 +27,7 @@ Future<void> main() async {
   await AppBackend.initialize();
   await AppLanguage.instance.load();
   await GameSounds.instance.load();
+  await PuzzleReminder.instance.load();
   await BoardTheme.instance.load();
   AnalyticsService.instance.log(AnalyticsEvent.appOpened);
   runApp(const MyApp());

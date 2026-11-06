@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import '../widgets/turn_king.dart';
 import '../backend/app_backend.dart';
+import '../backend/puzzle_reminder.dart';
 import '../backend/rating_prompt.dart';
 import 'auth_screen.dart';
 import '../audio/game_sounds.dart';
@@ -85,6 +86,9 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
       if (row['status'] == 'active' && row['step'] == 0) {
         GameSounds.instance.playStart();
       }
+      // The evening reminder is only wanted while the day is still open.
+      unawaited(PuzzleReminder.instance
+          .sync(solvedToday: row['status'] == 'solved'));
     } catch (_) {
       if (mounted) {
         setState(() => message =
@@ -179,6 +183,7 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
         GameSounds.instance.playVictory();
         unawaited(_celebrate());
         unawaited(RatingPrompt.instance.goodMoment());
+        unawaited(PuzzleReminder.instance.sync(solvedToday: true));
       }
     } catch (_) {
       if (mounted) {
@@ -193,7 +198,16 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
     if (reload && mounted) await load();
   }
 
-  Future<void> _celebrate() => showDialog<void>(
+  /// The streak is what a reminder protects, so the offer belongs where
+  /// the player is looking at their streak — and it is made once.
+  Future<void> _celebrate() async {
+    final reminder = PuzzleReminder.instance;
+    final offer = !reminder.asked && !reminder.enabled;
+    await _celebrationDialog(offer: offer);
+    if (offer) await reminder.markAsked();
+  }
+
+  Future<void> _celebrationDialog({required bool offer}) => showDialog<void>(
       context: context,
       builder: (context) => RokWoodDialog(
             title: const LText('Bugünün bulmacası çözüldü!',
@@ -216,11 +230,24 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
                   textAlign: TextAlign.center),
             ]),
             actions: [
+              if (offer)
+                TextButton(
+                    key: const ValueKey('enable-puzzle-reminder'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      unawaited(_turnRemindersOn());
+                    },
+                    child: const LText('Akşam hatırlat')),
               FilledButton(
                   onPressed: () => Navigator.pop(context),
                   child: const LText('Kapat')),
             ],
           ));
+
+  Future<void> _turnRemindersOn() async {
+    await PuzzleReminder.instance.setEnabled(true);
+    await PuzzleReminder.instance.sync(solvedToday: true);
+  }
 
   Future<void> _confirmReveal() async {
     final reveal = await showDialog<bool>(

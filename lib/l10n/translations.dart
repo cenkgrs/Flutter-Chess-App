@@ -890,6 +890,27 @@ const translations = <String, List<String>>{
   'İptal': ['Cancel', 'Abbrechen', 'Отмена'],
   'Kapat': ['Close', 'Schließen', 'Закрыть'],
   'Çık': ['Exit', 'Verlassen', 'Выйти'],
+  'Günün bulmacası seni bekliyor': [
+    "Today's puzzle is waiting",
+    'Das heutige Rätsel wartet',
+    'Сегодняшняя задача ждёт'
+  ],
+  'Seriyi bozma — çözmek birkaç dakika sürer.': [
+    'Keep your streak — it only takes a few minutes.',
+    'Halte deine Serie — es dauert nur ein paar Minuten.',
+    'Сохрани серию — это займёт пару минут.'
+  ],
+  'Akşam hatırlat': ['Remind me tonight', 'Abends erinnern', 'Напомнить вечером'],
+  'Bulmaca hatırlatıcısı': [
+    'Puzzle reminder',
+    'Rätsel-Erinnerung',
+    'Напоминание о задаче'
+  ],
+  'Günün bulmacası çözülmediyse akşam haber ver': [
+    'An evening nudge while the day is still open',
+    'Ein Hinweis am Abend, solange der Tag offen ist',
+    'Вечернее напоминание, пока день не закрыт'
+  ],
   'Menüye dön': ['Back to menu', 'Zum Menü', 'В меню'],
   'Tahtaya dön': ['Back to board', 'Zum Brett', 'К доске'],
   'Tahtayı incele': ['Review board', 'Brett ansehen', 'Просмотреть доску'],

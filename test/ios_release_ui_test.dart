@@ -74,10 +74,14 @@ void main() {
     AppLanguage.instance.locale = const Locale('de');
 
     await tester.pumpWidget(const MaterialApp(home: ProfileScreen()));
-    await tester.drag(find.byType(ListView), const Offset(0, -900));
+    // Scrolling to the entry rather than by a fixed distance, so a new
+    // row above it does not put the test's target out of reach.
+    final licences = find.text('Open-Source-Lizenzen');
+    await tester.scrollUntilVisible(licences, 300,
+        scrollable: find.byType(Scrollable).first);
     await tester.pumpAndSettle();
 
-    expect(find.text('Open-Source-Lizenzen'), findsOneWidget);
+    expect(licences, findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
