@@ -244,6 +244,46 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
             ],
           ));
 
+  /// The streak is on the screen right above this, which is the moment the
+  /// offer makes sense. It is made once: answered either way, it is gone.
+  Widget _reminderStrip() => ListenableBuilder(
+      listenable: PuzzleReminder.instance,
+      builder: (context, _) {
+        final reminder = PuzzleReminder.instance;
+        if (reminder.asked || reminder.enabled) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
+            decoration: BoxDecoration(
+              color: const Color(0x22e0a050),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0x55e0a050)),
+            ),
+            child: Row(children: [
+              const Expanded(
+                child: LText('Seriyi unutma · Akşam hatırlatayım mı?',
+                    style: TextStyle(color: rokBone, fontSize: 14)),
+              ),
+              TextButton(
+                key: const ValueKey('reminder-strip-yes'),
+                onPressed: () async {
+                  await PuzzleReminder.instance.markAsked();
+                  await _turnRemindersOn();
+                },
+                child: const LText('Hatırlat'),
+              ),
+              IconButton(
+                key: const ValueKey('reminder-strip-no'),
+                tooltip: tr(context, 'Kapat'),
+                onPressed: () => PuzzleReminder.instance.markAsked(),
+                icon: const Icon(Icons.close, size: 18, color: rokBone),
+              ),
+            ]),
+          ),
+        );
+      });
+
   Future<void> _turnRemindersOn() async {
     await PuzzleReminder.instance.setEnabled(true);
     await PuzzleReminder.instance.sync(solvedToday: true);
@@ -403,6 +443,7 @@ class _DailyPuzzleScreenState extends State<DailyPuzzleScreen> {
                                   fontWeight: FontWeight.w600)),
                         ),
                       ])),
+              _reminderStrip(),
               if (row != null && row['empty'] != true) ...[
                 const SizedBox(height: 10),
                 // Clock on one side, level on the other, framing the board.

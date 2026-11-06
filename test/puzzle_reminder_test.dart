@@ -93,6 +93,16 @@ void main() {
     expect(reminder.enabled, isFalse);
   });
 
+  test('the offer is not made again once it has been answered', () async {
+    final reminder = build();
+    await reminder.markAsked();
+    expect(reminder.asked, isTrue);
+    expect(reminder.enabled, isFalse);
+    final later = build();
+    await later.load();
+    expect(later.asked, isTrue);
+  });
+
   test('the choice and the question both survive a restart', () async {
     final first = build();
     await first.setEnabled(true);

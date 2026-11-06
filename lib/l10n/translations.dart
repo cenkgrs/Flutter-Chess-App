@@ -900,6 +900,12 @@ const translations = <String, List<String>>{
     'Halte deine Serie — es dauert nur ein paar Minuten.',
     'Сохрани серию — это займёт пару минут.'
   ],
+  'Seriyi unutma · Akşam hatırlatayım mı?': [
+    'Mind your streak · Shall I remind you tonight?',
+    'Denk an deine Serie · Soll ich dich abends erinnern?',
+    'Не теряй серию · Напомнить вечером?'
+  ],
+  'Hatırlat': ['Remind me', 'Erinnern', 'Напомнить'],
   'Akşam hatırlat': ['Remind me tonight', 'Abends erinnern', 'Напомнить вечером'],
   'Bulmaca hatırlatıcısı': [
     'Puzzle reminder',
