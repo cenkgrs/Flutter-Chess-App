@@ -47,6 +47,11 @@ Cenk Gürses
 Sayısal App ID'yi App Store Connect → App Information → General Information
 altında bulursun.
 
+## Gönderilen
+
+7 Kasım 2026, App Review Status başlığı altında gönderildi.
+**Case ID: 30000008085406.** Cevap bu numaraya bağlı e-postayla geliyor.
+
 ## Sonrası
 
 Cevap genelde bir iki iş günü içinde geliyor ve çoğu zaman "normal kuyrukta,
