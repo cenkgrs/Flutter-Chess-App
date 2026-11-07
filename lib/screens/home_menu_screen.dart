@@ -9,6 +9,7 @@ import '../backend/game_repository.dart';
 import '../online/time_control.dart';
 import '../prototype/play_screen.dart';
 import 'auth_screen.dart';
+import 'chess_leaderboard_screen.dart';
 import 'daily_puzzle_screen.dart';
 import 'friend_room_screen.dart';
 import 'matchmaking_screen.dart';
@@ -183,6 +184,18 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
                                       MaterialPageRoute(
                                           builder: (_) =>
                                               const PuzzleScreen())),
+                                ),
+                                const _MenuDivider(),
+                                _SecondaryAction(
+                                  key: const ValueKey('chess-leaderboard'),
+                                  icon: Icons.leaderboard_outlined,
+                                  title: 'Sıralama',
+                                  subtitle: 'Her sürede kendi Elo puanın',
+                                  onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const ChessLeaderboardScreen())),
                                 ),
                                 const _MenuDivider(),
                                 DailyPuzzleMenuEntry(

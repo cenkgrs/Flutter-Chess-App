@@ -502,11 +502,6 @@ const translations = <String, List<String>>{
     'Suche fehlgeschlagen. Erneut versuchen.',
     'Ошибка поиска. Повторите.'
   ],
-  'Arkadaşlık isteği gönderildi.': [
-    'Friend request sent.',
-    'Freundschaftsanfrage gesendet.',
-    'Запрос в друзья отправлен.'
-  ],
   'Arkadaşlık isteği kabul edildi.': [
     'Friend request accepted.',
     'Freundschaftsanfrage angenommen.',
@@ -916,6 +911,38 @@ const translations = <String, List<String>>{
     'An evening nudge while the day is still open',
     'Ein Hinweis am Abend, solange der Tag offen ist',
     'Вечернее напоминание, пока день не закрыт'
+  ],
+  'Oyuncu sıralaması': [
+    'Player rankings',
+    'Spielerrangliste',
+    'Рейтинг игроков'
+  ],
+  'Sıralama': ['Rankings', 'Rangliste', 'Рейтинг'],
+  'Her sürede kendi Elo puanın': [
+    'Your Elo in every time control',
+    'Dein Elo in jeder Bedenkzeit',
+    'Твой Эло в каждом контроле'
+  ],
+  'Beklemede': ['Pending', 'Ausstehend', 'Ожидает'],
+  'Arkadaşlık isteği gönderildi.': [
+    'Friend request sent.',
+    'Freundschaftsanfrage gesendet.',
+    'Запрос в друзья отправлен.'
+  ],
+  'İstek gönderilemedi. Tekrar dene.': [
+    'The request could not be sent. Try again.',
+    'Die Anfrage konnte nicht gesendet werden. Versuche es erneut.',
+    'Запрос не отправлен. Попробуй ещё раз.'
+  ],
+  'Davet gönderildi.': [
+    'Invitation sent.',
+    'Einladung gesendet.',
+    'Приглашение отправлено.'
+  ],
+  'Bu sürede dereceli bir maç oyna, sıralamaya katıl.': [
+    'Play a rated game at this time control to join the board.',
+    'Spiele eine gewertete Partie in dieser Bedenkzeit, um dabei zu sein.',
+    'Сыграй рейтинговую партию в этом контроле, чтобы попасть в список.'
   ],
   'Menüye dön': ['Back to menu', 'Zum Menü', 'В меню'],
   'Tahtaya dön': ['Back to board', 'Zum Brett', 'К доске'],
