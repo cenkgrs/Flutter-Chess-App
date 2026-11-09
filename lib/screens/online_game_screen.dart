@@ -17,6 +17,7 @@ import '../online/game_sync.dart';
 import '../widgets/board_annotations.dart';
 import '../widgets/first_use_tip.dart';
 import '../widgets/board_drag.dart';
+import '../widgets/board_surface.dart';
 import '../widgets/move_animation.dart';
 import '../prototype/premove.dart';
 import '../audio/game_sounds.dart';
@@ -659,8 +660,14 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
                         return GestureDetector(
                           key: ValueKey('online-square-$square'),
                           onTap: () => _tap(square),
-                          child: ColoredBox(
-                            color: _selected == square
+                          // The online board drew flat colour while the
+                          // offline one was grained: the same skin looked
+                          // like two different boards.
+                          child: BoardSquareSurface(
+                            skin: boardSkin,
+                            isLight: light,
+                            seed: index + (light ? 100 : 200),
+                            base: _selected == square
                                 ? boardSkin.selected
                                 : _premove?.from == square ||
                                         _premove?.to == square

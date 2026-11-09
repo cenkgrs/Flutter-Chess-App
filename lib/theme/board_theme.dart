@@ -147,6 +147,10 @@ const pieceSets = [
   iceLavaPieces,
 ];
 
+/// What a square is made of. The painter in `widgets/board_surface.dart`
+/// draws each one; a skin that wants none asks for [flat].
+enum SurfaceTexture { flat, wood, marble, slate, frost }
+
 class BoardSkin {
   const BoardSkin({
     required this.id,
@@ -163,7 +167,7 @@ class BoardSkin {
     required this.legalRing,
     required this.coordOnLight,
     required this.coordOnDark,
-    this.grain = false,
+    this.texture = SurfaceTexture.flat,
   });
 
   final String id;
@@ -192,8 +196,8 @@ class BoardSkin {
   final Color legalDot, legalRing;
   final Color coordOnLight, coordOnDark;
 
-  /// Paints the procedural wood grain the offline board uses.
-  final bool grain;
+  /// The material the squares are painted as.
+  final SurfaceTexture texture;
 
   Color base(bool isLight) => isLight ? light : dark;
   Color coordOn(bool isLight) => isLight ? coordOnLight : coordOnDark;
@@ -214,7 +218,7 @@ const woodSkin = BoardSkin(
   legalRing: Color(0xaae2b75f),
   coordOnLight: Color(0xff684426),
   coordOnDark: Color(0xffe3c691),
-  grain: true,
+  texture: SurfaceTexture.wood,
 );
 
 const marbleSkin = BoardSkin(
@@ -232,6 +236,7 @@ const marbleSkin = BoardSkin(
   legalRing: Color(0xaaf0e9a4),
   coordOnLight: Color(0xff5c6b56),
   coordOnDark: Color(0xffeef2e6),
+  texture: SurfaceTexture.marble,
 );
 
 const slateSkin = BoardSkin(
@@ -249,6 +254,7 @@ const slateSkin = BoardSkin(
   legalRing: Color(0xaacfe0f2),
   coordOnLight: Color(0xff323b47),
   coordOnDark: Color(0xffd3dcea),
+  texture: SurfaceTexture.slate,
 );
 
 /// Cool, low-contrast surface meant to sit under the glass pieces.
@@ -267,6 +273,7 @@ const iceSkin = BoardSkin(
   legalRing: Color(0xaaeaf6ff),
   coordOnLight: Color(0xff4a6878),
   coordOnDark: Color(0xffeef7ff),
+  texture: SurfaceTexture.frost,
 );
 
 const boardSkins = [woodSkin, marbleSkin, slateSkin, iceSkin];

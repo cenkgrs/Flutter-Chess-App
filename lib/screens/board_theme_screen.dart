@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_language.dart';
 import '../theme/board_theme.dart';
+import '../widgets/board_surface.dart';
 import '../widgets/rok_style.dart';
 
 /// Board skin and piece set, each with a live preview of the real board.
@@ -188,10 +189,15 @@ class _PreviewBoard extends StatelessWidget {
             final piece = full
                 ? BoardThemeScreen._preview.get('${'abcdefgh'[file]}$rank')
                 : _swatch[i];
-            return ColoredBox(
-              color: skin.base((i ~/ squares + file).isEven),
+            final light = (i ~/ squares + file).isEven;
+            // The preview shows the material too; a flat swatch sold the
+            // skin short and did not match what the board would look like.
+            return BoardSquareSurface(
+              skin: skin,
+              isLight: light,
+              seed: i + (light ? 100 : 200),
               child: piece == null
-                  ? null
+                  ? const SizedBox.expand()
                   // No scale override: a preview that ignored the set's own
                   // scale would show a different size than the real board.
                   : BoardPieceArt(piece, set: pieces, padding: full ? 2 : 1),

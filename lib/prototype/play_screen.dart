@@ -17,6 +17,7 @@ import 'engine.dart';
 import 'stockfish_engine.dart';
 import '../screens/profile_screen.dart';
 import '../widgets/board_annotations.dart';
+import '../widgets/board_surface.dart';
 import '../widgets/first_use_tip.dart';
 import '../widgets/move_animation.dart';
 import 'premove.dart';
@@ -883,11 +884,12 @@ class _PlayScreenState extends State<PlayScreen> {
                             child: GestureDetector(
                               key: ValueKey('square-$square'),
                               onTap: () => tap(square),
-                              child: _WoodSurface(
+                              child: BoardSquareSurface(
+                                  skin: skin,
+                                  isLight: isLight,
                                   seed: index + (isLight ? 100 : 200),
                                   base: base,
                                   overlay: overlay,
-                                  grain: skin.grain,
                                   child: Stack(
                                       alignment: Alignment.center,
                                       children: [
@@ -1220,91 +1222,6 @@ class _ReviewAction extends StatelessWidget {
           child: LText(label, maxLines: 1),
         ),
       );
-}
-
-class _WoodSurface extends StatelessWidget {
-  const _WoodSurface({
-    required this.seed,
-    required this.base,
-    required this.child,
-    this.overlay = Colors.transparent,
-    this.grain = true,
-  });
-
-  final int seed;
-  final Color base;
-  final Color overlay;
-
-  /// Only the wooden skin carries a grain; the others are flat surfaces.
-  final bool grain;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => CustomPaint(
-        painter: _WoodPainter(
-            seed: seed, base: base, overlay: overlay, grain: grain),
-        child: child,
-      );
-}
-
-class _WoodPainter extends CustomPainter {
-  const _WoodPainter(
-      {required this.seed,
-      required this.base,
-      required this.overlay,
-      required this.grain});
-
-  final int seed;
-  final Color base;
-  final Color overlay;
-  final bool grain;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final lightness = HSLColor.fromColor(base);
-    final lighter = lightness
-        .withLightness((lightness.lightness + .07).clamp(0, 1))
-        .toColor();
-    final darker = lightness
-        .withLightness((lightness.lightness - .05).clamp(0, 1))
-        .toColor();
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [lighter, base, darker],
-        ).createShader(rect),
-    );
-
-    if (grain) {
-      final random = math.Random(seed);
-      final stroke = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = .55
-        ..color = Colors.black.withValues(alpha: .09);
-      final lineCount = math.max(5, (size.height / 9).round());
-      for (var i = 0; i < lineCount; i++) {
-        final y = random.nextDouble() * size.height;
-        final wave = 1.2 + random.nextDouble() * 2.4;
-        final path = Path()..moveTo(0, y);
-        for (double x = 0; x <= size.width; x += 12) {
-          path.lineTo(x, y + math.sin(x / 22 + i) * wave);
-        }
-        canvas.drawPath(path, stroke);
-      }
-    }
-    if (overlay.a > 0) canvas.drawRect(rect, Paint()..color = overlay);
-  }
-
-  @override
-  bool shouldRepaint(covariant _WoodPainter oldDelegate) =>
-      seed != oldDelegate.seed ||
-      base != oldDelegate.base ||
-      overlay != oldDelegate.overlay ||
-      grain != oldDelegate.grain;
 }
 
 class _MoveArrowPainter extends CustomPainter {
