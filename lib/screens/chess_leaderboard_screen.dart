@@ -4,6 +4,7 @@ import '../backend/app_backend.dart';
 import '../backend/friend_repository.dart';
 import '../l10n/app_language.dart';
 import '../online/time_control.dart';
+import 'home_menu_screen.dart' show TimeControlOptions;
 import '../widgets/rok_style.dart';
 
 /// The top of each rating pool, and a way to play the people on it.
@@ -79,14 +80,17 @@ class _ChessLeaderboardScreenState extends State<ChessLeaderboardScreen> {
   Future<void> _challenge(Map row) async {
     final control = await showModalBottomSheet<TimeControl>(
         context: context,
-        builder: (sheet) => SafeArea(
-                child: ListView(children: [
-              ListTile(title: LText('${row['username']} · Oyun süresi seç')),
-              for (final c in TimeControl.presets.where((c) => c.pool == _pool))
-                ListTile(
-                    title: LText('${c.pool.label} · ${c.label}'),
-                    onTap: () => Navigator.pop(sheet, c)),
-            ])));
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Colors.transparent,
+        builder: (sheet) => RokSheet(
+              icon: Icons.timer_outlined,
+              title: 'SÜRE SEÇ',
+              note: '${row['username']} · ${_pool.label}',
+              child: TimeControlOptions(
+                  only: _pool,
+                  onSelected: (control) => Navigator.pop(sheet, control)),
+            ));
     if (control == null || !mounted) return;
     setState(() => _busy = true);
     try {
@@ -271,7 +275,11 @@ class _ChessLeaderboardScreenState extends State<ChessLeaderboardScreen> {
                         if (rows.isEmpty)
                           const LText('Henüz sıralamada oyuncu yok.',
                               style: TextStyle(color: Color(0xfff3eee7))),
-                        for (final row in rows) _entry(row as Map),
+                        // Your own standing is the card at the top; the
+                        // board would otherwise print you twice.
+                        for (final row in rows)
+                          if ((row as Map)['friendship'] != 'self')
+                            _entry(row),
                       ],
                     ));
               },

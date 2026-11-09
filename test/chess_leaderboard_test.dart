@@ -102,10 +102,10 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('challenge-u-friend')));
     await tester.pumpAndSettle();
     // Blitz is the pool on screen; a classical preset has no place here.
-    expect(find.text('Blitz · 3+0'), findsOneWidget);
-    expect(find.text('Klasik · 30+0'), findsNothing);
+    expect(find.byKey(const ValueKey('time-3+0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('time-30+0')), findsNothing);
 
-    await tester.tap(find.text('Blitz · 3+0'));
+    await tester.tap(find.byKey(const ValueKey('time-3+0')));
     await tester.pumpAndSettle();
     expect(repo.invites, ['u-friend:3+0']);
   });
