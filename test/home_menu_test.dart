@@ -76,6 +76,12 @@ void main() {
     expect(find.byKey(const ValueKey('login')), findsOneWidget);
     expect(find.byKey(const ValueKey('chess-leaderboard')), findsOneWidget);
     expect(find.byKey(const ValueKey('drawer-name')), findsOneWidget);
+    // Premium, the match history and the friend list each need an account;
+    // signed out they would only lead back to the login row below them.
+    for (final link in ['drawer-premium', 'drawer-recent-games',
+        'drawer-friends']) {
+      expect(find.byKey(ValueKey(link)), findsNothing, reason: link);
+    }
     expect(tester.takeException(), isNull);
   });
 }

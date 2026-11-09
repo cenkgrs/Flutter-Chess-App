@@ -14,7 +14,9 @@ import 'daily_puzzle_screen.dart';
 import 'friend_room_screen.dart';
 import 'matchmaking_screen.dart';
 import 'online_game_screen.dart';
+import 'friends_screen.dart';
 import 'profile_screen.dart';
+import 'subscription_screen.dart';
 import 'puzzle_screen.dart';
 import 'puzzle_duel_screen.dart';
 import '../route_observer.dart';
@@ -237,6 +239,46 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
               _openProfile(context);
             },
           ),
+          // An account is what gives these three something to show: a
+          // subscription to hold, games already played, friends already
+          // made. Signed out they would each only lead to the login page,
+          // which the panel already offers at the bottom.
+          if (user != null) ...[
+            _DrawerLink(
+              key: const ValueKey('drawer-premium'),
+              icon: Icons.workspace_premium_rounded,
+              label: 'ROK Premium',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const SubscriptionScreen()));
+              },
+            ),
+            _DrawerLink(
+              key: const ValueKey('drawer-recent-games'),
+              icon: Icons.history_rounded,
+              label: 'Son Maçlar',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const RecentGamesScreen()));
+              },
+            ),
+            _DrawerLink(
+              key: const ValueKey('drawer-friends'),
+              icon: Icons.people_outline_rounded,
+              label: 'Arkadaşlar',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const FriendsScreen()));
+              },
+            ),
+          ],
           _DrawerLink(
             key: const ValueKey('chess-leaderboard'),
             icon: Icons.leaderboard_outlined,

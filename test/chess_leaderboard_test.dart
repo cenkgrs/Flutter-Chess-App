@@ -132,6 +132,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('pool-bullet')));
     await tester.pumpAndSettle();
     expect(pools, ['blitz', 'bullet']);
-    expect(find.text('2400 · 30 oyun'), findsOneWidget);
+    expect(find.text('2400'), findsOneWidget);
+    expect(find.text('30 oyun'), findsOneWidget);
   });
 }

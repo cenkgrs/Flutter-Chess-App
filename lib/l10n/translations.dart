@@ -924,6 +924,7 @@ const translations = <String, List<String>>{
     'Твой Эло в каждом контроле'
   ],
   'Beklemede': ['Pending', 'Ausstehend', 'Ожидает'],
+  'SEN': ['YOU', 'DU', 'ТЫ'],
   'Arkadaşlık isteği gönderildi.': [
     'Friend request sent.',
     'Freundschaftsanfrage gesendet.',

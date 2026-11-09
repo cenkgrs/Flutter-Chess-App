@@ -22,6 +22,9 @@ class ChessLeaderboardScreen extends StatefulWidget {
   State<ChessLeaderboardScreen> createState() => _ChessLeaderboardScreenState();
 }
 
+const _bone = Color(0xfff3eee7);
+const _muted = Color(0xffb9aea5);
+
 class _ChessLeaderboardScreenState extends State<ChessLeaderboardScreen> {
   late final _repo = widget.repository ?? FriendRepository();
   SpeedPool _pool = SpeedPool.blitz;
@@ -103,42 +106,107 @@ class _ChessLeaderboardScreenState extends State<ChessLeaderboardScreen> {
 
   Widget _action(Map row) => switch (row['friendship']) {
         'self' => const SizedBox.shrink(),
-        'accepted' => TextButton(
+        'accepted' => _RowButton(
             key: ValueKey('challenge-${row['user_id']}'),
+            icon: Icons.sports_esports_outlined,
+            label: 'Davet et',
+            filled: true,
             onPressed: _busy ? null : () => _challenge(row),
-            child: const LText('Davet et'),
           ),
-        'pending' => const LText('Beklemede',
-            style: TextStyle(color: Color(0xffb9aea5))),
-        _ => TextButton(
+        'pending' => const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6),
+            child: LText('Beklemede',
+                style: TextStyle(color: _muted, fontSize: 12.5)),
+          ),
+        _ => _RowButton(
             key: ValueKey('befriend-${row['user_id']}'),
+            icon: Icons.person_add_alt_1_outlined,
+            label: 'Arkadaş ekle',
             onPressed: _busy ? null : () => _addFriend(row),
-            child: const LText('Arkadaş ekle'),
           ),
       };
 
-  Widget _entry(Map row, {bool own = false}) => Card(
-        color: own ? const Color(0xff454645) : const Color(0xff2b2c2b),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        child: ListTile(
-          textColor: const Color(0xfff3eee7),
-          leading: LText('#${row['place']}',
-              style: const TextStyle(fontSize: 20, color: Color(0xfff3eee7))),
-          title: LText('${row['username']}${own ? ' · Sen' : ''}',
-              maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: LText('${row['rating']} · ${row['games_played']} oyun',
-              style: const TextStyle(color: Color(0xffb9aea5))),
-          trailing: own ? null : _action(row),
+  /// A row carried the board's only real content and looked like a stock
+  /// list tile over flat grey. It is a card of the same wood as the rest of
+  /// the app now: the place reads as a medal, the rating as the chip it is
+  /// everywhere else, and your own row is the one lit in brass.
+  Widget _entry(Map row, {bool own = false}) {
+    final place = row['place'] as int? ?? 0;
+    final medal = switch (place) {
+      1 => const Color(0xffe2b75f),
+      2 => const Color(0xffcdc7bd),
+      3 => const Color(0xffc08457),
+      _ => _muted,
+    };
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+      decoration: BoxDecoration(
+        color: own ? const Color(0x77332113) : const Color(0x55241a12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+            color: own ? const Color(0xffd9b77e) : const Color(0xff6d6356),
+            width: own ? 1.4 : 1),
+      ),
+      child: Row(children: [
+        Container(
+          width: 38,
+          height: 38,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0x44000000),
+            border: Border.all(color: medal.withValues(alpha: 0.7)),
+          ),
+          child: Text('$place',
+              style: TextStyle(
+                  color: medal, fontSize: 15, fontWeight: FontWeight.w700)),
         ),
-      );
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  Flexible(
+                    child: Text('${row['username']}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            color: _bone,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600)),
+                  ),
+                  if (own) ...[
+                    const SizedBox(width: 7),
+                    const LText('SEN',
+                        style: TextStyle(
+                            color: Color(0xffd9b77e),
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.4)),
+                  ],
+                ]),
+                const SizedBox(height: 3),
+                LText('${row['games_played']} oyun',
+                    style: const TextStyle(color: _muted, fontSize: 12.5)),
+              ]),
+        ),
+        const SizedBox(width: 8),
+        RokStatChip(
+            icon: Icons.military_tech_outlined, value: '${row['rating']}'),
+        if (!own) ...[
+          const SizedBox(width: 6),
+          _action(row),
+        ],
+      ]),
+    );
+  }
 
   @override
   Widget build(BuildContext context) => RokScaffold(
-        backgroundColor: const Color(0xff202120),
         appBar: AppBar(
             title: const LText('Oyuncu sıralaması'),
-            backgroundColor: const Color(0xff202120),
-            foregroundColor: const Color(0xfff3eee7),
             actions: [
               IconButton(
                   onPressed: _refresh,
@@ -169,14 +237,14 @@ class _ChessLeaderboardScreenState extends State<ChessLeaderboardScreen> {
                 if (snapshot.connectionState != ConnectionState.done) {
                   return const Center(
                       child:
-                          CircularProgressIndicator(color: Color(0xfff3eee7)));
+                          CircularProgressIndicator(color: _bone));
                 }
                 if (snapshot.hasError) {
                   return Center(
                       child: TextButton(
                           onPressed: _refresh,
                           child: const LText('Sıralama yüklenemedi. Tekrar dene',
-                              style: TextStyle(color: Color(0xfff3eee7)))));
+                              style: TextStyle(color: _bone))));
                 }
                 final rows = snapshot.data!['leaders'] as List? ?? const [];
                 final me = snapshot.data!['me'] as Map?;
@@ -188,15 +256,18 @@ class _ChessLeaderboardScreenState extends State<ChessLeaderboardScreen> {
                       children: [
                         LText('${_pool.label} · İLK 100',
                             style: const TextStyle(
-                                color: Color(0xffb9aea5), letterSpacing: 1.5)),
+                                color: _muted,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.6)),
                         const SizedBox(height: 16),
                         if (me != null)
                           _entry(me, own: true)
                         else
                           const LText(
                               'Bu sürede dereceli bir maç oyna, sıralamaya katıl.',
-                              style: TextStyle(color: Color(0xfff3eee7))),
-                        const Divider(height: 32, color: Color(0xff454645)),
+                              style: TextStyle(color: _bone)),
+                        const Divider(height: 28, color: Color(0x44d8cec5)),
                         if (rows.isEmpty)
                           const LText('Henüz sıralamada oyuncu yok.',
                               style: TextStyle(color: Color(0xfff3eee7))),
@@ -207,5 +278,39 @@ class _ChessLeaderboardScreenState extends State<ChessLeaderboardScreen> {
             ),
           ),
         ]),
+      );
+}
+
+/// The one control a row carries, small enough to sit beside a rating.
+class _RowButton extends StatelessWidget {
+  const _RowButton(
+      {super.key,
+      required this.icon,
+      required this.label,
+      required this.onPressed,
+      this.filled = false});
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final bool filled;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+        message: tr(context, label),
+        child: IconButton(
+          onPressed: onPressed,
+          icon: Icon(icon, size: 19),
+          visualDensity: VisualDensity.compact,
+          style: IconButton.styleFrom(
+            foregroundColor: filled ? const Color(0xff241a12) : _bone,
+            backgroundColor:
+                filled ? const Color(0xffd9b77e) : const Color(0x33000000),
+            side: BorderSide(
+                color: filled
+                    ? const Color(0xffd9b77e)
+                    : const Color(0xff6d6356)),
+          ),
+        ),
       );
 }
