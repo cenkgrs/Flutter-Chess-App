@@ -697,19 +697,14 @@ class _MenuDivider extends StatelessWidget {
 
 /// The clock presets, grouped by pool. Used on its own and as a step.
 class TimeControlOptions extends StatelessWidget {
-  const TimeControlOptions({super.key, required this.onSelected, this.only});
+  const TimeControlOptions({super.key, required this.onSelected});
 
   final ValueChanged<TimeControl> onSelected;
-
-  /// One pool's clocks rather than all of them, for the places where the
-  /// pool is already settled — a challenge sent from a rating board is
-  /// only ever at the speed that board ranks.
-  final SpeedPool? only;
 
   @override
   Widget build(BuildContext context) => ListView(
         shrinkWrap: true,
-        children: (only == null ? SpeedPool.values : [only!]).map((pool) {
+        children: SpeedPool.values.map((pool) {
           final controls = TimeControl.presets
               .where((control) => control.pool == pool)
               .toList();

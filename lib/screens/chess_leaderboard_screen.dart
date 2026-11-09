@@ -86,9 +86,10 @@ class _ChessLeaderboardScreenState extends State<ChessLeaderboardScreen> {
         builder: (sheet) => RokSheet(
               icon: Icons.timer_outlined,
               title: 'SÜRE SEÇ',
-              note: '${row['username']} · ${_pool.label}',
+              note: '${row['username']}',
+              // Every clock, not just this board's: the board is where you
+              // found the player, not a promise about what you may play.
               child: TimeControlOptions(
-                  only: _pool,
                   onSelected: (control) => Navigator.pop(sheet, control)),
             ));
     if (control == null || !mounted) return;

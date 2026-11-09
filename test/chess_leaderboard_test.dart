@@ -95,15 +95,16 @@ void main() {
     expect(repo.actions, ['send:u-stranger']);
   });
 
-  testWidgets('a friend can be challenged at this pool only', (tester) async {
+  testWidgets('a friend can be challenged at any clock', (tester) async {
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('challenge-u-friend')));
     await tester.pumpAndSettle();
-    // Blitz is the pool on screen; a classical preset has no place here.
+    // The board is where the player was found, not a limit on the game:
+    // every clock is on offer, this board's and the others'.
     expect(find.byKey(const ValueKey('time-3+0')), findsOneWidget);
-    expect(find.byKey(const ValueKey('time-30+0')), findsNothing);
+    expect(find.byKey(const ValueKey('time-30+0')), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('time-3+0')));
     await tester.pumpAndSettle();
