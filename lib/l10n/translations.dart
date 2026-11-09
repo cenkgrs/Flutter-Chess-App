@@ -944,6 +944,8 @@ const translations = <String, List<String>>{
     'Spiele eine gewertete Partie in dieser Bedenkzeit, um dabei zu sein.',
     'Сыграй рейтинговую партию в этом контроле, чтобы попасть в список.'
   ],
+  'Menü': ['Menu', 'Menü', 'Меню'],
+  'Profil': ['Profile', 'Profil', 'Профиль'],
   'Menüye dön': ['Back to menu', 'Zum Menü', 'В меню'],
   'Tahtaya dön': ['Back to board', 'Zum Brett', 'К доске'],
   'Tahtayı incele': ['Review board', 'Brett ansehen', 'Просмотреть доску'],

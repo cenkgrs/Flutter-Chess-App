@@ -2,6 +2,14 @@ import 'package:chess_puzzle_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// Signing in now lives behind the menu button rather than in the header.
+Future<void> openSignIn(WidgetTester tester) async {
+  await tester.tap(find.byKey(const ValueKey('menu-drawer')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(const ValueKey('login')));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('guest can open login and switch to registration',
       (tester) async {
@@ -11,8 +19,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(const MyApp());
-    await tester.tap(find.byKey(const ValueKey('login')));
-    await tester.pumpAndSettle();
+    await openSignIn(tester);
 
     expect(find.text('GİRİŞ YAP'), findsWidgets);
     expect(find.byKey(const ValueKey('email-field')), findsOneWidget);
@@ -40,8 +47,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(const MyApp());
-    await tester.tap(find.byKey(const ValueKey('login')));
-    await tester.pumpAndSettle();
+    await openSignIn(tester);
     await tester.enterText(
         find.byKey(const ValueKey('email-field')), 'oyuncu@example.com');
     await tester.enterText(
@@ -61,8 +67,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(const MyApp());
-    await tester.tap(find.byKey(const ValueKey('login')));
-    await tester.pumpAndSettle();
+    await openSignIn(tester);
     await tester.tap(find.byKey(const ValueKey('auth-mode-toggle')));
     await tester.pump();
 

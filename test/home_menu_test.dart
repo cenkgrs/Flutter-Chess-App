@@ -57,4 +57,25 @@ void main() {
     expect(tester.getTopLeft(header).dy, initialTop);
     expect(find.text('ROK'), findsOneWidget);
   });
+
+  testWidgets('the account and the rankings live behind the menu button',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const MyApp());
+    await tester.pumpAndSettle();
+    // The header no longer carries them; the main list is for playing.
+    expect(find.byKey(const ValueKey('login')), findsNothing);
+    expect(find.byKey(const ValueKey('chess-leaderboard')), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('menu-drawer')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('login')), findsOneWidget);
+    expect(find.byKey(const ValueKey('chess-leaderboard')), findsOneWidget);
+    expect(find.byKey(const ValueKey('drawer-name')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

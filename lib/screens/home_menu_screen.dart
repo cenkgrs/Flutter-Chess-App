@@ -35,7 +35,6 @@ class HomeMenuScreen extends StatefulWidget {
 class _HomeMenuScreenState extends State<HomeMenuScreen>
     with RouteAware, WidgetsBindingObserver {
   static const bone = HomeMenuScreen.bone;
-  static const mutedBone = HomeMenuScreen.mutedBone;
   static const divider = HomeMenuScreen.divider;
   String? _activeGameId;
   bool _checkingActiveGame = false;
@@ -101,6 +100,7 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
 
   Widget _menu(BuildContext context, User? user) => Scaffold(
         backgroundColor: const Color(0xff32180d),
+        drawer: _drawer(context, user),
         body: DecoratedBox(
           decoration: const BoxDecoration(
             image: DecorationImage(
@@ -119,7 +119,7 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(22, 18, 22, 14),
-                    child: _header(context, user),
+                    child: _header(context),
                   ),
                   Expanded(
                     child: LayoutBuilder(
@@ -186,18 +186,6 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
                                               const PuzzleScreen())),
                                 ),
                                 const _MenuDivider(),
-                                _SecondaryAction(
-                                  key: const ValueKey('chess-leaderboard'),
-                                  icon: Icons.leaderboard_outlined,
-                                  title: 'Sıralama',
-                                  subtitle: 'Her sürede kendi Elo puanın',
-                                  onTap: () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (_) =>
-                                              const ChessLeaderboardScreen())),
-                                ),
-                                const _MenuDivider(),
                                 DailyPuzzleMenuEntry(
                                     key: ValueKey('daily-${user?.id}'),
                                     signedIn: user != null),
@@ -215,8 +203,72 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
         ),
       );
 
-  Widget _header(BuildContext context, User? user) {
+  /// The panel behind the header's one button: who you are, and the
+  /// screens that belong to an account rather than to a game.
+  Widget _drawer(BuildContext context, User? user) {
     final username = user?.userMetadata?['username'] as String?;
+    return Drawer(
+      backgroundColor: const Color(0xff2a1a10),
+      child: SafeArea(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 18),
+            child: Row(children: [
+              const Icon(Icons.account_circle_outlined, color: bone, size: 42),
+              const SizedBox(width: 12),
+              Expanded(
+                child: LText(
+                  username ?? 'Misafir',
+                  key: const ValueKey('drawer-name'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      color: bone, fontSize: 19, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ]),
+          ),
+          const Divider(height: 1, color: divider),
+          _DrawerLink(
+            icon: Icons.person_outline_rounded,
+            label: 'Profil',
+            onTap: () {
+              Navigator.pop(context);
+              _openProfile(context);
+            },
+          ),
+          _DrawerLink(
+            key: const ValueKey('chess-leaderboard'),
+            icon: Icons.leaderboard_outlined,
+            label: 'Sıralama',
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const ChessLeaderboardScreen()));
+            },
+          ),
+          const Spacer(),
+          const Divider(height: 1, color: divider),
+          _DrawerLink(
+            key: const ValueKey('login'),
+            icon: user == null
+                ? Icons.login_rounded
+                : Icons.logout_rounded,
+            label: user == null ? 'Giriş yap' : 'Çıkış yap',
+            onTap: () {
+              Navigator.pop(context);
+              user == null ? _openAuth(context) : _showAccountActions(context);
+            },
+          ),
+          const SizedBox(height: 10),
+        ]),
+      ),
+    );
+  }
+
+  Widget _header(BuildContext context) {
     return Row(
       children: [
         const Icon(Icons.castle_rounded, color: bone, size: 33),
@@ -239,50 +291,17 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
           ),
         ),
         const Spacer(),
-        IconButton(
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
-          onPressed: () => _openProfile(context),
-          icon: const Icon(Icons.account_circle_outlined,
-              color: mutedBone, size: 34),
-        ),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 53,
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: LText(
-              username ?? 'Misafir',
-              maxLines: 1,
-              style: const TextStyle(color: mutedBone, fontSize: 15),
-            ),
-          ),
-        ),
-        Container(
-          width: 1,
-          height: 27,
-          margin: const EdgeInsets.symmetric(horizontal: 13),
-          color: divider,
-        ),
-        InkWell(
-          key: const ValueKey('login'),
-          onTap: () =>
-              user == null ? _openAuth(context) : _showAccountActions(context),
-          borderRadius: BorderRadius.circular(4),
-          child: SizedBox(
-            width: 38,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: LText(
-                user == null ? 'Giriş' : 'Çıkış',
-                maxLines: 1,
-                style: const TextStyle(
-                  color: bone,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+        // The name, the profile and signing in and out used to crowd this
+        // corner and still said little. One button now opens a panel where
+        // each of them has room to be named.
+        Builder(
+          builder: (scaffoldContext) => IconButton(
+            key: const ValueKey('menu-drawer'),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            tooltip: tr(context, 'Menü'),
+            onPressed: () => Scaffold.of(scaffoldContext).openDrawer(),
+            icon: const Icon(Icons.menu_rounded, color: bone, size: 32),
           ),
         ),
       ],
@@ -762,4 +781,29 @@ class _PlayModeSheetState extends State<_PlayModeSheet> {
             child: const FriendRoomScreen(embedded: true),
           ),
       };
+}
+
+class _DrawerLink extends StatelessWidget {
+  const _DrawerLink(
+      {super.key,
+      required this.icon,
+      required this.label,
+      required this.onTap});
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+        leading: Icon(icon, color: HomeMenuScreen.mutedBone, size: 26),
+        title: LText(label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+                color: HomeMenuScreen.bone,
+                fontSize: 17,
+                fontWeight: FontWeight.w600)),
+        onTap: onTap,
+      );
 }
