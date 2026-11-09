@@ -1333,6 +1333,21 @@ const translations = <String, List<String>>{
   'Mermer': ['Marble', 'Marmor', 'Мрамор'],
   'Arduvaz': ['Slate', 'Schiefer', 'Сланец'],
   'Obsidyen': ['Obsidian', 'Obsidian', 'Обсидиан'],
+  'Bütün tahtalar ve taşlar': [
+    'Every board and every set',
+    'Alle Bretter und alle Figuren',
+    'Все доски и все фигуры'
+  ],
+  'Obsidyen, lav, art deco ve dövme metal tahtalar ile eşlik eden taş takımları.': [
+    'Obsidian, lava, art deco and brushed metal boards, with the sets that match them.',
+    'Obsidian, Lava, Art déco und gebürstetes Metall — mit den passenden Figuren.',
+    'Обсидиан, лава, ар-деко и шлифованный металл — с подходящими фигурами.'
+  ],
+  'Tahta ve taş temaları': [
+    'Board and piece themes',
+    'Brett- und Figurenthemen',
+    'Темы досок и фигур'
+  ],
   'Deniyorsun. Kullanmak için Premium gerek.': [
     'Just a look. Premium puts it on the board.',
     'Nur zur Ansicht. Mit Premium wird daraus dein Brett.',

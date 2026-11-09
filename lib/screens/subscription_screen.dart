@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../backend/subscriptions.dart';
 import '../l10n/app_language.dart';
+import '../theme/board_theme.dart';
 import '../widgets/rok_style.dart';
 
 /// The store page for ROK Premium.
@@ -127,6 +128,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
             style: TextStyle(color: _muted, fontSize: 14.5, height: 1.45)),
       ]);
 
+  /// Counted rather than written down: a theme added later must not leave
+  /// this page quoting a number that was true last release.
+  static final _freeThemes = boardSkins.where((s) => !s.premium).length +
+      pieceSets
+          .where((p) => !p.premium && BoardTheme.isPieceSetAvailable(p))
+          .length;
+  static final _allThemes = boardSkins.length +
+      pieceSets.where(BoardTheme.isPieceSetAvailable).length;
+
   static final _panel = BoxDecoration(
       color: const Color(0x33000000),
       borderRadius: BorderRadius.circular(14),
@@ -149,6 +159,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
             title: 'Beklemeden devam',
             detail: 'Hakkın dolduğunda gece yarısını beklemene gerek kalmaz.'),
         _Benefit(
+            icon: Icons.grid_view_rounded,
+            title: 'Bütün tahtalar ve taşlar',
+            detail:
+                'Obsidyen, lav, art deco ve dövme metal tahtalar ile eşlik eden taş takımları.'),
+        _Benefit(
             icon: Icons.favorite_rounded,
             title: 'Geliştirmeyi destekle',
             detail: 'ROK reklamsız. Abonelik, geliştirilmeye devam etmesini sağlar.'),
@@ -157,8 +172,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
   Widget _comparison() => Container(
         padding: const EdgeInsets.all(16),
         decoration: _panel,
-        child: const Column(children: [
-          Row(children: [
+        child: Column(children: [
+          const Row(children: [
             Expanded(flex: 4, child: SizedBox()),
             Expanded(
                 flex: 3,
@@ -177,14 +192,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         fontSize: 12,
                         fontWeight: FontWeight.w700))),
           ]),
-          Divider(height: 18, color: Color(0x33f3eee7)),
-          _CompareRow(label: 'Asistanlı maç', free: 'günde 1'),
-          _CompareRow(label: 'Maç analizi', free: 'günde 1'),
-          _CompareRow(
+          const Divider(height: 18, color: Color(0x33f3eee7)),
+          const _CompareRow(label: 'Asistanlı maç', free: 'günde 1'),
+          const _CompareRow(label: 'Maç analizi', free: 'günde 1'),
+          const _CompareRow(
               label: 'Çevrimiçi oyun', free: 'sınırsız', both: true),
-          _CompareRow(label: 'Bulmacalar', free: 'sınırsız', both: true),
+          const _CompareRow(
+              label: 'Bulmacalar', free: 'sınırsız', both: true),
           _CompareRow(
-              label: 'Tüm tahta ve taş temaları', free: 'açık', both: true),
+              label: 'Tahta ve taş temaları',
+              free: '$_freeThemes tema',
+              premium: '$_allThemes tema'),
         ]),
       );
 
@@ -326,9 +344,16 @@ class _Benefit extends StatelessWidget {
 }
 
 class _CompareRow extends StatelessWidget {
-  const _CompareRow({required this.label, required this.free, this.both = false});
+  const _CompareRow(
+      {required this.label,
+      required this.free,
+      this.premium,
+      this.both = false});
 
   final String label, free;
+
+  /// What Premium gives where "sınırsız" is not the honest word for it.
+  final String? premium;
 
   /// Both tiers already get this, so Premium shows the same words, not a tick
   /// that would imply the free tier misses out.
@@ -374,7 +399,7 @@ class _CompareRow extends StatelessWidget {
               flex: 3,
               child: both
                   ? _value(free, highlight: false)
-                  : _value('sınırsız', highlight: true)),
+                  : _value(premium ?? 'sınırsız', highlight: true)),
         ]),
       );
 }
