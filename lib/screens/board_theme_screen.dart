@@ -195,6 +195,8 @@ class _PreviewBoard extends StatelessWidget {
             return BoardSquareSurface(
               skin: skin,
               isLight: light,
+              pieceIsLight:
+                  piece == null ? null : piece.color == c.Color.WHITE,
               seed: i + (light ? 100 : 200),
               child: piece == null
                   ? const SizedBox.expand()

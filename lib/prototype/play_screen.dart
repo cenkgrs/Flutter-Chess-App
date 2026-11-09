@@ -887,6 +887,9 @@ class _PlayScreenState extends State<PlayScreen> {
                               child: BoardSquareSurface(
                                   skin: skin,
                                   isLight: isLight,
+                                  pieceIsLight: piece == null
+                                      ? null
+                                      : piece.color == c.Color.WHITE,
                                   seed: index + (isLight ? 100 : 200),
                                   base: base,
                                   overlay: overlay,

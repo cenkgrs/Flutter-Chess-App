@@ -281,8 +281,8 @@ const iceSkin = BoardSkin(
 const obsidianSkin = BoardSkin(
   id: 'obsidian',
   label: 'Obsidyen',
-  light: Color(0xff5a5a65),
-  dark: Color(0xff1e1e24),
+  light: Color(0xff686874),
+  dark: Color(0xff17171c),
   selected: Color(0xff5d6b7d),
   selectedOverlay: Color(0x997d93ab),
   checkOverlay: Color(0x99a3413c),
@@ -300,8 +300,8 @@ const obsidianSkin = BoardSkin(
 const lavaSkin = BoardSkin(
   id: 'lava',
   label: 'Lav',
-  light: Color(0xff6b4a40),
-  dark: Color(0xff271a18),
+  light: Color(0xff5f5852),
+  dark: Color(0xff232021),
   selected: Color(0xff8c4a2a),
   selectedOverlay: Color(0x99c9602a),
   checkOverlay: Color(0x99bb3b2f),
@@ -338,8 +338,8 @@ const decoSkin = BoardSkin(
 const paperSkin = BoardSkin(
   id: 'paper',
   label: 'Kağıt',
-  light: Color(0xfff2ece0),
-  dark: Color(0xffc7bda8),
+  light: Color(0xfff5f0e6),
+  dark: Color(0xffb5a98f),
   selected: Color(0xffd8cf9a),
   selectedOverlay: Color(0x99dcd292),
   checkOverlay: Color(0x99c5736a),
@@ -357,8 +357,8 @@ const paperSkin = BoardSkin(
 const metalSkin = BoardSkin(
   id: 'metal',
   label: 'Dövme Metal',
-  light: Color(0xffb6b2ab),
-  dark: Color(0xff6d6a60),
+  light: Color(0xffa9a59d),
+  dark: Color(0xff5c594f),
   selected: Color(0xff9d8a5e),
   selectedOverlay: Color(0x99c2a263),
   checkOverlay: Color(0x99a84b42),

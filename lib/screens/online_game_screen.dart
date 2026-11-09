@@ -666,6 +666,9 @@ class _OnlineGameScreenState extends State<OnlineGameScreen>
                           child: BoardSquareSurface(
                             skin: boardSkin,
                             isLight: light,
+                            pieceIsLight: piece == null
+                                ? null
+                                : piece.color == c.Color.WHITE,
                             seed: index + (light ? 100 : 200),
                             base: _selected == square
                                 ? boardSkin.selected

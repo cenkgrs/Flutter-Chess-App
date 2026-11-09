@@ -21,6 +21,7 @@ class BoardSquareSurface extends StatelessWidget {
     required this.child,
     this.overlay = Colors.transparent,
     this.base,
+    this.pieceIsLight,
   });
 
   final BoardSkin skin;
@@ -31,6 +32,10 @@ class BoardSquareSurface extends StatelessWidget {
   /// or a premove — keeps that colour and still gets the material.
   final Color? base;
   final Color overlay;
+
+  /// Whether the piece standing here is a light one, so a square of the
+  /// same tone can lift it. Null when the square is empty.
+  final bool? pieceIsLight;
   final Widget child;
 
   @override
@@ -41,6 +46,7 @@ class BoardSquareSurface extends StatelessWidget {
           overlay: overlay,
           seed: seed,
           isLight: isLight,
+          pieceIsLight: pieceIsLight,
         ),
         child: child,
       );
@@ -54,6 +60,7 @@ class BoardSquarePainter extends CustomPainter {
     required this.overlay,
     required this.seed,
     required this.isLight,
+    this.pieceIsLight,
   });
 
   final SurfaceTexture texture;
@@ -61,6 +68,7 @@ class BoardSquarePainter extends CustomPainter {
   final Color overlay;
   final int seed;
   final bool isLight;
+  final bool? pieceIsLight;
 
   Color _shift(double by) {
     final hsl = HSLColor.fromColor(base);
@@ -121,7 +129,31 @@ class BoardSquarePainter extends CustomPainter {
             stops: const [0, .45, 1],
           ).createShader(rect));
 
+    _halo(canvas, size);
     if (overlay.a > 0) canvas.drawRect(rect, Paint()..color = overlay);
+  }
+
+  /// A black king on obsidian, or a white one on paper, was a silhouette of
+  /// the square it stood on. Where piece and square share a tone the square
+  /// gets a soft pool of the opposite one, which reads as the piece sitting
+  /// on the board rather than as an outline drawn around it.
+  void _halo(Canvas canvas, Size size) {
+    final piece = pieceIsLight;
+    if (piece == null) return;
+    final luminance = base.computeLuminance();
+    final clash = piece ? luminance > .36 : luminance < .40;
+    if (!clash) return;
+    final tint = piece ? Colors.black : Colors.white;
+    canvas.drawRect(
+        Offset.zero & size,
+        Paint()
+          ..shader = RadialGradient(
+            radius: .62,
+            colors: [
+              tint.withValues(alpha: piece ? .21 : .22),
+              tint.withValues(alpha: 0),
+            ],
+          ).createShader(Offset.zero & size));
   }
 
   /// Long grain with the occasional darker ring.
@@ -309,13 +341,13 @@ class BoardSquarePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 3.4
-      ..color = const Color(0xffff7a1e).withValues(alpha: isLight ? .24 : .32)
+      ..color = const Color(0xffe8641a).withValues(alpha: isLight ? .20 : .26)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
     final core = Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = .9
-      ..color = const Color(0xffffd089).withValues(alpha: .75);
+      ..color = const Color(0xffffc06a).withValues(alpha: .62);
 
     Path crack(Offset from, double angle, double length, int steps) {
       final path = Path()..moveTo(from.dx, from.dy);
@@ -420,19 +452,8 @@ class BoardSquarePainter extends CustomPainter {
           .withValues(alpha: (dark ? .05 : .055) * random.nextDouble());
       canvas.drawLine(Offset(0, y), Offset(size.width, y), brush);
     }
-    canvas.drawRect(
-        Offset.zero & size,
-        Paint()
-          ..shader = ui.Gradient.linear(
-            Offset.zero,
-            Offset(size.width, size.height),
-            [
-              Colors.white.withValues(alpha: 0),
-              Colors.white.withValues(alpha: .07),
-              Colors.white.withValues(alpha: 0),
-            ],
-            [0, .5, 1],
-          ));
+    // No per-square sheen: a highlight decided square by square speckled
+    // the board. The brushing alone carries the plate.
     canvas.restore();
   }
 
@@ -442,5 +463,6 @@ class BoardSquarePainter extends CustomPainter {
       base != old.base ||
       overlay != old.overlay ||
       seed != old.seed ||
-      isLight != old.isLight;
+      isLight != old.isLight ||
+      pieceIsLight != old.pieceIsLight;
 }
