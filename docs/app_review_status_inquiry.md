@@ -52,6 +52,11 @@ altında bulursun.
 7 Kasım 2026, App Review Status başlığı altında gönderildi.
 **Case ID: 30000008085406.** Cevap bu numaraya bağlı e-postayla geliyor.
 
+9 Kasım'da aynı kayda ikinci bir mesaj eklendi: düzeltmenin yapıldığı, tek
+yerelleştirmede EULA bağlantısının durduğu ve bağlantıların açıldığı yazıldı.
+Takip mesajı, kayıt sayfasındaki **Get more help → Email** ile gönderiliyor;
+yeni kayıt açmaya gerek yok.
+
 ## Sonrası
 
 Cevap genelde bir iki iş günü içinde geliyor ve çoğu zaman "normal kuyrukta,
