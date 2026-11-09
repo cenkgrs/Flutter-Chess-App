@@ -1332,6 +1332,10 @@ const translations = <String, List<String>>{
   'Ahşap': ['Wood', 'Holz', 'Дерево'],
   'Mermer': ['Marble', 'Marmor', 'Мрамор'],
   'Arduvaz': ['Slate', 'Schiefer', 'Сланец'],
+  'Obsidyen': ['Obsidian', 'Obsidian', 'Обсидиан'],
+  'Lav': ['Lava', 'Lava', 'Лава'],
+  'Kağıt': ['Paper', 'Papier', 'Бумага'],
+  'Dövme Metal': ['Brushed Metal', 'Gebürstetes Metall', 'Шлифованный металл'],
   'Buz': ['Ice', 'Eis', 'Лёд'],
   'Cam': ['Glass', 'Glas', 'Стекло'],
   'Fildişi ve Abanoz': [

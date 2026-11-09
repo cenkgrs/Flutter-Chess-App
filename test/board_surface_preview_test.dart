@@ -15,8 +15,12 @@ import 'package:chess_puzzle_app/widgets/board_surface.dart';
 void main() {
   test('paints each skin to build/board_preview.png', () async {
     const square = 64.0;
-    const width = square * 8;
-    final height = square * 8 * boardSkins.length;
+    // Laid out in rows of three: a single column of nine boards is taller
+    // than anything that can be looked at at once.
+    const columns = 3;
+    final rows = (boardSkins.length + columns - 1) ~/ columns;
+    const width = square * 8 * columns;
+    final height = square * 8 * rows;
 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
@@ -26,7 +30,9 @@ void main() {
         final file = i % 8, rank = i ~/ 8;
         final light = (rank + file).isEven;
         canvas.save();
-        canvas.translate(file * square, (s * 8 + rank) * square);
+        canvas.translate(
+            (s % columns) * 8 * square + file * square,
+            (s ~/ columns) * 8 * square + rank * square);
         BoardSquarePainter(
           texture: skin.texture,
           base: skin.base(light),

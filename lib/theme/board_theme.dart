@@ -149,7 +149,7 @@ const pieceSets = [
 
 /// What a square is made of. The painter in `widgets/board_surface.dart`
 /// draws each one; a skin that wants none asks for [flat].
-enum SurfaceTexture { flat, wood, marble, slate, frost }
+enum SurfaceTexture { flat, wood, marble, slate, frost, basalt, ember, deco, paper, metal }
 
 class BoardSkin {
   const BoardSkin({
@@ -276,7 +276,113 @@ const iceSkin = BoardSkin(
   texture: SurfaceTexture.frost,
 );
 
-const boardSkins = [woodSkin, marbleSkin, slateSkin, iceSkin];
+/// Black stone under the porcelain and glass sets, where a light board
+/// washed the pieces out.
+const obsidianSkin = BoardSkin(
+  id: 'obsidian',
+  label: 'Obsidyen',
+  light: Color(0xff5a5a65),
+  dark: Color(0xff1e1e24),
+  selected: Color(0xff5d6b7d),
+  selectedOverlay: Color(0x997d93ab),
+  checkOverlay: Color(0x99a3413c),
+  premove: Color(0xff57628a),
+  premoveOverlay: Color(0x99707cab),
+  lastMove: Color(0x66808a06),
+  legalDot: Color(0x99e6e9ef),
+  legalRing: Color(0xaad7dde8),
+  coordOnLight: Color(0xffd3d6de),
+  coordOnDark: Color(0xff8e919b),
+  texture: SurfaceTexture.basalt,
+);
+
+/// Cooled crust with the heat still in the cracks, for the ice and lava set.
+const lavaSkin = BoardSkin(
+  id: 'lava',
+  label: 'Lav',
+  light: Color(0xff6b4a40),
+  dark: Color(0xff271a18),
+  selected: Color(0xff8c4a2a),
+  selectedOverlay: Color(0x99c9602a),
+  checkOverlay: Color(0x99bb3b2f),
+  premove: Color(0xff6b5a86),
+  premoveOverlay: Color(0x99806ea3),
+  lastMove: Color(0x66d98033),
+  legalDot: Color(0x99ffd9a8),
+  legalRing: Color(0xaaffb765),
+  coordOnLight: Color(0xffe9c6ab),
+  coordOnDark: Color(0xffa07f6f),
+  texture: SurfaceTexture.ember,
+);
+
+/// Black and gold with the inlaid line the period put on everything.
+const decoSkin = BoardSkin(
+  id: 'deco',
+  label: 'Art Deco',
+  light: Color(0xffe8dcc4),
+  dark: Color(0xff2f2a26),
+  selected: Color(0xffc9a24a),
+  selectedOverlay: Color(0x99d9b45c),
+  checkOverlay: Color(0x99a4453a),
+  premove: Color(0xff7b7f9c),
+  premoveOverlay: Color(0x99888cab),
+  lastMove: Color(0x66c7a24e),
+  legalDot: Color(0x88534a3c),
+  legalRing: Color(0xaae8c477),
+  coordOnLight: Color(0xff6b5f45),
+  coordOnDark: Color(0xffd9c79c),
+  texture: SurfaceTexture.deco,
+);
+
+/// The board as a diagram on paper, for the matte set and for study.
+const paperSkin = BoardSkin(
+  id: 'paper',
+  label: 'Kağıt',
+  light: Color(0xfff2ece0),
+  dark: Color(0xffc7bda8),
+  selected: Color(0xffd8cf9a),
+  selectedOverlay: Color(0x99dcd292),
+  checkOverlay: Color(0x99c5736a),
+  premove: Color(0xffa9b3c6),
+  premoveOverlay: Color(0x99a3aec4),
+  lastMove: Color(0x66cfc98a),
+  legalDot: Color(0x77615a4c),
+  legalRing: Color(0xaa9a9280),
+  coordOnLight: Color(0xff7b7363),
+  coordOnDark: Color(0xff574f42),
+  texture: SurfaceTexture.paper,
+);
+
+/// Brushed plate with a milled edge, under the silver and bronze set.
+const metalSkin = BoardSkin(
+  id: 'metal',
+  label: 'Dövme Metal',
+  light: Color(0xffb6b2ab),
+  dark: Color(0xff6d6a60),
+  selected: Color(0xff9d8a5e),
+  selectedOverlay: Color(0x99c2a263),
+  checkOverlay: Color(0x99a84b42),
+  premove: Color(0xff7e879b),
+  premoveOverlay: Color(0x998d96ab),
+  lastMove: Color(0x66b8a263),
+  legalDot: Color(0x88333028),
+  legalRing: Color(0xaaeadfc0),
+  coordOnLight: Color(0xff4e4b44),
+  coordOnDark: Color(0xffd6d1c6),
+  texture: SurfaceTexture.metal,
+);
+
+const boardSkins = [
+  woodSkin,
+  marbleSkin,
+  slateSkin,
+  iceSkin,
+  obsidianSkin,
+  lavaSkin,
+  decoSkin,
+  paperSkin,
+  metalSkin,
+];
 
 /// The player's board skin and piece set, kept on the device.
 class BoardTheme extends ChangeNotifier {

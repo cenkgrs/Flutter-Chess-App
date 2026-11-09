@@ -90,6 +90,16 @@ class BoardSquarePainter extends CustomPainter {
         _slate(canvas, size, random);
       case SurfaceTexture.frost:
         _frost(canvas, size, random);
+      case SurfaceTexture.basalt:
+        _basalt(canvas, size, random);
+      case SurfaceTexture.ember:
+        _ember(canvas, size, random);
+      case SurfaceTexture.deco:
+        _deco(canvas, size, random);
+      case SurfaceTexture.paper:
+        _paper(canvas, size, random);
+      case SurfaceTexture.metal:
+        _metal(canvas, size, random);
       case SurfaceTexture.flat:
         break;
     }
@@ -268,6 +278,161 @@ class BoardSquarePainter extends CustomPainter {
         }
       }
     }
+    canvas.restore();
+  }
+
+  /// Volcanic rock: gas pockets of a few sizes, each a dark pit with a lit
+  /// upper rim, since the light on this board comes from the top left.
+  void _basalt(Canvas canvas, Size size, math.Random random) {
+    canvas.save();
+    canvas.clipRect(Offset.zero & size);
+    for (var i = 0; i < 22; i++) {
+      final at = Offset(random.nextDouble() * size.width,
+          random.nextDouble() * size.height);
+      final r = size.width * (.012 + random.nextDouble() * .035);
+      canvas.drawCircle(
+          at, r, Paint()..color = Colors.black.withValues(alpha: .22));
+      canvas.drawCircle(
+          at.translate(-r * .3, -r * .3),
+          r * .55,
+          Paint()..color = Colors.white.withValues(alpha: .07));
+    }
+    canvas.restore();
+  }
+
+  /// Cooled crust split by heat: cracks that fork, each with the glow of
+  /// what is still burning under it.
+  void _ember(Canvas canvas, Size size, math.Random random) {
+    canvas.save();
+    canvas.clipRect(Offset.zero & size);
+    final glow = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 3.4
+      ..color = const Color(0xffff7a1e).withValues(alpha: isLight ? .24 : .32)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+    final core = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = .9
+      ..color = const Color(0xffffd089).withValues(alpha: .75);
+
+    Path crack(Offset from, double angle, double length, int steps) {
+      final path = Path()..moveTo(from.dx, from.dy);
+      var at = from, heading = angle;
+      for (var i = 0; i < steps; i++) {
+        heading += (random.nextDouble() - .5) * .9;
+        at += Offset(math.cos(heading), math.sin(heading)) * (length / steps);
+        path.lineTo(at.dx, at.dy);
+      }
+      return path;
+    }
+
+    // Two squares in five crack; a crack on every one of them reads as a
+    // pattern rather than as a break in the crust.
+    if (random.nextDouble() > .4) {
+      canvas.restore();
+      return;
+    }
+    final start = Offset(random.nextDouble() * size.width, -size.height * .1);
+    final main = crack(start, math.pi / 2 + (random.nextDouble() - .5) * .8,
+        size.height * 1.3, 7);
+    for (final paint in [glow, core]) {
+      canvas.drawPath(main, paint);
+    }
+    if (random.nextBool()) {
+      canvas.restore();
+      return;
+    }
+    // One branch, so the crack belongs to a bigger break in the crust.
+    final branchAt = Offset(start.dx + (random.nextDouble() - .5) * size.width * .3,
+        size.height * (.3 + random.nextDouble() * .4));
+    final branch = crack(branchAt,
+        random.nextBool() ? .3 : math.pi - .3, size.width * .7, 4);
+    for (final paint in [glow, core]) {
+      canvas.drawPath(branch, paint);
+    }
+    canvas.restore();
+  }
+
+  /// The inlaid line the period put on everything: a border set in from the
+  /// edge, with a stepped corner at one end of the square.
+  void _deco(Canvas canvas, Size size, math.Random random) {
+    final gold = const Color(0xffc9a24a)
+        .withValues(alpha: isLight ? .55 : .70);
+    final line = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = .9
+      ..color = gold;
+    final inset = size.width * .12;
+    canvas.drawRect(
+        Rect.fromLTWH(inset, inset, size.width - inset * 2,
+            size.height - inset * 2),
+        line);
+    final step = size.width * .055;
+    canvas.drawRect(
+        Rect.fromLTWH(inset + step, inset + step,
+            size.width - (inset + step) * 2, size.height - (inset + step) * 2),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = .5
+          ..color = gold.withValues(alpha: gold.a * .55));
+    // The corner bracket the period set inside the frame, in one of the
+    // four corners so the board is not eight identical rows.
+    final corner = random.nextInt(4);
+    final cx = corner % 2 == 0 ? inset + step * 2 : size.width - inset - step * 2;
+    final cy = corner ~/ 2 == 0 ? inset + step * 2 : size.height - inset - step * 2;
+    final dx = corner % 2 == 0 ? size.width * .16 : -size.width * .16;
+    final dy = corner ~/ 2 == 0 ? size.height * .16 : -size.height * .16;
+    canvas.drawPath(
+        Path()
+          ..moveTo(cx + dx, cy)
+          ..lineTo(cx, cy)
+          ..lineTo(cx, cy + dy),
+        line);
+  }
+
+  /// Paper: fibre, and the faint tooth of a sheet held to the light.
+  void _paper(Canvas canvas, Size size, math.Random random) {
+    final fibre = Paint()..style = PaintingStyle.stroke..strokeWidth = .5;
+    for (var i = 0; i < 46; i++) {
+      final dark = random.nextBool();
+      fibre.color = (dark ? Colors.black : Colors.white)
+          .withValues(alpha: dark ? .07 : .11);
+      final at = Offset(random.nextDouble() * size.width,
+          random.nextDouble() * size.height);
+      final a = random.nextDouble() * math.pi;
+      final l = size.width * (.03 + random.nextDouble() * .07);
+      canvas.drawLine(
+          at, at + Offset(math.cos(a), math.sin(a)) * l, fibre);
+    }
+  }
+
+  /// Brushed plate: the fine parallel scoring a wire brush leaves, and the
+  /// band of light that travels across it.
+  void _metal(Canvas canvas, Size size, math.Random random) {
+    canvas.save();
+    canvas.clipRect(Offset.zero & size);
+    final brush = Paint()..strokeWidth = .6;
+    for (var y = 0.0; y < size.height; y += 1.6) {
+      final dark = random.nextBool();
+      brush.color = (dark ? Colors.black : Colors.white)
+          .withValues(alpha: (dark ? .05 : .055) * random.nextDouble());
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), brush);
+    }
+    canvas.drawRect(
+        Offset.zero & size,
+        Paint()
+          ..shader = ui.Gradient.linear(
+            Offset.zero,
+            Offset(size.width, size.height),
+            [
+              Colors.white.withValues(alpha: 0),
+              Colors.white.withValues(alpha: .07),
+              Colors.white.withValues(alpha: 0),
+            ],
+            [0, .5, 1],
+          ));
     canvas.restore();
   }
 
