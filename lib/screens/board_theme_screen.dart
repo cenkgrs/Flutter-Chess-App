@@ -5,6 +5,7 @@ import '../l10n/app_language.dart';
 import '../theme/board_theme.dart';
 import '../widgets/board_surface.dart';
 import '../widgets/rok_style.dart';
+import 'subscription_screen.dart';
 
 /// Board skin and piece set, each with a live preview of the real board.
 class BoardThemeScreen extends StatefulWidget {
@@ -21,6 +22,23 @@ class BoardThemeScreen extends StatefulWidget {
 class _BoardThemeScreenState extends State<BoardThemeScreen> {
   bool _pieces = false;
   final _scroll = ScrollController();
+
+  /// What a locked theme is being tried as. Looking costs nothing, so a
+  /// tap puts it on the board above without saving it anywhere; the
+  /// selection stays where it was until Premium makes it a choice.
+  BoardSkin? _trySkin;
+  PieceSet? _trySet;
+
+  void _try({BoardSkin? skin, PieceSet? set}) => setState(() {
+        if (skin != null) _trySkin = skin;
+        if (set != null) _trySet = set;
+      });
+
+  Future<void> _openPremium() async {
+    await Navigator.push<void>(context,
+        MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
+    if (mounted) setState(() {});
+  }
 
   @override
   void dispose() {
@@ -46,9 +64,28 @@ class _BoardThemeScreenState extends State<BoardThemeScreen> {
                           width: size,
                           height: size,
                           child: _PreviewBoard(
-                              skin: boardSkin,
-                              pieces: boardPieces,
+                              skin: _trySkin ?? boardSkin,
+                              pieces: _trySet ?? boardPieces,
                               full: true)))),
+              if (_trySkin != null || _trySet != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 0, 18, 4),
+                  child: Row(children: [
+                    const Icon(Icons.lock_outline_rounded,
+                        color: Color(0xffe2b75f), size: 18),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: LText('Deniyorsun. Kullanmak için Premium gerek.',
+                          style: TextStyle(
+                              color: BoardThemeScreen.mutedBone,
+                              fontSize: 13)),
+                    ),
+                    TextButton(
+                        key: const ValueKey('theme-unlock'),
+                        onPressed: _openPremium,
+                        child: const LText('Premium')),
+                  ]),
+                ),
               Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 18),
                   child: SegmentedButton<bool>(
@@ -80,24 +117,37 @@ class _BoardThemeScreenState extends State<BoardThemeScreen> {
                     if (!_pieces)
                       for (final skin in boardSkins) ...[
                         _Option(
+                            key: ValueKey('skin-${skin.id}'),
                             label: skin.label,
                             selected: skin.id == boardSkin.id,
-                            onTap: () =>
-                                BoardTheme.instance.selectSkin(skin.id),
-                            preview:
-                                _PreviewBoard(skin: skin, pieces: boardPieces)),
+                            locked: BoardTheme.isLocked(skin.premium),
+                            onTap: () => BoardTheme.isLocked(skin.premium)
+                                ? _try(skin: skin)
+                                : setState(() {
+                                    _trySkin = null;
+                                    BoardTheme.instance.selectSkin(skin.id);
+                                  }),
+                            preview: _PreviewBoard(
+                                skin: skin, pieces: _trySet ?? boardPieces)),
                         const SizedBox(height: 10),
                       ]
                     else
                       for (final set in pieceSets)
                         if (BoardTheme.isPieceSetAvailable(set)) ...[
                           _Option(
+                              key: ValueKey('set-${set.id}'),
                               label: set.label,
                               selected: set.id == boardPieces.id,
-                              onTap: () =>
-                                  BoardTheme.instance.selectPieceSet(set.id),
-                              preview:
-                                  _PreviewBoard(skin: boardSkin, pieces: set)),
+                              locked: BoardTheme.isLocked(set.premium),
+                              onTap: () => BoardTheme.isLocked(set.premium)
+                                  ? _try(set: set)
+                                  : setState(() {
+                                      _trySet = null;
+                                      BoardTheme.instance
+                                          .selectPieceSet(set.id);
+                                    }),
+                              preview: _PreviewBoard(
+                                  skin: _trySkin ?? boardSkin, pieces: set)),
                           const SizedBox(height: 10),
                         ],
                   ])),
@@ -107,14 +157,17 @@ class _BoardThemeScreenState extends State<BoardThemeScreen> {
 
 class _Option extends StatelessWidget {
   const _Option({
+    super.key,
     required this.label,
     required this.selected,
     required this.onTap,
     required this.preview,
+    this.locked = false,
   });
 
   final String label;
   final bool selected;
+  final bool locked;
   final VoidCallback onTap;
   final Widget preview;
 
@@ -142,13 +195,17 @@ class _Option extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                         fontSize: 17)),
               ),
-              Icon(
-                  selected
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_unchecked,
-                  color: selected
-                      ? BoardThemeScreen.bone
-                      : BoardThemeScreen.mutedBone),
+              if (locked)
+                const Icon(Icons.lock_outline_rounded,
+                    color: Color(0xffe2b75f))
+              else
+                Icon(
+                    selected
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
+                    color: selected
+                        ? BoardThemeScreen.bone
+                        : BoardThemeScreen.mutedBone),
             ]),
           ),
         ),

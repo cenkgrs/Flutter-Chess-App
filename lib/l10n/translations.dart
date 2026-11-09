@@ -1333,6 +1333,11 @@ const translations = <String, List<String>>{
   'Mermer': ['Marble', 'Marmor', 'Мрамор'],
   'Arduvaz': ['Slate', 'Schiefer', 'Сланец'],
   'Obsidyen': ['Obsidian', 'Obsidian', 'Обсидиан'],
+  'Deniyorsun. Kullanmak için Premium gerek.': [
+    'Just a look. Premium puts it on the board.',
+    'Nur zur Ansicht. Mit Premium wird daraus dein Brett.',
+    'Только просмотр. Premium ставит это на доску.'
+  ],
   'Lav': ['Lava', 'Lava', 'Лава'],
   'Kağıt': ['Paper', 'Papier', 'Бумага'],
   'Dövme Metal': ['Brushed Metal', 'Gebürstetes Metall', 'Шлифованный металл'],

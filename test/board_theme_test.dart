@@ -78,11 +78,11 @@ void main() {
     final list = find.byKey(const ValueKey('piece-options'));
     final scrolling =
         find.descendant(of: list, matching: find.byType(Scrollable)).first;
-    await tester.scrollUntilVisible(find.text(iceLavaPieces.label), 200,
+    await tester.scrollUntilVisible(find.text(minimalMattePieces.label), 200,
         scrollable: scrolling);
-    await tester.tap(find.text(iceLavaPieces.label));
+    await tester.tap(find.text(minimalMattePieces.label));
     await tester.pumpAndSettle();
-    expect(boardPieces.id, iceLavaPieces.id);
+    expect(boardPieces.id, minimalMattePieces.id);
     expect(tester.getRect(preview), initial);
     await tester.tap(find.text('Tahta'));
     await tester.pumpAndSettle();
@@ -131,5 +131,33 @@ void main() {
     expect(glassPieces.assetFor(whiteKing), 'assets/pieces/glass/w_king.png');
     expect(glassPieces.assetFor(blackKing), 'assets/pieces/glass/b_king.png');
     expect(glassPieces.tintFor(whiteKing), isNull);
+  });
+
+  testWidgets('a locked theme can be tried but not put on the board',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    await BoardTheme.instance.load();
+    await BoardTheme.instance.selectSkin(woodSkin.id);
+
+    await tester.pumpWidget(
+        MaterialApp(theme: rokTheme(), home: const BoardThemeScreen()));
+    await tester.pumpAndSettle();
+
+    final locked = find.byKey(ValueKey('skin-${obsidianSkin.id}'));
+    final list = find.byKey(const ValueKey('board-options'));
+    await tester.scrollUntilVisible(locked, 200,
+        scrollable:
+            find.descendant(of: list, matching: find.byType(Scrollable)).first);
+    await tester.tap(locked);
+    await tester.pumpAndSettle();
+
+    // Tried: the board above shows it, and the way to buy it is offered.
+    expect(find.byKey(const ValueKey('theme-unlock')), findsOneWidget);
+    // Not chosen: the wooden board is still the one in play.
+    expect(boardSkin.id, woodSkin.id);
+    expect(tester.takeException(), isNull);
   });
 }

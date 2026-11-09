@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../backend/subscriptions.dart';
+
 /// Board skins and piece sets are chosen separately, so a player can keep the
 /// wooden pieces on a marble board or put the glass pieces on any surface.
 ///
@@ -39,6 +41,7 @@ class PieceSet {
     this.blackTint,
     this.scale = 1,
     this.padding = 3,
+    this.premium = false,
   });
 
   final String id;
@@ -52,6 +55,10 @@ class PieceSet {
   /// Drawn larger than its square, for artwork with built-in margins.
   final double scale;
   final double padding;
+
+  /// Half of what ROK draws is free; the rest comes with Premium. A locked
+  /// set can still be looked at — it just cannot be put on the board.
+  final bool premium;
 
   String assetFor(c.Piece piece) {
     final name = _pieceFileNames[piece.type.name];
@@ -88,6 +95,7 @@ const glassPieces = PieceSet(
 /// type, so both colours and all materials have the same on-board weight.
 const artDecoPieces = PieceSet(
     id: 'art_deco',
+    premium: true,
     label: 'Art Deco',
     directory: 'assets/pieces/art_deco',
     art: PieceArt.painted,
@@ -95,6 +103,7 @@ const artDecoPieces = PieceSet(
 
 const iceLavaPieces = PieceSet(
     id: 'ice_lava',
+    premium: true,
     label: 'Buz ve Lav',
     directory: 'assets/pieces/ice_lava',
     art: PieceArt.painted,
@@ -123,6 +132,7 @@ const minimalMattePieces = PieceSet(
 
 const porcelainObsidianPieces = PieceSet(
     id: 'porcelain_obsidian',
+    premium: true,
     label: 'Porselen ve Obsidyen',
     directory: 'assets/pieces/porcelain_obsidian',
     art: PieceArt.painted,
@@ -130,6 +140,7 @@ const porcelainObsidianPieces = PieceSet(
 
 const silverBronzePieces = PieceSet(
     id: 'silver_bronze',
+    premium: true,
     label: 'Gümüş ve Bronz',
     directory: 'assets/pieces/silver_bronze',
     art: PieceArt.painted,
@@ -168,6 +179,7 @@ class BoardSkin {
     required this.coordOnLight,
     required this.coordOnDark,
     this.texture = SurfaceTexture.flat,
+    this.premium = false,
   });
 
   final String id;
@@ -198,6 +210,9 @@ class BoardSkin {
 
   /// The material the squares are painted as.
   final SurfaceTexture texture;
+
+  /// See [PieceSet.premium].
+  final bool premium;
 
   Color base(bool isLight) => isLight ? light : dark;
   Color coordOn(bool isLight) => isLight ? coordOnLight : coordOnDark;
@@ -280,6 +295,7 @@ const iceSkin = BoardSkin(
 /// washed the pieces out.
 const obsidianSkin = BoardSkin(
   id: 'obsidian',
+  premium: true,
   label: 'Obsidyen',
   light: Color(0xff686874),
   dark: Color(0xff17171c),
@@ -299,6 +315,7 @@ const obsidianSkin = BoardSkin(
 /// Cooled crust with the heat still in the cracks, for the ice and lava set.
 const lavaSkin = BoardSkin(
   id: 'lava',
+  premium: true,
   label: 'Lav',
   light: Color(0xff5f5852),
   dark: Color(0xff232021),
@@ -318,6 +335,7 @@ const lavaSkin = BoardSkin(
 /// Black and gold with the inlaid line the period put on everything.
 const decoSkin = BoardSkin(
   id: 'deco',
+  premium: true,
   label: 'Art Deco',
   light: Color(0xffe8dcc4),
   dark: Color(0xff2f2a26),
@@ -356,6 +374,7 @@ const paperSkin = BoardSkin(
 /// Brushed plate with a milled edge, under the silver and bronze set.
 const metalSkin = BoardSkin(
   id: 'metal',
+  premium: true,
   label: 'Dövme Metal',
   light: Color(0xffa9a59d),
   dark: Color(0xff5c594f),
@@ -396,14 +415,19 @@ class BoardTheme extends ChangeNotifier {
   BoardSkin _skin = woodSkin;
   PieceSet _pieces = woodPieces;
 
-  BoardSkin get skin => _skin;
-  PieceSet get pieces => _pieces;
+  BoardSkin get skin => isLocked(_skin.premium) ? woodSkin : _skin;
+  PieceSet get pieces => isLocked(_pieces.premium) ? woodPieces : _pieces;
 
   /// Piece sets whose artwork is bundled in this build.
   static Set<String> _availablePieceSets = {woodPieces.id};
 
   static bool isPieceSetAvailable(PieceSet set) =>
       _availablePieceSets.contains(set.id);
+
+  /// A premium theme is locked until the subscription is live. The lock is
+  /// on putting it on the board, never on looking at it.
+  static bool isLocked(bool premium) =>
+      premium && !SubscriptionStore.instance.active;
 
   Future<void> load() async {
     _availablePieceSets = await _bundledPieceSets();
@@ -436,7 +460,7 @@ class BoardTheme extends ChangeNotifier {
   Future<void> selectSkin(String id) async {
     final next =
         boardSkins.firstWhere((s) => s.id == id, orElse: () => woodSkin);
-    if (next.id == _skin.id) return;
+    if (next.id == _skin.id || isLocked(next.premium)) return;
     _skin = next;
     AnalyticsService.instance
         .log(AnalyticsEvent.themeChanged, metadata: {'skin': next.id});
@@ -447,7 +471,11 @@ class BoardTheme extends ChangeNotifier {
   Future<void> selectPieceSet(String id) async {
     final next =
         pieceSets.firstWhere((p) => p.id == id, orElse: () => woodPieces);
-    if (next.id == _pieces.id || !isPieceSetAvailable(next)) return;
+    if (next.id == _pieces.id ||
+        !isPieceSetAvailable(next) ||
+        isLocked(next.premium)) {
+      return;
+    }
     _pieces = next;
     AnalyticsService.instance
         .log(AnalyticsEvent.pieceSetChanged, metadata: {'set': next.id});
