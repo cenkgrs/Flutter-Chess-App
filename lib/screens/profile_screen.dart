@@ -3,15 +3,14 @@ import 'auth_screen.dart';
 import 'subscription_screen.dart';
 import '../backend/feature_limits.dart';
 import '../widgets/daily_limit.dart';
-import 'board_theme_screen.dart';
 import '../theme/board_theme.dart';
 import '../widgets/rok_style.dart';
+import '../widgets/settings_rows.dart';
 import 'dart:math' as math;
 import 'package:chess/chess.dart' as c;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../backend/app_backend.dart';
 import '../backend/game_repository.dart';
@@ -20,11 +19,8 @@ import 'friends_screen.dart';
 import '../prototype/play_screen.dart';
 import '../prototype/stockfish_engine.dart';
 import '../widgets/analysis_markers.dart';
-import '../audio/game_sounds.dart';
-import '../backend/puzzle_reminder.dart';
 import '../l10n/app_language.dart';
 import 'delete_account_screen.dart';
-import 'open_source_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key, this.openLink});
@@ -33,10 +29,6 @@ class ProfileScreen extends StatelessWidget {
 
   static const bone = Color(0xfff3eee7);
   static const mutedBone = Color(0xffb9aea5);
-  static final privacyUri =
-      Uri.parse('https://cenkgrs.github.io/rok-site/privacy.html');
-  static final supportUri =
-      Uri.parse('https://cenkgrs.github.io/rok-site/support.html');
 
   /// This screen is stateless and only rebuilds on a language change, so a
   /// successful sign-in would leave a stale 'Giriş yap' row behind. Returning
@@ -48,24 +40,6 @@ class ProfileScreen extends StatelessWidget {
       MaterialPageRoute(builder: (_) => const AuthScreen()),
     );
     if (authenticated == true) navigator.popUntil((route) => route.isFirst);
-  }
-
-  Future<void> _openLink(BuildContext context, Uri uri) async {
-    try {
-      final opened = await (openLink?.call(uri) ??
-          launchUrl(uri, mode: LaunchMode.externalApplication));
-      if (!opened && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: LText('Bağlantı açılamadı. Tekrar dene.')),
-        );
-      }
-    } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: LText('Bağlantı açılamadı. Tekrar dene.')),
-        );
-      }
-    }
   }
 
   @override
@@ -157,14 +131,14 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 if (user == null) ...[
                   const SizedBox(height: 16),
-                  _ProfileLink(
+                  SettingsLink(
                       icon: Icons.login_rounded,
                       title: 'Giriş yap',
                       subtitle: 'Giriş yap veya hesap oluştur',
                       onTap: () => _signIn(context)),
                 ],
                 const SizedBox(height: 16),
-                _ProfileLink(
+                SettingsLink(
                     icon: Icons.workspace_premium_rounded,
                     title: 'ROK Premium',
                     subtitle: 'Sınırsız asistanlı maç ve analiz',
@@ -173,6 +147,9 @@ class ProfileScreen extends StatelessWidget {
                         MaterialPageRoute(
                             builder: (_) => const SubscriptionScreen()))),
                 const SizedBox(height: 28),
+                // What the player is, not what they set: the record, the
+                // people they play and the account itself. Everything they
+                // choose moved to the settings page.
                 const LText('HESAP',
                     style: TextStyle(
                         color: mutedBone,
@@ -180,40 +157,7 @@ class ProfileScreen extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.6)),
                 const SizedBox(height: 10),
-                _ProfileLink(
-                    icon: Icons.language,
-                    title: 'Dil',
-                    subtitle: AppLanguage.instance.locale?.languageCode
-                            .toUpperCase() ??
-                        'Cihaz dili',
-                    onTap: () => showDialog<void>(
-                        context: context,
-                        builder: (dialog) => RokWoodDialog(
-                            title: const LText('Dil'),
-                            content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  for (final option in <String?, String>{
-                                    null: 'Cihaz dili',
-                                    'tr': 'Türkçe',
-                                    'en': 'English',
-                                    'de': 'Deutsch',
-                                    'ru': 'Русский'
-                                  }.entries)
-                                    ListTile(
-                                        title: LText(option.value),
-                                        trailing: AppLanguage.instance.locale
-                                                    ?.languageCode ==
-                                                option.key
-                                            ? const Icon(Icons.check)
-                                            : null,
-                                        onTap: () {
-                                          AppLanguage.instance.set(option.key);
-                                          Navigator.pop(dialog);
-                                        }),
-                                ])))),
-                const SizedBox(height: 12),
-                _ProfileLink(
+                SettingsLink(
                   icon: Icons.history_rounded,
                   title: 'Son Maçlar',
                   subtitle: 'Maç geçmişini ve hamlelerini incele',
@@ -224,7 +168,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _ProfileLink(
+                SettingsLink(
                   icon: Icons.people_outline_rounded,
                   title: 'Arkadaşlar',
                   subtitle: 'Arkadaşlarını, istekleri ve davetleri yönet',
@@ -233,81 +177,9 @@ class ProfileScreen extends StatelessWidget {
                     MaterialPageRoute(builder: (_) => const FriendsScreen()),
                   ),
                 ),
-                const SizedBox(height: 12),
-                ListenableBuilder(
-                    listenable: BoardTheme.instance,
-                    builder: (context, _) => _ProfileLink(
-                          key: const ValueKey('board-theme-link'),
-                          icon: Icons.grid_view_rounded,
-                          title: 'Tahta görünümü',
-                          subtitle:
-                              '${tr(context, boardSkin.label)} · ${tr(context, boardPieces.label)}',
-                          onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const BoardThemeScreen())),
-                        )),
-                const SizedBox(height: 12),
-                ListenableBuilder(
-                    listenable: GameSounds.instance,
-                    builder: (context, _) => _ProfileSwitch(
-                          key: const ValueKey('sound-effects-toggle'),
-                          icon: GameSounds.instance.enabled
-                              ? Icons.volume_up_rounded
-                              : Icons.volume_off_rounded,
-                          title: 'Ses efektleri',
-                          subtitle: 'Hamle, oyun başlangıcı ve zafer sesleri',
-                          value: GameSounds.instance.enabled,
-                          onChanged: GameSounds.instance.setEnabled,
-                        )),
-                const SizedBox(height: 12),
-                ListenableBuilder(
-                    listenable: PuzzleReminder.instance,
-                    builder: (context, _) => _ProfileSwitch(
-                          key: const ValueKey('puzzle-reminder-toggle'),
-                          icon: PuzzleReminder.instance.enabled
-                              ? Icons.notifications_active_rounded
-                              : Icons.notifications_off_rounded,
-                          title: 'Bulmaca hatırlatıcısı',
-                          subtitle:
-                              'Günün bulmacası çözülmediyse akşam haber ver',
-                          value: PuzzleReminder.instance.enabled,
-                          onChanged: (on) async {
-                            await PuzzleReminder.instance.markAsked();
-                            await PuzzleReminder.instance.setEnabled(on);
-                          },
-                        )),
-                const SizedBox(height: 12),
-                _ProfileLink(
-                  icon: Icons.description_outlined,
-                  title: 'Açık kaynak lisansları',
-                  subtitle: 'Stockfish ve kullanılan kütüphaneler',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => OpenSourceScreen(openLink: openLink),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _ProfileLink(
-                  key: const ValueKey('privacy-policy-link'),
-                  icon: Icons.policy_outlined,
-                  title: 'Gizlilik Politikası',
-                  subtitle: 'Verilerinin nasıl işlendiğini incele',
-                  onTap: () => _openLink(context, privacyUri),
-                ),
-                const SizedBox(height: 12),
-                _ProfileLink(
-                  key: const ValueKey('support-link'),
-                  icon: Icons.support_agent_outlined,
-                  title: 'Destek',
-                  subtitle: 'Yardım ve iletişim seçenekleri',
-                  onTap: () => _openLink(context, supportUri),
-                ),
                 if (user != null) ...[
                   const SizedBox(height: 24),
-                  _ProfileLink(
+                  SettingsLink(
                       icon: Icons.delete_forever_outlined,
                       title: 'Hesabımı sil',
                       subtitle:
@@ -324,96 +196,6 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-class _ProfileLink extends StatelessWidget {
-  const _ProfileLink({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Material(
-        color: const Color(0xe6202120),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: Color(0xff686966), width: .8),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: ListTile(
-          onTap: onTap,
-          minVerticalPadding: 16,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-          leading: Icon(icon, color: ProfileScreen.bone, size: 28),
-          title: LText(title,
-              style: const TextStyle(
-                  color: ProfileScreen.bone,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 17)),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: LText(subtitle,
-                style: const TextStyle(
-                    color: ProfileScreen.mutedBone, height: 1.35)),
-          ),
-          trailing: const Icon(Icons.chevron_right_rounded,
-              color: ProfileScreen.mutedBone),
-        ),
-      );
-}
-
-class _ProfileSwitch extends StatelessWidget {
-  const _ProfileSwitch({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) => Material(
-        color: const Color(0xe6202120),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: Color(0xff686966), width: .8),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: SwitchListTile.adaptive(
-          value: value,
-          onChanged: onChanged,
-          secondary: Icon(icon, color: ProfileScreen.bone, size: 28),
-          title: LText(title,
-              style: const TextStyle(
-                  color: ProfileScreen.bone,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 17)),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: LText(subtitle,
-                style: const TextStyle(
-                    color: ProfileScreen.mutedBone, height: 1.35)),
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-        ),
-      );
 }
 
 class RecentGamesScreen extends StatelessWidget {

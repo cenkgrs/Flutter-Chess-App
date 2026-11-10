@@ -16,6 +16,7 @@ import 'matchmaking_screen.dart';
 import 'online_game_screen.dart';
 import 'friends_screen.dart';
 import 'profile_screen.dart';
+import 'settings_screen.dart';
 import 'subscription_screen.dart';
 import 'puzzle_screen.dart';
 import 'puzzle_duel_screen.dart';
@@ -289,6 +290,16 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
                   context,
                   MaterialPageRoute(
                       builder: (_) => const ChessLeaderboardScreen()));
+            },
+          ),
+          _DrawerLink(
+            key: const ValueKey('drawer-settings'),
+            icon: Icons.settings_outlined,
+            label: 'Ayarlar',
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()));
             },
           ),
           const Spacer(),

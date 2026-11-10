@@ -1,7 +1,7 @@
 import 'package:chess_puzzle_app/l10n/app_language.dart';
 import 'package:chess_puzzle_app/screens/auth_screen.dart';
 import 'package:chess_puzzle_app/screens/delete_account_screen.dart';
-import 'package:chess_puzzle_app/screens/profile_screen.dart';
+import 'package:chess_puzzle_app/screens/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -66,14 +66,14 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('German profile links do not overflow on a narrow phone',
+  testWidgets('German settings links do not overflow on a narrow phone',
       (tester) async {
     configureSmallPhone(tester);
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     AppLanguage.instance.locale = const Locale('de');
 
-    await tester.pumpWidget(const MaterialApp(home: ProfileScreen()));
+    await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
     // Scrolling to the entry rather than by a fixed distance, so a new
     // row above it does not put the test's target out of reach.
     final licences = find.text('Open-Source-Lizenzen');

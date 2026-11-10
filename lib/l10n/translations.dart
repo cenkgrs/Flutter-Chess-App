@@ -1333,6 +1333,8 @@ const translations = <String, List<String>>{
   'Mermer': ['Marble', 'Marmor', 'Мрамор'],
   'Arduvaz': ['Slate', 'Schiefer', 'Сланец'],
   'Obsidyen': ['Obsidian', 'Obsidian', 'Обсидиан'],
+  'Ayarlar': ['Settings', 'Einstellungen', 'Настройки'],
+  'AYARLAR': ['SETTINGS', 'EINSTELLUNGEN', 'НАСТРОЙКИ'],
   'Bütün tahtalar ve taşlar': [
     'Every board and every set',
     'Alle Bretter und alle Figuren',
