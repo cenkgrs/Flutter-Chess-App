@@ -1334,6 +1334,43 @@ const translations = <String, List<String>>{
   'Arduvaz': ['Slate', 'Schiefer', 'Сланец'],
   'Obsidyen': ['Obsidian', 'Obsidian', 'Обсидиан'],
   'Ayarlar': ['Settings', 'Einstellungen', 'Настройки'],
+  'Atla': ['Skip', 'Überspringen', 'Пропустить'],
+  'Hoş geldin': ['Welcome', 'Willkommen', 'Добро пожаловать'],
+  'Satranç oyna, çalış ve gelişimini takip et. Reklam yok, oyunu bölen hiçbir şey yok.': [
+    'Play chess, study it, and watch yourself improve. No ads, nothing that interrupts a game.',
+    'Schach spielen, üben und besser werden. Keine Werbung, nichts, was eine Partie unterbricht.',
+    'Играйте в шахматы, занимайтесь и растите. Без рекламы и без помех во время партии.'
+  ],
+  'Yanında bir asistan': [
+    'An assistant at your side',
+    'Ein Assistent an deiner Seite',
+    'Помощник рядом с вами'
+  ],
+  'Oynarken hamleni sorabilir, maç bitince partiyi hamle hamle motora inceletebilirsin. Motor Stockfish.': [
+    'Ask about a move while you play, and have the engine walk the finished game move by move. The engine is Stockfish.',
+    'Frage während der Partie nach einem Zug und lass die Engine die fertige Partie Zug für Zug durchgehen. Die Engine ist Stockfish.',
+    'Спросите о ходе по ходу партии, а после — разберите её движком ход за ходом. Движок — Stockfish.'
+  ],
+  'Her gün yeni bulmaca': [
+    'A new puzzle every day',
+    'Jeden Tag ein neues Rätsel',
+    'Новая задача каждый день'
+  ],
+  'Günlük bulmacayı çöz, serini büyüt. Arkadaşınla bulmaca düellosu da yapabilirsin.': [
+    'Solve the daily puzzle and build your streak. You can duel a friend at puzzles too.',
+    'Löse das Tagesrätsel und baue deine Serie aus. Du kannst dich auch mit Freunden im Rätselduell messen.',
+    'Решайте задачу дня и наращивайте серию. А ещё можно устроить дуэль с другом.'
+  ],
+  'Hazır olduğunda çevrimiçi': [
+    'Online when you are ready',
+    'Online, wenn du so weit bist',
+    'Онлайн, когда захотите'
+  ],
+  'Bilgisayara karşı oynamak ve bulmacalar için hesap gerekmez. Hesap, çevrimiçi maç ve arkadaşlar için.': [
+    'Playing the engine and solving puzzles need no account. One is for online games and friends.',
+    'Für Partien gegen die Engine und für Rätsel brauchst du kein Konto. Eines ist für Online-Partien und Freunde.',
+    'Для игры с движком и задач аккаунт не нужен. Он нужен для онлайн-партий и друзей.'
+  ],
   'AYARLAR': ['SETTINGS', 'EINSTELLUNGEN', 'НАСТРОЙКИ'],
   'Bütün tahtalar ve taşlar': [
     'Every board and every set',

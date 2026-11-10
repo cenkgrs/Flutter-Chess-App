@@ -17,6 +17,7 @@ import 'online_game_screen.dart';
 import 'friends_screen.dart';
 import 'profile_screen.dart';
 import 'settings_screen.dart';
+import 'welcome_screen.dart';
 import 'subscription_screen.dart';
 import 'puzzle_screen.dart';
 import 'puzzle_duel_screen.dart';
@@ -47,11 +48,25 @@ class _HomeMenuScreenState extends State<HomeMenuScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _checkActiveGame();
+    _showWelcomeIfPending();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) _checkActiveGame();
+  }
+
+  /// The tour belongs to the first launch, so it opens over the menu
+  /// rather than replacing it: skipping it leaves the player where they
+  /// already were.
+  Future<void> _showWelcomeIfPending() async {
+    if (!await WelcomeScreen.isPending() || !mounted) return;
+    await Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (route) => WelcomeScreen(
+                onDone: () => Navigator.pop(route))));
   }
 
   Future<void> _checkActiveGame() async {
